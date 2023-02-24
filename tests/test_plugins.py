@@ -122,9 +122,10 @@ class MyManifest1(ManifestBase):
     def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function)->bool:
         return True # We are always different
 
-    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function):
+    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
+        variable_cache.store_variable(variable=Variable(name='{}:{}'.format(self.kind, self.metadata['name']), initial_value='Some Result Worth Saving'))
         return  # Assume some implementation
-
+    
 
 my_manifest_1_data=  """---
 kind: MyManifest1
@@ -139,16 +140,44 @@ spec:
     - three
 """
 
-def manifest_lookup_that_always_returns_MyManifest1(name: str):
+def manifest_lookup_that_always_returns_MyManifest1(name: str)->ManifestBase:
     m = MyManifest1(post_parsing_method=my_post_parsing_method)
     m.parse_manifest(manifest_data=parse_yaml_file(yaml_data=my_manifest_1_data)['part_1'])
-    return m
+    if name == m.metadata['name']:
+        return m
+    raise Exception('Wrong Name!')
+
+
+class MyManifest2(ManifestBase):
+
+    def __init__(self, logger=get_logger(), post_parsing_method: object = my_post_parsing_method, version: str='v0.2', supported_versions: tuple=('v0.2,')):
+        super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
+
+    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function)->bool:
+        return True # We are always different
+
+    def apply_manifest(self, manifest_lookup_function: object=manifest_lookup_that_always_returns_MyManifest1, variable_cache: VariableCache=VariableCache()):
+        m1 = manifest_lookup_function(name=self.spec['parent'])
+        m1.apply_manifest(variable_cache=variable_cache)
+        variable_cache.store_variable(variable=Variable(name='{}:{}'.format(self.kind, self.metadata['name']), initial_value='Another value worth storing'))
+        return  # Assume some implementation
+
+
+my_manifest_2_data=  """---
+kind: MyManifest2
+version: v0.2
+metadata:
+    name: test2
+spec:
+    val: 2
+    parent: test1
+"""
 
 
 class TestMyManifest1(unittest.TestCase):    # pragma: no cover
 
     def test_init_with_defaults(self):
-        result = manifest_lookup_that_always_returns_MyManifest1(name='dummy')
+        result = manifest_lookup_that_always_returns_MyManifest1(name='test1')
         self.assertIsNotNone(result)
         self.assertIsInstance(result, MyManifest1)
         self.assertIsInstance(result, ManifestBase)
@@ -252,6 +281,20 @@ spec:
         print(yaml_result)
         print('='*80)
         self.assertTrue('name: MyManifest1' in yaml_result)
+
+
+class TestMyManifest2(unittest.TestCase):    # pragma: no cover
+
+    def test_init_with_defaults(self):
+        m2 = MyManifest2(post_parsing_method=my_post_parsing_method)
+        m2.parse_manifest(manifest_data=parse_yaml_file(yaml_data=my_manifest_2_data)['part_1'])
+        vc = VariableCache()
+        m2.apply_manifest(manifest_lookup_function=manifest_lookup_that_always_returns_MyManifest1, variable_cache=vc)
+        self.assertEqual(len(vc.values), 2)
+        self.assertTrue('MyManifest1:test1' in vc.values)
+        self.assertTrue('MyManifest2:test2' in vc.values)
+        self.assertEqual(vc.get_value(variable_name='MyManifest1:test1'), 'Some Result Worth Saving')
+        self.assertEqual(vc.get_value(variable_name='MyManifest2:test2'), 'Another value worth storing')
 
 
 if __name__ == '__main__':
