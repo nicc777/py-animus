@@ -214,6 +214,22 @@ spec:
             m.parse_manifest(manifest_data=parse_yaml_file(yaml_data=invalid_manifest_data)['part_1'])
         self.assertTrue('Version v0.2 not supported by this implementation' in str(context.exception))
 
+    def test_init_with_version_not_present_throws_exception(self):
+        invalid_manifest_data =  """---
+kind: MyManifest1
+metadata:
+    name: test1
+spec:
+    val: 1
+    more:
+    - one
+    - two
+    - three"""
+        m = MyManifest1(post_parsing_method=my_post_parsing_method)
+        with self.assertRaises(Exception) as context:
+            m.parse_manifest(manifest_data=parse_yaml_file(yaml_data=invalid_manifest_data)['part_1'])
+        self.assertTrue('Version property not present in data.' in str(context.exception))
+
 
 if __name__ == '__main__':
     unittest.main()
