@@ -85,7 +85,7 @@ def parse_yaml_file(yaml_data: str, logger=get_logger())->dict:
             current_part += 1
             configuration['part_{}'.format(current_part)] = data
         logger.debug('configuration={}'.format(configuration))
-    except:
+    except: # pragma: no cover
         traceback.print_exc()
         raise Exception('Failed to parse configuration')
     return configuration

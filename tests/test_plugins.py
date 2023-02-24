@@ -230,6 +230,29 @@ spec:
             m.parse_manifest(manifest_data=parse_yaml_file(yaml_data=invalid_manifest_data)['part_1'])
         self.assertTrue('Version property not present in data.' in str(context.exception))
 
+    def test_init_with_no_metadata_name_uses_default_name(self):
+        manifest_data =  """---
+kind: MyManifest1
+version: v0.1
+spec:
+    val: 1
+    more:
+    - one
+    - two
+    - three"""
+        m = MyManifest1(post_parsing_method=my_post_parsing_method)
+        m.parse_manifest(manifest_data=parse_yaml_file(yaml_data=manifest_data)['part_1'])
+
+        yaml_result = str(m)
+        self.assertIsNotNone(yaml_result)
+        self.assertIsInstance(yaml_result, str)
+        self.assertTrue(len(yaml_result) > 10)
+        print('='*80)
+        print('# test_init_with_no_metadata_name_uses_default_name YAML')
+        print(yaml_result)
+        print('='*80)
+        self.assertTrue('name: MyManifest1' in yaml_result)
+
 
 if __name__ == '__main__':
     unittest.main()
