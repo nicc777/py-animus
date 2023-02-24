@@ -20,6 +20,9 @@ from py_animus.plugins import *
 
 class TestClassVariable(unittest.TestCase):    # pragma: no cover
 
+    def setUp(self):
+        print('-'*80)
+
     def test_init_with_defaults(self):
         result = Variable(name='test')
         self.assertIsNotNone(result)
