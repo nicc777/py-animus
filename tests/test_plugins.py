@@ -83,5 +83,28 @@ class TestClassVariable(unittest.TestCase):    # pragma: no cover
         self.assertTrue('Expired' in str(context.exception))
 
 
+class TestClassVariableCache(unittest.TestCase):    # pragma: no cover
+
+    def test_init_with_defaults(self):
+        result = VariableCache()
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, VariableCache)
+
+    def test_method_store_variable(self):
+        vc = VariableCache()
+        vc.store_variable(variable=Variable(name='test', initial_value=123))
+        result = vc.get_value(variable_name='test')
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, int)
+        self.assertEqual(result, 123)
+
+    def test_method_get_non_existing_variable_fail_with_exception(self):
+        vc = VariableCache()
+        vc.store_variable(variable=Variable(name='test', initial_value=123))
+        with self.assertRaises(Exception) as context:
+            vc.get_value(variable_name='i_dont_exist')
+        self.assertTrue('Variable "i_dont_exist" not found' in str(context.exception))
+
+
 if __name__ == '__main__':
     unittest.main()

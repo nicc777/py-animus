@@ -1,5 +1,7 @@
 #!/bin/sh
 
+export DEBUG=1
+
 rm -frR reports
 mkdir reports
 
