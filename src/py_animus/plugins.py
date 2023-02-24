@@ -151,10 +151,10 @@ class ManifestBase:
     def __str__(self):
         return yaml.dump(self.to_dict())
 
-    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function)->bool:
+    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function)->bool:    # pragma: no cover
         raise Exception('To be implemented by user')
 
-    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function):
+    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function):  # pragma: no cover
         raise Exception('To be implemented by user')
 
 
