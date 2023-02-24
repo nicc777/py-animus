@@ -16,6 +16,7 @@ import time
 
 
 from py_animus.plugins import *
+from py_animus import get_logger, parse_yaml_file
 
 
 class TestClassVariable(unittest.TestCase):    # pragma: no cover
@@ -107,6 +108,96 @@ class TestClassVariableCache(unittest.TestCase):    # pragma: no cover
         with self.assertRaises(Exception) as context:
             vc.get_value(variable_name='i_dont_exist')
         self.assertTrue('Variable "i_dont_exist" not found' in str(context.exception))
+
+
+def my_post_parsing_method(params):
+    print('Working with parameters: {}'.format(params))
+    return
+
+class MyManifest1(ManifestBase):
+
+    def __init__(self, logger=get_logger(), post_parsing_method: object = my_post_parsing_method):
+        super().__init__(logger, post_parsing_method)
+        self.version = 'v0.1'
+        self.supported_versions = [self.version,]
+
+    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function)->bool:
+        return True # We are always different
+
+    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function):
+        return  # Assume some implementation
+
+
+my_manifest_1_data=  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1
+spec:
+    val: 1
+    more:
+    - one
+    - two
+    - three
+"""
+
+def manifest_lookup_that_always_returns_MyManifest1(name: str):
+    m = MyManifest1(post_parsing_method=my_post_parsing_method)
+    m.parse_manifest(manifest_data=parse_yaml_file(yaml_data=my_manifest_1_data)['part_1'])
+    return m
+
+
+class TestMyManifest1(unittest.TestCase):    # pragma: no cover
+
+    def test_init_with_defaults(self):
+        result = manifest_lookup_that_always_returns_MyManifest1(name='dummy')
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, MyManifest1)
+        self.assertIsInstance(result, ManifestBase)
+
+        yaml_result = str(result)
+        self.assertIsNotNone(yaml_result)
+        self.assertIsInstance(yaml_result, str)
+        self.assertTrue(len(yaml_result) > 10)
+        print('='*80)
+        print('# test_init_with_defaults YAML')
+        print(yaml_result)
+        print('='*80)
+
+    def test_init_with_invalid_yaml_kind_throws_excaption(self):
+        invalid_manifest_data =  """---
+kind: SomeOtherUnsupportedKind
+version: v0.1
+metadata:
+    name: test1
+spec:
+    val: 1
+    more:
+    - one
+    - two
+    - three"""
+        m = MyManifest1(post_parsing_method=my_post_parsing_method)
+        m.parse_manifest(manifest_data=parse_yaml_file(yaml_data=invalid_manifest_data)['part_1'])
+        self.assertFalse(m.initialized)
+        with self.assertRaises(Exception) as context:
+            str(m)
+        self.assertTrue('Class not yet fully initialized' in str(context.exception))
+
+    def test_init_with_missing_kind_throws_excaption(self):
+        invalid_manifest_data =  """---
+version: v0.1
+metadata:
+    name: test1
+spec:
+    val: 1
+    more:
+    - one
+    - two
+    - three"""
+        m = MyManifest1(post_parsing_method=my_post_parsing_method)
+        with self.assertRaises(Exception) as context:
+            m.parse_manifest(manifest_data=parse_yaml_file(yaml_data=invalid_manifest_data)['part_1'])
+        self.assertTrue('Kind property not present in data' in str(context.exception))
 
 
 if __name__ == '__main__':

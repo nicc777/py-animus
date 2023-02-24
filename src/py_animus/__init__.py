@@ -14,6 +14,12 @@ import sys
 import os
 from datetime import datetime
 
+import yaml
+try:    # pragma: no cover
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError: # pragma: no cover
+    from yaml import Loader, Dumper
+
 
 def get_utc_timestamp(with_decimal: bool=False): # pragma: no cover
     epoch = datetime(1970,1,1,0,0,0)
@@ -69,4 +75,18 @@ def get_logger(
 
     logger.info('Logging init done')
     return logger
+
+
+def parse_yaml_file(yaml_data: str, logger=get_logger())->dict:
+    configuration = dict()
+    current_part = 0
+    try:
+        for data in yaml.load_all(yaml_data, Loader=Loader):
+            current_part += 1
+            configuration['part_{}'.format(current_part)] = data
+        logger.debug('configuration={}'.format(configuration))
+    except:
+        traceback.print_exc()
+        raise Exception('Failed to parse configuration')
+    return configuration
 

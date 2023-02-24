@@ -14,7 +14,7 @@ import yaml
 from py_animus import get_logger, get_utc_timestamp, is_debug_set_in_environment
 
 
-def dummy_manifest_lookup_function():
+def dummy_manifest_lookup_function(name: str):
     return
 
 
@@ -93,7 +93,7 @@ class ManifestBase:
         self.post_parsing_method = post_parsing_method
         self.checksum = None
 
-    def log(self, message: str, level: str='info'):
+    def log(self, message: str, level: str='info'): # pragma: no cover
         if level.lower().startswith('d'):
             if self.debug:
                 self.logger.debug('[{}] {}'.format(self.kind, message))
@@ -102,7 +102,7 @@ class ManifestBase:
         elif level.lower().startswith('w'):
             self.logger.warning('[{}] {}'.format(self.kind, message))
         elif level.lower().startswith('e'):
-            self.logger.errors('[{}] {}'.format(self.kind, message))
+            self.logger.error('[{}] {}'.format(self.kind, message))
 
     def parse_manifest(self, manifest_data: dict):
         converted_data = dict((k.lower(),v) for k,v in manifest_data.items()) # Convert keys to lowercase
@@ -151,7 +151,7 @@ class ManifestBase:
     def __str__(self):
         return yaml.dump(self.to_dict())
 
-    def compare_implemented_manifest_with_current(self, manifest_lookup_function: object=dummy_manifest_lookup_function):
+    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function)->bool:
         raise Exception('To be implemented by user')
 
     def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function):
