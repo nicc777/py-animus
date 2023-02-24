@@ -81,12 +81,12 @@ class VariableCache:
 
 class ManifestBase:
 
-    def __init__(self, logger=get_logger(), post_parsing_method: object=None):
+    def __init__(self, logger=get_logger(), post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1,')):
         self.spec = None
         self.kind = self.__class__.__name__
         self.metadata = dict()
-        self.version = 'v1'
-        self.supported_versions = [self.version, ]
+        self.version = version
+        self.supported_versions = supported_versions
         self.debug = is_debug_set_in_environment()
         self.logger = logger
         self.initialized = False

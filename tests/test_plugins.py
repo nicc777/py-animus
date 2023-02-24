@@ -116,10 +116,8 @@ def my_post_parsing_method(params):
 
 class MyManifest1(ManifestBase):
 
-    def __init__(self, logger=get_logger(), post_parsing_method: object = my_post_parsing_method):
-        super().__init__(logger, post_parsing_method)
-        self.version = 'v0.1'
-        self.supported_versions = [self.version,]
+    def __init__(self, logger=get_logger(), post_parsing_method: object = my_post_parsing_method, version: str='v0.1', supported_versions: tuple=('v0.1,')):
+        super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
 
     def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function)->bool:
         return True # We are always different
@@ -164,7 +162,7 @@ class TestMyManifest1(unittest.TestCase):    # pragma: no cover
         print(yaml_result)
         print('='*80)
 
-    def test_init_with_invalid_yaml_kind_throws_excaption(self):
+    def test_init_with_invalid_yaml_kind_throws_exception(self):
         invalid_manifest_data =  """---
 kind: SomeOtherUnsupportedKind
 version: v0.1
@@ -183,7 +181,7 @@ spec:
             str(m)
         self.assertTrue('Class not yet fully initialized' in str(context.exception))
 
-    def test_init_with_missing_kind_throws_excaption(self):
+    def test_init_with_missing_kind_throws_exception(self):
         invalid_manifest_data =  """---
 version: v0.1
 metadata:
@@ -198,6 +196,23 @@ spec:
         with self.assertRaises(Exception) as context:
             m.parse_manifest(manifest_data=parse_yaml_file(yaml_data=invalid_manifest_data)['part_1'])
         self.assertTrue('Kind property not present in data' in str(context.exception))
+
+    def test_init_with_invalid_version_throws_exception(self):
+        invalid_manifest_data =  """---
+kind: MyManifest1
+version: v0.2
+metadata:
+    name: test1
+spec:
+    val: 1
+    more:
+    - one
+    - two
+    - three"""
+        m = MyManifest1(post_parsing_method=my_post_parsing_method)
+        with self.assertRaises(Exception) as context:
+            m.parse_manifest(manifest_data=parse_yaml_file(yaml_data=invalid_manifest_data)['part_1'])
+        self.assertTrue('Version v0.2 not supported by this implementation' in str(context.exception))
 
 
 if __name__ == '__main__':
