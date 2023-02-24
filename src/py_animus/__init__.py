@@ -18,6 +18,7 @@ def is_debug_set_in_environment()->bool:
     try:
         env_debug = os.getenv('DEBUG', '0').lower()
         if env_debug in ('1','true','t','enabled'):
+            print('** DEBUG is enabled')
             return True
     except:
         pass
