@@ -18,7 +18,6 @@ def is_debug_set_in_environment()->bool:
     try:
         env_debug = os.getenv('DEBUG', '0').lower()
         if env_debug in ('1','true','t','enabled'):
-            print('** DEBUG is enabled')
             return True
     except:
         pass
@@ -47,6 +46,7 @@ def get_logger(
         level = logging.DEBUG
 
     logger = logging.getLogger()
+    logger.setLevel(level=level)
     logger.handlers = []
     formatter = logging.Formatter(log_format)
 
@@ -57,5 +57,6 @@ def get_logger(
     if h is not None:
         logger.addHandler(h)
 
+    logger.info('Logging init done')
     return logger
 
