@@ -1,5 +1,7 @@
 # py-animus
 
+> `animus` as in a sense of purpose and reason
+
 A python based plugable and extensible manifest processing system
 
 The general idea is to create an extensible system that would be responsible for processing YAML Manifest files (similar to Kubernetes) in a consistent way.
