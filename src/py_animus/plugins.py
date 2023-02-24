@@ -26,7 +26,7 @@ class Variable:
     def _is_expired(self):
         if self.ttl < 0:
             return False
-        elapsed_time = get_utc_timestamp(with_decimal=False) - self.ttl
+        elapsed_time = get_utc_timestamp(with_decimal=False) - self.init_timestamp
         if elapsed_time > self.ttl:
             return True
         return False
