@@ -35,7 +35,7 @@ class Variable:
             self._log_debug(message='NOT EXPIRED - TTL less than zero - expiry ignored')
             return False
         elapsed_time = get_utc_timestamp(with_decimal=False) - self.init_timestamp
-        self._log_debug(message='elapsed_time={}'.format(elapsed_time))
+        self._log_debug(message='elapsed_time={}   ttl={}'.format(elapsed_time, self.ttl))
         if elapsed_time > self.ttl:
             self._log_debug(message='EXPIRED')
             return True
