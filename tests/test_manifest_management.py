@@ -333,6 +333,12 @@ class TestManifestManager(unittest.TestCase):    # pragma: no cover
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
         self.assertEqual(len(mm.manifest_class_register), 2)
 
+        mm.parse_manifest(manifest_data=parse_yaml_file(yaml_data=my_manifest_1_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_yaml_file(yaml_data=my_manifest_2_data)['part_1'])
+        self.assertEqual(len(mm.manifest_instances), 2)
+        self.assertTrue('test1' in mm.manifest_instances)
+        self.assertTrue('test2' in mm.manifest_instances)
+
 
 if __name__ == '__main__':
     unittest.main()

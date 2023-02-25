@@ -180,6 +180,7 @@ class ManifestManager:
 
     def __init__(self, variable_cache: VariableCache, logger=get_logger()):
         self.manifest_class_register = dict()
+        self.manifest_instances = dict()
         self.variable_cache = variable_cache
         self.logger = logger
 
@@ -195,7 +196,7 @@ class ManifestManager:
         self.logger.info('Registered classes: {}'.format(list(self.manifest_class_register.keys())))
 
     def apply_manifest(self, kind: str, execution_reference: str, parameters:dict=dict(), store_result_in_values_api: bool=True):
-        if kind.lower() not in self.manifest_class_register:
+        if kind not in self.manifest_class_register:
             raise Exception('No plugin handler for "{}" kind found'.format(kind))
         result = self.manifest_class_register[kind.lower()].exec(values_api=copy.deepcopy(self.variable_cache), execution_reference=execution_reference, parameters=parameters, function_get_plugin_by_kind=self.get_manifest_class_by_kind)
         if store_result_in_values_api:
@@ -206,3 +207,11 @@ class ManifestManager:
         if kind.lower() in self.manifest_class_register:
             return self.manifest_class_register[kind.lower()]
         raise Exception('Manifest named "{}" not registered'.format(kind))
+    
+    def parse_manifest(self, manifest_data: dict):
+        if 'kind' in manifest_data:
+            if manifest_data['kind'] in self.manifest_class_register:
+                class_instance_copy = copy.deepcopy(self.manifest_class_register[manifest_data['kind']])
+                class_instance_copy.parse_manifest(manifest_data=manifest_data)
+                self.manifest_instances[class_instance_copy.metadata['name']] = class_instance_copy
+
