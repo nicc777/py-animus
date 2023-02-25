@@ -205,14 +205,12 @@ class ManifestManager:
         manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
 
     def get_manifest_class_by_kind(self, kind: str):
-        if kind.lower() in self.manifest_class_register:
-            return self.manifest_class_register[kind.lower()]
+        if kind in self.manifest_class_register:
+            return self.manifest_class_register[kind]
         raise Exception('Manifest named "{}" not registered'.format(kind))
     
     def parse_manifest(self, manifest_data: dict):
-        if 'kind' in manifest_data:
-            if manifest_data['kind'] in self.manifest_class_register:
-                class_instance_copy = copy.deepcopy(self.manifest_class_register[manifest_data['kind']])
-                class_instance_copy.parse_manifest(manifest_data=manifest_data)
-                self.manifest_instances[class_instance_copy.metadata['name']] = class_instance_copy
+        class_instance_copy = copy.deepcopy(self.get_manifest_class_by_kind(kind=manifest_data['kind']))
+        class_instance_copy.parse_manifest(manifest_data=manifest_data)
+        self.manifest_instances[class_instance_copy.metadata['name']] = class_instance_copy
 
