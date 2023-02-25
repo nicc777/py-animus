@@ -195,13 +195,14 @@ class ManifestManager:
              self.register_manifest_class(manifest=returned_class(logger=self.logger))
         self.logger.info('Registered classes: {}'.format(list(self.manifest_class_register.keys())))
 
-    def apply_manifest(self, kind: str, execution_reference: str, parameters:dict=dict(), store_result_in_values_api: bool=True):
-        if kind not in self.manifest_class_register:
-            raise Exception('No plugin handler for "{}" kind found'.format(kind))
-        result = self.manifest_class_register[kind.lower()].exec(values_api=copy.deepcopy(self.variable_cache), execution_reference=execution_reference, parameters=parameters, function_get_plugin_by_kind=self.get_manifest_class_by_kind)
-        if store_result_in_values_api:
-            self.variable_cache.set_value(resolver_name='{}'.format(execution_reference), value=result.result)
-        return result
+    def get_manifest_instance_by_name(self, name: str):
+        if name not in self.manifest_instances:
+            raise Exception('No plugin handler for "{}" kind found'.format(name))
+        return self.manifest_instances[name]
+
+    def apply_manifest(self, name: str):
+        manifest_instance = self.get_manifest_instance_by_name(name=name)
+        manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
 
     def get_manifest_class_by_kind(self, kind: str):
         if kind.lower() in self.manifest_class_register:

@@ -338,6 +338,14 @@ class TestManifestManager(unittest.TestCase):    # pragma: no cover
         self.assertEqual(len(mm.manifest_instances), 2)
         self.assertTrue('test1' in mm.manifest_instances)
         self.assertTrue('test2' in mm.manifest_instances)
+        mm.apply_manifest(name='test2')
+        self.assertEqual(len(vc.values), 2)
+        self.assertTrue('MyManifest1:test1' in vc.values)
+        self.assertTrue('MyManifest2:test2' in vc.values)
+        self.assertEqual(vc.values['MyManifest1:test1'].value, 'Some Result Worth Saving')
+        self.assertEqual(vc.values['MyManifest2:test2'].value, 'Another value worth storing')
+        for k,v in vc.values.items():
+            print('{}={}'.format(k,v.value))
 
 
 if __name__ == '__main__':
