@@ -7,7 +7,7 @@ mkdir reports
 
 
 echo ; echo ; echo "########################################################################################################################"
-coverage run -a tests/test_plugins.py
+coverage run -a tests/test_manifest_management.py
 
 echo ; echo ; echo "########################################################################################################################"
 coverage report --omit="tests/test*" -m

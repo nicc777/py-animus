@@ -15,7 +15,7 @@ import unittest
 import time
 
 
-from py_animus.plugins import *
+from py_animus.manifest_management import *
 from py_animus import get_logger, parse_yaml_file
 
 
