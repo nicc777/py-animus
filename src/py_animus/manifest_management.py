@@ -179,32 +179,30 @@ class ManifestBase:
 class ManifestManager:
 
     def __init__(self, variable_cache: VariableCache, logger=get_logger()):
-        self.manifest_register = dict()
+        self.manifest_class_register = dict()
         self.variable_cache = variable_cache
         self.logger = logger
 
-    def register_plugin(self, manifest: ManifestBase):
+    def register_manifest_class(self, manifest: ManifestBase):
         if isinstance(manifest, ManifestBase) is False:
             raise Exception('Incorrect Base Class')
-        if manifest.initialized is False:
-            raise Exception('Manifest has not yet been initialized.')
-        self.manifest_register[manifest.metadata['name']] = manifest
-        self.logger.info('Registered manifest "{}" named "{}" of version {}'.format(manifest.__class__.__name__, manifest.metadata['name'], manifest.version))
+        self.manifest_class_register[manifest.kind] = manifest
+        self.logger.info('Registered manifest "{}" of version {}'.format(manifest.__class__.__name__, manifest.version))
 
-    def load_manifest_from_file(self, plugin_file_path: str):
+    def load_manifest_class_definition_from_file(self, plugin_file_path: str):
         for returned_class, kind in get_modules_in_package(target_dir=plugin_file_path, logger=self.logger):
-             self.register_plugin(manifest=returned_class(kind=kind, logger=self.logger))
-        self.logger.info('Registered classes: {}'.format(list(self.manifest_register.keys())))
+             self.register_manifest_class(manifest=returned_class(logger=self.logger))
+        self.logger.info('Registered classes: {}'.format(list(self.manifest_class_register.keys())))
 
     def apply_manifest(self, kind: str, execution_reference: str, parameters:dict=dict(), store_result_in_values_api: bool=True):
-        if kind.lower() not in self.manifest_register:
+        if kind.lower() not in self.manifest_class_register:
             raise Exception('No plugin handler for "{}" kind found'.format(kind))
-        result = self.manifest_register[kind.lower()].exec(values_api=copy.deepcopy(self.variable_cache), execution_reference=execution_reference, parameters=parameters, function_get_plugin_by_kind=self.get_manifest_class_by_name)
+        result = self.manifest_class_register[kind.lower()].exec(values_api=copy.deepcopy(self.variable_cache), execution_reference=execution_reference, parameters=parameters, function_get_plugin_by_kind=self.get_manifest_class_by_kind)
         if store_result_in_values_api:
             self.variable_cache.set_value(resolver_name='{}'.format(execution_reference), value=result.result)
         return result
 
-    def get_manifest_class_by_name(self, name: str):
-        if name.lower() in self.manifest_register:
-            return self.manifest_register[name.lower()]
-        raise Exception('Manifest named "{}" not registered'.format(name))
+    def get_manifest_class_by_kind(self, kind: str):
+        if kind.lower() in self.manifest_class_register:
+            return self.manifest_class_register[kind.lower()]
+        raise Exception('Manifest named "{}" not registered'.format(kind))

@@ -8,6 +8,7 @@
 
 import sys
 import os
+import shutil
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src")
 print('sys.path={}'.format(sys.path))
 
@@ -18,6 +19,8 @@ import time
 from py_animus.manifest_management import *
 from py_animus import get_logger, parse_yaml_file
 
+running_path = os.getcwd()
+print('Current Working Path: {}'.format(running_path))
 
 class TestClassVariable(unittest.TestCase):    # pragma: no cover
 
@@ -110,7 +113,7 @@ class TestClassVariableCache(unittest.TestCase):    # pragma: no cover
         self.assertTrue('Variable "i_dont_exist" not found' in str(context.exception))
 
 
-def my_post_parsing_method(params):
+def my_post_parsing_method(**params):
     print('Working with parameters: {}'.format(params))
     return
 
@@ -295,6 +298,40 @@ class TestMyManifest2(unittest.TestCase):    # pragma: no cover
         self.assertTrue('MyManifest2:test2' in vc.values)
         self.assertEqual(vc.get_value(variable_name='MyManifest1:test1'), 'Some Result Worth Saving')
         self.assertEqual(vc.get_value(variable_name='MyManifest2:test2'), 'Another value worth storing')
+
+
+class TestManifestManager(unittest.TestCase):    # pragma: no cover
+
+    def setUp(self):
+        print('*'*80)
+        if os.path.exists('/tmp/test_manifest_classes'):
+            if os.path.isdir(s='/tmp/test_manifest_classes'):
+                shutil.rmtree(path='/tmp/test_manifest_classes', ignore_errors=True)
+        os.mkdir(path='/tmp/test_manifest_classes')
+        os.mkdir(path='/tmp/test_manifest_classes/test1')
+        os.mkdir(path='/tmp/test_manifest_classes/test2')
+        with open('{}/tests/manifest_classes/test1.py'.format(running_path), 'r') as f1r:
+            with open('/tmp/test_manifest_classes/test1/test1.py', 'w') as f1w:
+                f1w.write(f1r.read())
+                print('Copied "{}" to "/tmp/test_manifest_classes/test1/test1.py"'.format('{}/tests/manifest_classes/test1.py'.format(running_path)))
+        with open('{}/tests/manifest_classes/test2.py'.format(running_path), 'r') as f2r:
+            with open('/tmp/test_manifest_classes/test2/test2.py', 'w') as f2w:
+                f2w.write(f2r.read())
+                print('Copied "{}" to "/tmp/test_manifest_classes/test1/test1.py"'.format('{}/tests/manifest_classes/test2.py'.format(running_path)))
+        print('PREP COMPLETED')
+        print('~'*80)
+
+    def tearDown(self):
+        if os.path.exists('/tmp/test_manifest_classes'):
+            if os.path.isdir(s='/tmp/test_manifest_classes'):
+                shutil.rmtree(path='/tmp/test_manifest_classes', ignore_errors=True)
+
+    def test_init_with_test_files(self):
+        vc = VariableCache()
+        mm = ManifestManager(variable_cache=vc)
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
+        self.assertEqual(len(mm.manifest_class_register), 2)
 
 
 if __name__ == '__main__':
