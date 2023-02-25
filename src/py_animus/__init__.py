@@ -30,7 +30,7 @@ def get_utc_timestamp(with_decimal: bool=False): # pragma: no cover
     return int(timestamp)
 
 
-def is_debug_set_in_environment()->bool:
+def is_debug_set_in_environment()->bool:    # pragma: no cover
     try:
         env_debug = os.getenv('DEBUG', '0').lower()
         if env_debug in ('1','true','t','enabled'):
@@ -49,9 +49,9 @@ def get_logging_stream_handler(
         h.setLevel(level)    
         h.setFormatter(formatter)
         return h
-    except:
+    except: # pragma: no cover
         traceback.print_exc()
-    return None
+    return None # pragma: no cover
 
 
 def get_logger(

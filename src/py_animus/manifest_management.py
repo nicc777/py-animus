@@ -22,7 +22,7 @@ def get_modules_in_package(target_dir: str, logger=get_logger()):
     for file in files:
         if file not in ['__init__.py', '__pycache__']:
             if file[-3:] != '.py':
-                continue
+                continue    # pragma: no cover
             file_name = file[:-3]
             module_name = file_name
             for name, cls in inspect.getmembers(importlib.import_module(module_name), inspect.isclass):
@@ -32,7 +32,7 @@ def get_modules_in_package(target_dir: str, logger=get_logger()):
                     yield (clazz, name)
 
 
-def dummy_manifest_lookup_function(name: str):
+def dummy_manifest_lookup_function(name: str):  # pragma: no cover
     return
 
 
@@ -197,7 +197,7 @@ class ManifestManager:
 
     def get_manifest_instance_by_name(self, name: str):
         if name not in self.manifest_instances:
-            raise Exception('No plugin handler for "{}" kind found'.format(name))
+            raise Exception('No manifest instance for "{}" found'.format(name))
         return self.manifest_instances[name]
 
     def apply_manifest(self, name: str):
@@ -207,7 +207,7 @@ class ManifestManager:
     def get_manifest_class_by_kind(self, kind: str):
         if kind in self.manifest_class_register:
             return self.manifest_class_register[kind]
-        raise Exception('Manifest named "{}" not registered'.format(kind))
+        raise Exception('Manifest kind "{}" not registered'.format(kind))
     
     def parse_manifest(self, manifest_data: dict):
         class_instance_copy = copy.deepcopy(self.get_manifest_class_by_kind(kind=manifest_data['kind']))
