@@ -347,6 +347,15 @@ class TestManifestManager(unittest.TestCase):    # pragma: no cover
         for k,v in vc.values.items():
             print('{}={}'.format(k,v.value))
 
+        # Test exceptions
+        with self.assertRaises(Exception) as context:
+            mm.get_manifest_class_by_kind(kind='NotRegisteredKind')
+        self.assertTrue('Manifest kind "NotRegisteredKind" not registered' in str(context.exception))
+
+        with self.assertRaises(Exception) as context:
+            mm.get_manifest_instance_by_name(name='does-not-exist')
+        self.assertTrue('No manifest instance for "does-not-exist" found' in str(context.exception))
+
 
 if __name__ == '__main__':
     unittest.main()
