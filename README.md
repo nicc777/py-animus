@@ -24,3 +24,13 @@ Overall the system needs to be able to derive the implemented state versus the d
 If this sounds very familiar, then yes - it is basically how Kubernetes work. The difference is that this library is not Kubernetes specific and aims to be more generalized methods that could be employed by potentially any system that must be continuously monitored and updated to fit a desired state.
 
 [Documentation](doc/README.md)
+
+# Build
+
+## Docker Version
+
+Run:
+
+```shell
+docker build --no-cache -t animus .
+```
