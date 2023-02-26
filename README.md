@@ -25,12 +25,25 @@ If this sounds very familiar, then yes - it is basically how Kubernetes work. Th
 
 [Documentation](doc/README.md)
 
-# Build
+# Use
 
-## Docker Version
+## Quick start using pre-built Docker Image
 
-Run:
+Pull the image:
 
 ```shell
-docker build --no-cache -t animus .
+docker pull ghcr.io/nicc777/py-animus:release
 ```
+
+Use (as per the [hello world example](doc/README.md)):
+
+```shell
+docker run --rm -e "DEBUG=1" \
+  -v $PWD/examples/hello-world/src:/tmp/src \
+  -v $PWD/examples/hello-world/manifest:/tmp/data \
+  -v /tmp/results:/tmp/hello-world-result \
+  ghcr.io/nicc777/py-animus:release -m /tmp/data/hello-v1.yaml -s /tmp/src
+```
+
+> **Warning**
+> A Python package is not yet available. I am working on that next

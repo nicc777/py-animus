@@ -50,7 +50,7 @@ docker run --rm -e "DEBUG=1" \
   -v $PWD/examples/hello-world/src:/tmp/src \
   -v $PWD/examples/hello-world/manifest:/tmp/data \
   -v /tmp/results:/tmp/hello-world-result \
-  animus -m /tmp/data/hello-v1.yaml -s /tmp/src
+  ghcr.io/nicc777/py-animus:release -m /tmp/data/hello-v1.yaml -s /tmp/src
 ```
 
 You can run the exact same docker command a couple of times.
