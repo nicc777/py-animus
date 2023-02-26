@@ -1,4 +1,4 @@
-# py-animus
+# py_animus
 
 > `animus` as in a sense of purpose and reason
 
@@ -22,3 +22,5 @@ Processing must ensure that the desired end-state of the manifest can be impleme
 Overall the system needs to be able to derive the implemented state versus the desired state in order to calculate and implement changes required to reach a desired state as defined in the manifest.
 
 If this sounds very familiar, then yes - it is basically how Kubernetes work. The difference is that this library is not Kubernetes specific and aims to be more generalized methods that could be employed by potentially any system that must be continuously monitored and updated to fit a desired state.
+
+[Documentation](doc/README.md)
