@@ -68,9 +68,12 @@ def main(logger=get_logger(), cli_args: list=sys.argv[1:]):
             except:
                 logger.error('Failed to read file "{}" due to exception'.format(manifest_file))
                 logger.error(traceback.format_exc())
-        
+    for name in tuple(mm.manifest_instances.keys()):
+        logger.debug('Applying manifest named "{}"'.format(name))
+        mm.apply_manifest(name=name)
+    for name in tuple(vc.values.keys()):
+        logger.info('RESULT: {}={}'.format(name, vc.get_value(variable_name=name)))
 
-    
 
 if __name__ == '__main__':
     main()
