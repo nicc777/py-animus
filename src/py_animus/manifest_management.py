@@ -114,6 +114,12 @@ class Variable:
           value_if_expired: What to return if the value is considered expired (Optional, default=None as by default an Exception will be raised)
           raise_exception_on_expired: Boolean to indicate an Exception must be thrown if the value is considered expired (optional, default=True)
           reset_timer_on_value_read: Boolean to reset timers for expiry is the value is read (Optional, default=False)
+
+        Returns:
+            The value
+
+        Raises:
+            Exception: When the value has expired
         """
         if self._is_expired() is True:
             if raise_exception_on_expired is True:
@@ -128,16 +134,52 @@ class Variable:
 
 
 class VariableCache:
+    """A VariableCache holds a collection of Variable instances
+
+    Attributes:
+        values: Dictionary of Variable instance, index by each Variable name
+        logger: The logging.Logger class used for logging.
+    """
 
     def __init__(self, logger=get_logger()):
+        """Initializes a new instance of a VariableCache hold a collection of Variable instances.
+
+        Args:
+          logger: An instance of logging.Logger used for logging (Optional, default is teh result from internal call to get_logger())
+        """
         self.values = dict()
         self.logger = logger
 
     def store_variable(self, variable: Variable, overwrite_existing: bool=False):
+        """Stores an instance of Variable
+
+        If the Variable already exist (by name), and `overwrite_existing` is False, effectively nothing is done.
+
+        Args:
+          variable: An instance of Variable
+          overwrite_existing: Boolean to indicate if a any pre-existing Variable (with the same name) must be over written with this value. (Optional, Default=False)
+        """
         if variable.name not in self.values or overwrite_existing is True:
             self.values[variable.name] = variable
 
     def get_value(self, variable_name: str, value_if_expired=None, raise_exception_on_expired: bool=True, reset_timer_on_value_read: bool=False):
+        """Get the value of a stored Variable.
+
+        To get more granular logging, enable debug by setting an environment variable DEBUG to "1"
+
+        Args:
+          variable_name: String with the name of a previously stored Variable
+          value_if_expired: What to return if the value is considered expired (Optional, default=None as by default an Exception will be raised)
+          raise_exception_on_expired: Boolean to indicate an Exception must be thrown if the value is considered expired (optional, default=True)
+          reset_timer_on_value_read: Boolean to reset timers for expiry is the value is read (Optional, default=False)
+
+        Returns:
+            A copy of the value stored in Variable with the given name
+
+        Raises:
+            Exception: When the value has expired (From Variable) (pass through)
+            Exception: When the Variable is not found
+        """
         if variable_name not in self.values:
             raise Exception('Variable "{}" not found'.format(variable_name))
         return copy.deepcopy(self.values[variable_name].get_value(value_if_expired=value_if_expired, raise_exception_on_expired=raise_exception_on_expired, reset_timer_on_value_read=reset_timer_on_value_read))
