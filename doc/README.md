@@ -11,7 +11,7 @@ More people are getting familiar with [Kubernetes style Manifest files](https://
 
 This solution allows users to create application logic that can implement the state as specified by a manifest file.
 
-> **Info**
+> **Note**
 > Keep in mind the manifest always contains the desired state. 
 
 Take an example manifest like the following:
