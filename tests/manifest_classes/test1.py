@@ -1,5 +1,5 @@
 from py_animus.manifest_management import *
-from py_animus import get_logger, parse_yaml_file
+from py_animus import get_logger, parse_raw_yaml_data
 
 
 def my_post_parsing_method(**params):

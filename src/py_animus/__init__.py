@@ -77,7 +77,7 @@ def get_logger(
     return logger
 
 
-def parse_yaml_file(yaml_data: str, logger=get_logger())->dict:
+def parse_raw_yaml_data(yaml_data: str, logger=get_logger())->dict:
     configuration = dict()
     current_part = 0
     try:

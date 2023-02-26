@@ -17,7 +17,7 @@ import time
 
 
 from py_animus.manifest_management import *
-from py_animus import get_logger, parse_yaml_file
+from py_animus import get_logger, parse_raw_yaml_data
 
 running_path = os.getcwd()
 print('Current Working Path: {}'.format(running_path))
@@ -145,7 +145,7 @@ spec:
 
 def manifest_lookup_that_always_returns_MyManifest1(name: str)->ManifestBase:
     m = MyManifest1(post_parsing_method=my_post_parsing_method)
-    m.parse_manifest(manifest_data=parse_yaml_file(yaml_data=my_manifest_1_data)['part_1'])
+    m.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=my_manifest_1_data)['part_1'])
     if name == m.metadata['name']:
         return m
     raise Exception('Wrong Name!')
@@ -207,7 +207,7 @@ spec:
     - two
     - three"""
         m = MyManifest1(post_parsing_method=my_post_parsing_method)
-        m.parse_manifest(manifest_data=parse_yaml_file(yaml_data=invalid_manifest_data)['part_1'])
+        m.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=invalid_manifest_data)['part_1'])
         self.assertFalse(m.initialized)
         with self.assertRaises(Exception) as context:
             str(m)
@@ -226,7 +226,7 @@ spec:
     - three"""
         m = MyManifest1(post_parsing_method=my_post_parsing_method)
         with self.assertRaises(Exception) as context:
-            m.parse_manifest(manifest_data=parse_yaml_file(yaml_data=invalid_manifest_data)['part_1'])
+            m.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=invalid_manifest_data)['part_1'])
         self.assertTrue('Kind property not present in data' in str(context.exception))
 
     def test_init_with_invalid_version_throws_exception(self):
@@ -243,7 +243,7 @@ spec:
     - three"""
         m = MyManifest1(post_parsing_method=my_post_parsing_method)
         with self.assertRaises(Exception) as context:
-            m.parse_manifest(manifest_data=parse_yaml_file(yaml_data=invalid_manifest_data)['part_1'])
+            m.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=invalid_manifest_data)['part_1'])
         self.assertTrue('Version v0.2 not supported by this implementation' in str(context.exception))
 
     def test_init_with_version_not_present_throws_exception(self):
@@ -259,7 +259,7 @@ spec:
     - three"""
         m = MyManifest1(post_parsing_method=my_post_parsing_method)
         with self.assertRaises(Exception) as context:
-            m.parse_manifest(manifest_data=parse_yaml_file(yaml_data=invalid_manifest_data)['part_1'])
+            m.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=invalid_manifest_data)['part_1'])
         self.assertTrue('Version property not present in data.' in str(context.exception))
 
     def test_init_with_no_metadata_name_uses_default_name(self):
@@ -273,7 +273,7 @@ spec:
     - two
     - three"""
         m = MyManifest1(post_parsing_method=my_post_parsing_method)
-        m.parse_manifest(manifest_data=parse_yaml_file(yaml_data=manifest_data)['part_1'])
+        m.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_data)['part_1'])
 
         yaml_result = str(m)
         self.assertIsNotNone(yaml_result)
@@ -290,7 +290,7 @@ class TestMyManifest2(unittest.TestCase):    # pragma: no cover
 
     def test_init_with_defaults(self):
         m2 = MyManifest2(post_parsing_method=my_post_parsing_method)
-        m2.parse_manifest(manifest_data=parse_yaml_file(yaml_data=my_manifest_2_data)['part_1'])
+        m2.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=my_manifest_2_data)['part_1'])
         vc = VariableCache()
         m2.apply_manifest(manifest_lookup_function=manifest_lookup_that_always_returns_MyManifest1, variable_cache=vc)
         self.assertEqual(len(vc.values), 2)
@@ -333,8 +333,8 @@ class TestManifestManager(unittest.TestCase):    # pragma: no cover
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
         self.assertEqual(len(mm.manifest_class_register), 2)
 
-        mm.parse_manifest(manifest_data=parse_yaml_file(yaml_data=my_manifest_1_data)['part_1'])
-        mm.parse_manifest(manifest_data=parse_yaml_file(yaml_data=my_manifest_2_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=my_manifest_1_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=my_manifest_2_data)['part_1'])
         self.assertEqual(len(mm.manifest_instances), 2)
         self.assertTrue('test1' in mm.manifest_instances)
         self.assertTrue('test2' in mm.manifest_instances)
