@@ -25,6 +25,10 @@ If this sounds very familiar, then yes - it is basically how Kubernetes work. Th
 
 [Documentation](doc/README.md)
 
+> **Warning**
+> I have labeled this software `BETA`, but keep in mind testing in the real world has been limited and there may be a number of enhancements or changes forthcoming. 
+
+
 # Use
 
 ## Quick start using pre-built Docker Image
@@ -45,5 +49,3 @@ docker run --rm -e "DEBUG=1" \
   ghcr.io/nicc777/py-animus:release -m /tmp/data/hello-v1.yaml -s /tmp/src
 ```
 
-> **Warning**
-> A Python package is not yet available. I am working on that next
