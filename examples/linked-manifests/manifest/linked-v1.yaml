@@ -1,0 +1,22 @@
+---
+kind: WebsiteUpTest
+version: v1
+metadata:
+  name: is-google-up
+spec:
+  url: https://raw.githubusercontent.com/nicc777/py-animus/main/README.md
+  acceptableResponseCodes:
+  - 200
+  - 201
+  - 301
+  - 302
+---
+kind: DownloadWebPageContent
+version: v1
+metadata:
+  name: google-python
+spec:
+  url: https://raw.githubusercontent.com/nicc777/py-animus/main/README.md
+  outputFile: /tmp/google-python-result/output.txt
+  livenessFunction: is-google-up
+  
