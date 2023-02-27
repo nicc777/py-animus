@@ -31,7 +31,20 @@ If this sounds very familiar, then yes - it is basically how Kubernetes work. Th
 
 # Use
 
-## Quick start using pre-built Docker Image
+## Installation
+
+This project is also hosted on https://pypi.org/project/py-animus/
+
+Installation:
+
+```shell
+pip install py-animus
+```
+
+> **Note**
+> It is always a good idea to use [Python Virtual environments](https://docs.python.org/3/tutorial/venv.html) and I encourage it as well.
+
+## Using pre-built Docker Image
 
 Pull the image:
 
