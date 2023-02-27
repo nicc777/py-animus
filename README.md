@@ -23,7 +23,7 @@ Overall the system needs to be able to derive the implemented state versus the d
 
 If this sounds very familiar, then yes - it is basically how Kubernetes work. The difference is that this library is not Kubernetes specific and aims to be more generalized methods that could be employed by potentially any system that must be continuously monitored and updated to fit a desired state.
 
-[Documentation](doc/README.md)
+[Documentation](https://github.com/nicc777/py-animus/tree/main/doc)
 
 > **Warning**
 > I have labeled this software `BETA`, but keep in mind testing in the real world has been limited and there may be a number of enhancements or changes forthcoming. 
@@ -39,7 +39,7 @@ Pull the image:
 docker pull ghcr.io/nicc777/py-animus:release
 ```
 
-Use (as per the [hello world example](doc/README.md)):
+Use (as per the [hello world example](https://github.com/nicc777/py-animus/tree/main/doc)):
 
 ```shell
 docker run --rm -e "DEBUG=1" \
