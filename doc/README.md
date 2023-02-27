@@ -1,9 +1,9 @@
-# PyAnimus Documentation
+# py_animus Documentation
 
 The documentation focus on two parts:
 
 * The implementation of classes that extend `ManifestBase`
-* How to work with the `ManifestManager` and roll your own solution
+* How to work with the `ManifestManager` and roll your own solution (TODO)
 
 # Basic Concepts
 
@@ -44,8 +44,6 @@ mkdir /tmp/results
 
 rm -frR /tmp/results/*
 
-export DEBUG=1
-
 docker run --rm -e "DEBUG=1" \
   -v $PWD/examples/hello-world/src:/tmp/src \
   -v $PWD/examples/hello-world/manifest:/tmp/data \
@@ -75,7 +73,7 @@ cat /tmp/results/output.txt
 
 If you edit either the file in `/tmp/results/output.txt` or the manifest, any next run will update the file contents again to align to what is defined in the manifest. 
 
-> **Warning**
+> **Note**
 > Keep in mind the manifest always contains the desired state. Therefore, in this example, the implementation will ensure that the specified file always contain the text as specified in the manifest.
 
 
