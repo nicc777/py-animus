@@ -65,7 +65,7 @@ class DownloadWebPageContent(ManifestBase):
             self.log(message='Retrieving {}'.format(self.spec['url']), level='info')
             try:
                 content = ''
-                self.log(message='Reding content from: {}'.format(self.spec['url']), level='info')
+                self.log(message='Reading content from: {}'.format(self.spec['url']), level='info')
                 with urlopen(self.spec['url']) as webpage:
                     content = webpage.read().decode()
                 with open(self.spec['outputFile'], 'w') as of:
