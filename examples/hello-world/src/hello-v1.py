@@ -33,4 +33,14 @@ class HelloWorld(ManifestBase):
         else:
             self.log(message='Already Applied "{}" named "{}"'.format(self.kind, self.metadata['name']), level='info')
         variable_cache.store_variable(variable=Variable(name='{}:{}'.format(self.kind, self.metadata['name']), initial_value=True, logger=self.logger), overwrite_existing=True)
-        return  
+        return 
+    
+    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
+        try:
+            if os.path.exists(path=self.spec['file']) is True:
+                os.remove(path=self.spec['file'])
+            variable_cache.store_variable(variable=Variable(name='{}:{}'.format(self.kind, self.metadata['name']), initial_value=False, logger=self.logger), overwrite_existing=True)
+            variable_cache.store_variable(variable=Variable(name='{}-state'.format(self.metadata['name']), initial_value='deleted', ttl=30, logger=self.logger), overwrite_existing=True)
+        except:
+            self.log(message='Failed to delete file {}'.format(self.spec['outputFile']), level='error')
+        return 
