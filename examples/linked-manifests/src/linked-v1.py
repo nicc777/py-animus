@@ -7,16 +7,52 @@ from py_animus import get_logger
 
 
 class WebsiteUpTest(ManifestBase):
+    """This class implements manifests of kind `WebsiteUpTest` and tests if a given URL is returning an acceptable HTTP status code
+    
+    Example manifest:
+
+    ```yaml
+    kind: WebsiteUpTest
+    version: v1
+    metadata:
+      name: is-page-up
+    spec:
+      url: https://raw.githubusercontent.com/nicc777/py-animus/main/README.md
+      acceptableResponseCodes:
+      - 200
+      - 201
+      - 301
+      - 302
+    ```
+
+    In the `spec` section, the following fields are required:
+
+    * `spec.url` - The URL to check
+    * `spec.acceptableResponseCodes` - A list if integers with acceptable HTTP response codes
+    """
 
     def __init__(self, logger=get_logger(), post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):
         super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
 
     def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache())->bool:
-        """Look at the current variable_cache
+        """Look at the current variable_cache to determine if a check was already made recently
+
+        It will look in the `variable_cache` for a variable named `is-page-up`.
+
+        Decision table:
+
+        | Variable Exists | Final Variable Value | Change Detected |
+        |:---------------:|:--------------------:|:---------------:|
+        | No              | False                | True            |
+        | Yes             | False                | True            |
+        | Yes (Expired)   | False                | True            |
+        | Yes             | True (Stored value)  | False           |
         """
         return not variable_cache.get_value(variable_name=self.metadata['name'], value_if_expired=False, raise_exception_on_expired=False, raise_exception_on_not_found=False, default_value_if_not_found=False)
 
     def apply_manifest(self, manifest_lookup_function: object=None, variable_cache: VariableCache=VariableCache()):
+        """Do the check if a previous check was not yet performed
+        """
         website_up = False
         if self.implemented_manifest_differ_from_this_manifest() is True:
             self.log(message='Testing website: {}'.format(self.spec['url']), level='info')
