@@ -162,7 +162,15 @@ class VariableCache:
         if variable.name not in self.values or overwrite_existing is True:
             self.values[variable.name] = variable
 
-    def get_value(self, variable_name: str, value_if_expired=None, raise_exception_on_expired: bool=True, reset_timer_on_value_read: bool=False):
+    def get_value(
+            self,
+            variable_name: str, 
+            value_if_expired=None, 
+            raise_exception_on_expired: bool=True, 
+            reset_timer_on_value_read: bool=False,
+            raise_exception_on_not_found: bool=True,
+            default_value_if_not_found=None
+        ):
         """Get the value of a stored Variable.
 
         To get more granular logging, enable debug by setting an environment variable DEBUG to "1"
@@ -180,8 +188,12 @@ class VariableCache:
             Exception: When the value has expired (From Variable) (pass through)
             Exception: When the Variable is not found
         """
-        if variable_name not in self.values:
+        if variable_name not in self.values and raise_exception_on_not_found is True:
+            self.logger.debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to True'.format(variable_name))
             raise Exception('Variable "{}" not found'.format(variable_name))
+        elif variable_name not in self.values and raise_exception_on_not_found is False:
+            self.logger.debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to False - Returning default_value_if_not_found'.format(variable_name))
+            return default_value_if_not_found
         return copy.deepcopy(self.values[variable_name].get_value(value_if_expired=value_if_expired, raise_exception_on_expired=raise_exception_on_expired, reset_timer_on_value_read=reset_timer_on_value_read))
 
 
@@ -373,7 +385,7 @@ class ManifestBase:
         """
         return yaml.dump(self.to_dict())
 
-    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function)->bool:    # pragma: no cover
+    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache())->bool:    # pragma: no cover
         """A helper method to determine if the current manifest is different from a potentially previously implemented
         version
 
@@ -398,6 +410,7 @@ class ManifestBase:
 
         Args:
           manifest_lookup_function: A function passed in by the ManifestManager. Called with `manifest_lookup_function(name='...')`. Implemented in ManifestManager.get_manifest_instance_by_name()
+          variable_cache: A reference to the current instance of the VariableCache
 
         Returns:
             Boolean True if the previous implementation checksum is different from the current manifest checksum.
