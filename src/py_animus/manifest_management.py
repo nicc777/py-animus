@@ -196,6 +196,17 @@ class VariableCache:
             return default_value_if_not_found
         return copy.deepcopy(self.values[variable_name].get_value(value_if_expired=value_if_expired, raise_exception_on_expired=raise_exception_on_expired, reset_timer_on_value_read=reset_timer_on_value_read))
 
+    def __str__(self)->str:
+        data = dict()
+        for k,v in self.values.items():
+            data[k] = list()
+            data[k].append(v.value)
+            expires = -1
+            if v.ttl > -1:
+                expires = v.ttl + v.init_timestamp
+            data[k].append(expires)
+        return '{}'.format(data)
+
 
 class ManifestBase:
     """ManifestBase needs to be extended by a user to implement a class that can handle the implementation logic of 

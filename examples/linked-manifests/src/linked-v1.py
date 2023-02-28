@@ -30,7 +30,7 @@ class WebsiteUpTest(ManifestBase):
             except:
                 self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
             variable_cache.store_variable(variable=Variable(name='{}'.format(self.metadata['name']), initial_value=website_up, ttl=30, logger=self.logger), overwrite_existing=True)
-            self.log(message='variable_cache now: {}'.format(repr(variable_cache.values)), level='debug')
+            self.log(message='variable_cache now: {}'.format(str(variable_cache)), level='debug')
         self.log(message='Is site up TEST: {}'.format(variable_cache.get_value(variable_name=self.metadata['name'])), level='debug')
         return 
     
@@ -61,7 +61,7 @@ class DownloadWebPageContent(ManifestBase):
         m1 = manifest_lookup_function(name=self.spec['livenessFunction'])
         m1.apply_manifest(variable_cache=variable_cache)
         site_up = variable_cache.get_value(variable_name=self.spec['livenessFunction'], value_if_expired=False, raise_exception_on_expired=False)
-        self.log(message='variable_cache now: {}'.format(repr(variable_cache.values)), level='debug')
+        self.log(message='variable_cache now: {}'.format(str(variable_cache)), level='debug')
         self.log(message='Is site up? Test={}'.format(site_up), level='info')
         if site_up is True:
             self.log(message='Retrieving {}'.format(self.spec['url']), level='info')
