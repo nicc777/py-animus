@@ -2,7 +2,7 @@
 kind: WebsiteUpTest
 version: v1
 metadata:
-  name: is-google-up
+  name: is-page-up
 spec:
   url: https://raw.githubusercontent.com/nicc777/py-animus/main/README.md
   acceptableResponseCodes:
@@ -18,5 +18,5 @@ metadata:
 spec:
   url: https://raw.githubusercontent.com/nicc777/py-animus/main/README.md
   outputFile: /tmp/google-python-result/output.txt
-  livenessFunction: is-google-up
+  livenessFunction: is-page-up
   
