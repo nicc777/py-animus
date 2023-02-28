@@ -476,6 +476,51 @@ class ManifestBase:
             Exception: As determined by the user
         """
         raise Exception('To be implemented by user')
+    
+    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):  # pragma: no cover
+        """A  method to DELETE the current state as defined in a manifest.
+
+        The ManifestManager will typically call this method to delete the manifest. The ManifestManager will NOT make a
+        prior call to implemented_manifest_differ_from_this_manifest() and it is up to the user implementation of this
+        method to determine if prior changes need to be taken into consideration. A common pattern during
+        implementation is therefore:
+
+        ```python
+        if self.implemented_manifest_differ_from_this_manifest() is False:
+            self.log(message='No changes from previous implementation detected')
+            return
+        // Proceed with the implementation here...
+        ```
+
+        Any results produced can be stored in the VariableCache as one or more Variable instances, for example:
+
+        ```python
+        // Some result is stored in the variable "result"
+        variable_cache.store_variable(variable=Variable(name='some_name', initial_value=result), overwrite_existing=True)
+        ```
+
+        If this manifest relies on some other manifest, the `dummy_manifest_lookup_function()` function can be called
+        to implement that manifest and get the result from the VariableCache, for example:
+
+        ```python
+        // Assuming we define our parent/dependency in the manifest as "spec.parent"
+        parent_manifest = manifest_lookup_function(name=self.spec['parent'])    // Get an instance of ManifestBase implementation with teh provided name
+        parent_manifest.apply_manifest(variable_cache=variable_cache)           // Ensure it is applied (or deleted, as required in this specific context)
+        // Consume output from parent_manifest as stored in the variable_cache as needed...
+        ```
+
+        Args:
+          manifest_lookup_function: A function passed in by the ManifestManager. Called with `manifest_lookup_function(name='...')`. Implemented in ManifestManager.get_manifest_instance_by_name()
+          variable_cache: A reference to the current instance of the VariableCache
+
+        Returns:
+            Any returned value will be ignored by the ManifestManager
+
+        Raises:
+            Exception: When the method was not implemented by th user
+            Exception: As determined by the user
+        """
+        raise Exception('To be implemented by user')
 
 
 class ManifestManager:
@@ -505,6 +550,10 @@ class ManifestManager:
     def apply_manifest(self, name: str):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
         manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
+
+    def delete_manifest(self, name: str):
+        manifest_instance = self.get_manifest_instance_by_name(name=name)
+        manifest_instance.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
 
     def get_manifest_class_by_kind(self, kind: str):
         if kind in self.manifest_class_register:

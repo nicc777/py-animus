@@ -14,7 +14,11 @@ import argparse
 def _get_arg_parser(
     logger
 )->argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description='Processes YAML manifest files and call custom user defined implementation logic to act on te manifest files')
+    parser = argparse.ArgumentParser(
+        prog = 'animus COMMAND',
+        description='Processes YAML manifest files and call custom user defined implementation logic to act on te manifest files',
+        epilog = 'COMMAND is one of "apply" or "delete"'
+    )
     parser.add_argument(
         '-m', '--manifest',
         action='append',
@@ -39,12 +43,36 @@ def _get_arg_parser(
     return parser
 
 
-def main(logger=get_logger(), cli_args: list=sys.argv[1:]):
+def apply_command(vc, mm, logger):
+    for name in tuple(mm.manifest_instances.keys()):
+        logger.debug('Applying manifest named "{}"'.format(name))
+        mm.apply_manifest(name=name)
+    for name in tuple(vc.values.keys()):
+        logger.info('RESULT: {}={}'.format(name, vc.get_value(variable_name=name)))
+
+
+def delete_command(vc, mm, logger):
+    for name in tuple(mm.manifest_instances.keys()):
+        logger.debug('Deleting manifest named "{}"'.format(name))
+        mm.delete_manifest(name=name)
+    for name in tuple(vc.values.keys()):
+        logger.info('RESULT: {}={}'.format(name, vc.get_value(variable_name=name)))
+
+
+def main(logger=get_logger(), command: str=sys.argv[1], cli_args: list=sys.argv[2:]):
     logger.info('ok')
+    if command.lower().startswith('--h') or command.lower().startswith('-h'):
+        cli_args=['-h', ]
     args = dict()
     args['conf'] = None
     parser = _get_arg_parser(logger=logger)
     parsed_args, unknown_args = parser.parse_known_args(cli_args)
+    
+    if not command:
+        raise Exception('Expected command "apply" or "delete"')
+    if command not in ('apply', 'delete'):
+        raise Exception('Command must be one of "apply" or "delete"')
+    
     logger.debug('Command line arguments parsed...')
     logger.debug('   parsed_args: {}'.format(parsed_args))
     logger.debug('   unknown_args: {}'.format(unknown_args))
@@ -68,11 +96,12 @@ def main(logger=get_logger(), cli_args: list=sys.argv[1:]):
             except:
                 logger.error('Failed to read file "{}" due to exception'.format(manifest_file))
                 logger.error(traceback.format_exc())
-    for name in tuple(mm.manifest_instances.keys()):
-        logger.debug('Applying manifest named "{}"'.format(name))
-        mm.apply_manifest(name=name)
-    for name in tuple(vc.values.keys()):
-        logger.info('RESULT: {}={}'.format(name, vc.get_value(variable_name=name)))
+    if command == 'apply':
+        apply_command(vc, mm, logger)
+    elif command == 'delete':
+        delete_command(vc, mm, logger)
+    else:
+        raise Exception('Unknown command. Command must be one of "apply" or "delete"')
 
 
 if __name__ == '__main__':

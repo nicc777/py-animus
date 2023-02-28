@@ -52,6 +52,12 @@ Pull the image:
 docker pull ghcr.io/nicc777/py-animus:release
 ```
 
+Get quick help:
+
+```shell
+docker run --rm -e "DEBUG=1" ghcr.io/nicc777/py-animus:release -h
+```
+
 Use (as per the [hello world example](https://github.com/nicc777/py-animus/tree/main/doc)):
 
 ```shell

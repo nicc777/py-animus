@@ -1,7 +1,7 @@
 import traceback
 import urllib.request
 from urllib.request import urlopen
-import copy
+import os
 from py_animus.manifest_management import *
 from py_animus import get_logger
 
@@ -34,6 +34,9 @@ class WebsiteUpTest(ManifestBase):
         self.log(message='Is site up TEST: {}'.format(variable_cache.get_value(variable_name=self.metadata['name'])), level='debug')
         return 
     
+    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
+        return
+    
 
 class DownloadWebPageContent(ManifestBase):
 
@@ -41,6 +44,10 @@ class DownloadWebPageContent(ManifestBase):
         super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
 
     def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache())->bool:
+        previously_delete = variable_cache.get_value(variable_name='{}-state'.format(self.metadata['name']), value_if_expired='unknown', raise_exception_on_expired=False, raise_exception_on_not_found=False, default_value_if_not_found='unknown')
+        if previously_delete == 'applied':
+            self.log(message='Appears to have recently been applied - no further action required. Returning no differences found status', level='warning')
+            return False    # Must have been recently applied
         current_file_data = ''
         if 'outputFile' in self.spec:
             try:
@@ -74,6 +81,16 @@ class DownloadWebPageContent(ManifestBase):
                     of.write(content)
                 self.log(message='Saved content in {}'.format(self.spec['outputFile']), level='info')
                 variable_cache.store_variable(variable=Variable(name='{}'.format(self.metadata['name']), initial_value=True, ttl=30, logger=self.logger), overwrite_existing=True)
+                variable_cache.store_variable(variable=Variable(name='{}-state'.format(self.metadata['name']), initial_value='applied', ttl=30, logger=self.logger), overwrite_existing=True)
             except:
                 self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
         return  
+    
+    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
+        try:
+            if os.path.exists(path=self.spec['outputFile']) is True:
+                os.remove(path=self.spec['outputFile'])
+            variable_cache.store_variable(variable=Variable(name='{}-state'.format(self.metadata['name']), initial_value='deleted', ttl=30, logger=self.logger), overwrite_existing=True)
+        except:
+            self.log(message='Failed to delete file {}'.format(self.spec['outputFile']), level='error')
+        return 
