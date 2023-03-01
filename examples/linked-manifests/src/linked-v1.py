@@ -80,6 +80,11 @@ class DownloadWebPageContent(ManifestBase):
         super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
 
     def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache())->bool:
+        """Attempt to see if the page was previously downloaded with the following checks:
+
+        1) First check if there was somehow a delete action before this apply action by checking for the variable named '{}-state'.format(self.metadata['name'])
+        2) Try to read the downloaded file. If the file can be read and has more than 0 bytes, assume it was already downloaded
+        """
         previously_delete = variable_cache.get_value(variable_name='{}-state'.format(self.metadata['name']), value_if_expired='unknown', raise_exception_on_expired=False, raise_exception_on_not_found=False, default_value_if_not_found='unknown')
         if previously_delete == 'applied':
             self.log(message='Appears to have recently been applied - no further action required. Returning no differences found status', level='warning')
