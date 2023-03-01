@@ -74,7 +74,7 @@ More complex example:
 docker run --rm -e "DEBUG=1" \
   -v $PWD/examples/linked-manifests/src:/tmp/src \
   -v $PWD/examples/linked-manifests/manifest:/tmp/data \
-  -v /tmp/results:/tmp/google-python-result \
+  -v /tmp/results:/tmp/example-page-result \
   ghcr.io/nicc777/py-animus:release apply -m /tmp/data/linked-v1.yaml -s /tmp/src
 ```
 

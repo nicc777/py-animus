@@ -75,6 +75,27 @@ class WebsiteUpTest(ManifestBase):
     
 
 class DownloadWebPageContent(ManifestBase):
+    """This class implements manifests of kind `WebsiteUpTest` and tests if a given URL is returning an acceptable HTTP status code
+    
+    Example manifest:
+
+    ```yaml
+    kind: DownloadWebPageContent
+    version: v1
+    metadata:
+      name: example_page
+    spec:
+      url: https://raw.githubusercontent.com/nicc777/py-animus/main/README.md
+      outputFile: /tmp/example-page-result/output.txt
+      livenessFunction: is-page-up
+    ```
+
+    In the `spec` section, the following fields are required:
+
+    * `spec.url` - The URL to check
+    * `spec.outputFile` - The output file
+    * `spec.livenessFunction` - The name of the `WebsiteUpTest` manifest that has the implementation to check if this site is alive.
+    """
 
     def __init__(self, logger=get_logger(), post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):
         super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
