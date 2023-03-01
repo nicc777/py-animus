@@ -102,6 +102,14 @@ class DownloadWebPageContent(ManifestBase):
         return True 
 
     def apply_manifest(self, manifest_lookup_function: object=None, variable_cache: VariableCache=VariableCache()):
+        """The apply process works implements the following flow:
+
+        1) Check if the file has previously been downloaded - if so, no further processing is required and the method returns
+        2) Check if the remote site is up by calling to the `WebsiteUpTest` manifest implementations apply action. If the site is not up, return
+        3) Download the page content
+        4) Save to a file defined in the Manifest
+        5) Set variables and return
+        """
         if self.implemented_manifest_differ_from_this_manifest() is False:
             self.log(message='Already retrieved {}'.format(self.spec['url']), level='info')
             return
@@ -125,6 +133,8 @@ class DownloadWebPageContent(ManifestBase):
                 variable_cache.store_variable(variable=Variable(name='{}-state'.format(self.metadata['name']), initial_value='applied', ttl=30, logger=self.logger), overwrite_existing=True)
             except:
                 self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
+                variable_cache.store_variable(variable=Variable(name='{}'.format(self.metadata['name']), initial_value=False, ttl=30, logger=self.logger), overwrite_existing=True)
+                variable_cache.store_variable(variable=Variable(name='{}-state'.format(self.metadata['name']), initial_value='not-applied', ttl=30, logger=self.logger), overwrite_existing=True)
         return  
     
     def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
