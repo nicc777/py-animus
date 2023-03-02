@@ -1,3 +1,9 @@
+
+- [py\_animus Documentation](#py_animus-documentation)
+- [Basic Concepts](#basic-concepts)
+  - [Manifests and Handler Classes for Manifests](#manifests-and-handler-classes-for-manifests)
+  - [The Classes Implementing the Manifest](#the-classes-implementing-the-manifest)
+
 # py_animus Documentation
 
 The documentation focus on two parts:
@@ -7,9 +13,11 @@ The documentation focus on two parts:
 
 # Basic Concepts
 
+## Manifests and Handler Classes for Manifests
+
 More people are getting familiar with [Kubernetes style Manifest files](https://kubernetes.io/docs/reference/glossary/?all=true#term-manifest).
 
-This solution allows users to create application logic that can implement the state as specified by a manifest file.
+Thr `animus` solution allows users to create application logic that can implement the state as specified by a manifest file, where each manifest is tied to a specific class implementing by linking the `kind` to an actual class that implements the desired state as defined in the manifest.
 
 > **Note**
 > Keep in mind the manifest always contains the desired state. 
@@ -76,4 +84,36 @@ If you edit either the file in `/tmp/results/output.txt` or the manifest, any ne
 > **Note**
 > Keep in mind the manifest always contains the desired state. Therefore, in this example, the implementation will ensure that the specified file always contain the text as specified in the manifest.
 
+## The Classes Implementing the Manifest
 
+Whet the example is run, output on the terminal may look something like the following:
+
+| Line #  | Log Level | Log Text                                                                                                                                                                                                                                                            |
+|:-------:|:---------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 01 - 07 | INFO      | `Logging init done`                                                                                                                                                                                                                                                 |
+| 08      | INFO      | `ok`                                                                                                                                                                                                                                                                |
+| 09      | INFO      | `Returning CLI Argument Parser`                                                                                                                                                                                                                                     |
+| 10      | DEBUG     | `Command line arguments parsed...`                                                                                                                                                                                                                                  |
+| 11      | DEBUG     | `   parsed_args: Namespace(manifest_locations=[['/tmp/data/hello-v1.yaml']], src_locations=[['/tmp/src']])`                                                                                                                                                         |
+| 12      | DEBUG     | `   unknown_args: []`                                                                                                                                                                                                                                               |
+| 13      | DEBUG     | `Ingesting source file /tmp/src`                                                                                                                                                                                                                                    |
+| 14      | INFO      | `Logging init done`                                                                                                                                                                                                                                                 |
+| 15      | INFO      | `Registered manifest "HelloWorld" of version v1`                                                                                                                                                                                                                    |
+| 16      | INFO      | `Registered classes: ['HelloWorld']`                                                                                                                                                                                                                                |
+| 17      | DEBUG     | `configuration={'part_1': {'kind': 'HelloWorld', 'version': 'v1', 'metadata': {'name': 'hello-world'}, 'spec': {'file': '/tmp/hello-world-result/output.txt', 'content': 'This is the contents of the file\nspecified in the file property of\nthe spec.   \n'}}}`  |
+| 18      | DEBUG     | `Applying manifest named "hello-world"`                                                                                                                                                                                                                             |
+| 19      | INFO      | `[HelloWorld] Not yet applied. Applying "HelloWorld" named "hello-world"`                                                                                                                                                                                           |
+| 20      | INFO      | `[Variable:HelloWorld:hello-world] NOT EXPIRED - TTL less than zero - expiry ignored`                                                                                                                                                                               |
+| 21      | INFO      | `[Variable:HelloWorld:hello-world] Returning value`                                                                                                                                                                                                                 |
+| 22      | INFO      | `RESULT: HelloWorld:hello-world=True`                                                                                                                                                                                                                               |
+
+> **Note**
+> Some logging details may change and may not reflect exactly as shown above. 
+
+The interesting lines are the following:
+
+* Line 13 - THe application now goes through the Python files in the directory `/tmp/src` and looks for classes to ingest
+* Line 15 - A class called `HelloWorld` is registered in the `ManifestManager`
+* Line 18 - Based on the `kind` defined in the Manifest, the `ManifestManager` will apply the manifest by calling the apply method of the registered `HelloWorld`
+* Line 19 - From the `HelloWorld` class, we see that the manifest has not yet been applied, or the data is different (this implementation just checks if the output file exists or not and if it exists, the content is compared to the manifest supplied data)
+* Line 22 - After the application completes it's run, all the current variables are dumped. In this case, there is only one variable
