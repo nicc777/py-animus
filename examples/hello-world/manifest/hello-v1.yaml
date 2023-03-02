@@ -1,5 +1,5 @@
 ---
-kind: HelloWorld
+kind: HelloWorldV1
 version: v1
 metadata:
   name: hello-world
