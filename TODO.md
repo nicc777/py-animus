@@ -3,6 +3,9 @@
 > **Note**
 > If you have an idea for the road map, pleas [open a new issue](https://github.com/nicc777/py-animus/issues/new?assignees=&labels=&template=enhancement.md&title=)
 
+> **Note**
+> A checkmark below would mean an Issue was created. For details and progress of the feature, refer to the issue itself.
+
 # Version 1 Enhancements Road Map
 
 * [ ] Handle multiple versions of the same class in `ManifestManager`
