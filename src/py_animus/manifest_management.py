@@ -131,6 +131,13 @@ class Variable:
             self.init_timestamp = get_utc_timestamp(with_decimal=False)
         self._log_debug(message='Returning value')
         return self.value
+    
+    def to_dict(self):
+        return {
+            'ttl': self.ttl,
+            'value': '{}'.format(str(self.value)),
+            'expires': self.ttl + self.init_timestamp,
+        }
 
 
 class VariableCache:
@@ -196,16 +203,15 @@ class VariableCache:
             return default_value_if_not_found
         return copy.deepcopy(self.values[variable_name].get_value(value_if_expired=value_if_expired, raise_exception_on_expired=raise_exception_on_expired, reset_timer_on_value_read=reset_timer_on_value_read))
 
-    def __str__(self)->str:
+    def to_dict(self):
         data = dict()
         for k,v in self.values.items():
-            data[k] = list()
-            data[k].append(v.value)
-            expires = -1
-            if v.ttl > -1:
-                expires = v.ttl + v.init_timestamp
-            data[k].append(expires)
-        return '{}'.format(data)
+            v_dict = v.to_dict()
+            data[k] = v_dict
+        return data
+
+    def __str__(self)->str:
+        return json.dumps(self.to_dict())
 
 
 class ManifestBase:

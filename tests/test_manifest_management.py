@@ -112,6 +112,15 @@ class TestClassVariableCache(unittest.TestCase):    # pragma: no cover
             vc.get_value(variable_name='i_dont_exist')
         self.assertTrue('Variable "i_dont_exist" not found' in str(context.exception))
 
+    def test_method_store_variables_dump_as_str(self):
+        vc = VariableCache()
+        vc.store_variable(variable=Variable(name='test1', initial_value=123))
+        vc.store_variable(variable=Variable(name='test2', initial_value=456))
+        result = str(vc)
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, int)
+        self.assertEqual(result, 123)
+
 
 def my_post_parsing_method(**params):
     print('Working with parameters: {}'.format(params))
