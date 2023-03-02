@@ -4,6 +4,9 @@
   - [Manifests and Handler Classes for Manifests](#manifests-and-handler-classes-for-manifests)
   - [The Classes Implementing the Manifest](#the-classes-implementing-the-manifest)
     - [The `__init__` method](#the-__init__-method)
+    - [The `implemented_manifest_differ_from_this_manifest` method](#the-implemented_manifest_differ_from_this_manifest-method)
+    - [The `apply_manifest` method](#the-apply_manifest-method)
+    - [The `delete_manifest` method](#the-delete_manifest-method)
 
 # py_animus Documentation
 
@@ -136,3 +139,22 @@ class HelloWorldV1(ManifestBase):
 
 In terms of best practices, it is good idea to add some version as part of the class name. The exact implementation may change in the near future (see [the road map](../TODO.md)), but at the moment, the `ManifestManager` only registers one version of a class, given multiple classes of the same name.
 
+### The `implemented_manifest_differ_from_this_manifest` method
+
+This method must implement logic to determine the following:
+
+* If the manifest have not yet been applied, return `TRUE`
+* If the manifest have previously been applied, but the implemented state is now different from the provided manifest `sped`, return `TRUE`
+* If the manifest have previously been applied, and the implemented state is still matching the provided manifest `sped`, return `FALSE`
+
+### The `apply_manifest` method
+
+When an apply command is provided to the application, it will call this method.
+
+The intent of this method is to implement logic that will create a state that satisfies the `spec` of the manifest.
+
+### The `delete_manifest` method
+
+When an delete command is provided to the application, it will call this method.
+
+The intent of this method is to implement logic that will delete a current implementation and it may or may not depend on the `spec` of the manifest.
