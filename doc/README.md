@@ -134,4 +134,5 @@ class HelloWorldV1(ManifestBase):
         super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
 ```
 
+In terms of best practices, it is good idea to add some version as part of the class name. The exact implementation may change in the near future, but at the moment, the `ManifestManager` only registers one version of a class, given multiple classes of the same name.
 
