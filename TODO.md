@@ -8,7 +8,7 @@
 
 # Version 1 Enhancements Road Map
 
-* [ ] Handle multiple versions of the same class in `ManifestManager`
+* [x] Handle multiple versions of the same class in `ManifestManager` ([Issue 7](https://github.com/nicc777/py-animus/issues/7))
 * [ ] Add `metadata` field `skipApplyAll` (boolean value) to indicate to the `apply_command()` function in `src/py_animus/py_animus.py` if this manifest must be applied or not. A Value of `true` will skip over the manifest onto the next manifest. This will allow some manifests (children) to act as additional config for other manifests (parents). A parent is then responsible for "applying" the child manifest and consume the result via the variable(s) that was set. Typical use case would be a child manifest that defines/creates a login session which the parent manifest can use, for example to upload an artifact to a remote system.
 * [ ] Add `metadata` field `applyOrderSequence` (integer value) to indicate to the `apply_command()` function in `src/py_animus/py_animus.py` if this manifest has to be applied in a certain order. Manifests with this field will be considered first, and applied from low to high numbers. Manifests with the same integer value will be processed in more-or-less random order. Manifests without this field will be processed afterwards in more-or-less random order. The `delete_command()` will operate in the reverse order. If a manifest has the `skipApplyAll` value set to `true`, the additional `applyOrderSequence` will have no effect, regardless of it's value.
 
