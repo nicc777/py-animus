@@ -8,6 +8,7 @@
 
 import sys
 import os
+import json
 import shutil
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src")
 print('sys.path={}'.format(sys.path))
@@ -115,11 +116,31 @@ class TestClassVariableCache(unittest.TestCase):    # pragma: no cover
     def test_method_store_variables_dump_as_str(self):
         vc = VariableCache()
         vc.store_variable(variable=Variable(name='test1', initial_value=123))
-        vc.store_variable(variable=Variable(name='test2', initial_value=456))
+        vc.store_variable(variable=Variable(name='test2', initial_value=456, ttl=60))
         result = str(vc)
         self.assertIsNotNone(result)
-        self.assertIsInstance(result, int)
-        self.assertEqual(result, 123)
+        self.assertIsInstance(result, str)
+
+        print('='*80)
+        print('# test_method_store_variables_dump_as_str JSON')
+        print(result)
+        print('='*80)
+
+        data_result = json.loads(result)
+        self.assertIsNotNone(data_result)
+        self.assertIsInstance(data_result, dict)
+        self.assertTrue('test1' in data_result)
+        self.assertTrue('test2' in data_result)
+        self.assertIsNotNone(data_result['test1'])
+        self.assertIsInstance(data_result['test1'], dict)
+        self.assertIsNotNone(data_result['test2'])
+        self.assertIsInstance(data_result['test2'], dict)
+        self.assertTrue('ttl' in data_result['test1'])
+        self.assertTrue('value' in data_result['test1'])
+        self.assertTrue('expires' in data_result['test1'])
+        self.assertTrue('ttl' in data_result['test2'])
+        self.assertTrue('value' in data_result['test2'])
+        self.assertTrue('expires' in data_result['test2'])
 
 
 def my_post_parsing_method(**params):

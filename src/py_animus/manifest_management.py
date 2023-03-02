@@ -133,11 +133,14 @@ class Variable:
         return self.value
     
     def to_dict(self):
-        return {
+        data = {
             'ttl': self.ttl,
             'value': '{}'.format(str(self.value)),
             'expires': self.ttl + self.init_timestamp,
         }
+        if self.ttl < 0:
+            data['expires'] = 9999999999
+        return data
 
 
 class VariableCache:
