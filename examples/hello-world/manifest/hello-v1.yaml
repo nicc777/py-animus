@@ -1,5 +1,5 @@
 ---
-kind: HelloWorldV1
+kind: HelloWorld
 version: v1
 metadata:
   name: hello-world
@@ -7,5 +7,5 @@ spec:
   file: /tmp/hello-world-result/output.txt
   content: |
     This is the contents of the file
-    specified in the file property of
-    the spec.   
+    specified in the content property 
+    of the spec.   

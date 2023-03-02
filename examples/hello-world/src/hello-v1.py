@@ -3,7 +3,7 @@ from py_animus import get_logger
 import traceback
 
 
-class HelloWorldV1(ManifestBase):
+class HelloWorld(ManifestBase):
 
     def __init__(self, logger=get_logger(), post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):
         super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
