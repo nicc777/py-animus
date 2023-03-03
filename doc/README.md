@@ -9,6 +9,7 @@
     - [The `delete_manifest` method](#the-delete_manifest-method)
   - [The `Variable` base class and `VariableCache`](#the-variable-base-class-and-variablecache)
     - [How data is passed around](#how-data-is-passed-around)
+    - [Basic Workflow](#basic-workflow)
 
 # py_animus Documentation
 
@@ -168,5 +169,37 @@ The intent of this method is to implement logic that will delete a current imple
 The `ManifestManager` class instance is generally responsible to orchestrate the applying of commands based on manifests file content and implementations of `ManifestBase`.
 
 A part of this orchestrations deals with having some way to share data among all calls to various class instances. This is done via the `VariableCache` implementation that stores `Variable` instances which other processes can store and/or read as required.
+
+Each time the `ManifestManager` calls a method in an implementation of `ManifestBase`, a reference to the `VariableCache` is passed as well, which will make all `Variable` instances available to query.
+
+> **Warning**:
+> There are no specific safeguards built into `VariableCache` and it is possible for an implementation of `ManifestBase` to override any value set in the `VariableCache`. Best practice is to only _read_ a `Variable` not "owned" or controlled by the specific implementation of `ManifestBase`
+
+### Basic Workflow
+
+When the `ManifestManager` is initialized, an instance of `VariableCache` is created. Only one copy of the `VariableCache` should ever exist.
+
+As the `ManifestManager` calls an implementation of `ManifestBase`, to either the `apply_manifest()` or `delete_manifest()` methods, a reference of the `VariableCache` is passed in as a parameter named `variable_cache`.
+
+The `apply_manifest()` and `delete_manifest()` methods can in turn also pass that reference internally to other methods, like `implemented_manifest_differ_from_this_manifest()` as required.
+
+Any call to the `store_variable()` will either create a new instance of `Variable` to be stored or override an existing instance if the `overwrite_existing` parameter is True (default is False).
+
+As the implementation of `ManifestBase` processes the call to the `apply_manifest()` and `delete_manifest()` methods, it can make calls to the `store_variable()` and `get_value()` methods as required.
+
+A quick way to get the current references (names) of all stored `Variable` instances if needed can be done as follow:
+
+```python
+# Get the names
+current_variable_names = tuple(variable_cache.values.keys())
+
+# Iterate over every named variable:
+for variable_name in tuple(variable_cache.values.keys()):
+    current_value = variable_cache.get_value(variable_name=variable_name)
+    # Do further processing on the returned value...
+```
+
+> **Warning**:
+> Important to remember is that calls to the `VariableCache` methods `store_variable()` and `get_value()` could raise exceptions (depending on optional parameters set), and the implementation of `ManifestBase` should be able to handle that appropriately as required.
 
 
