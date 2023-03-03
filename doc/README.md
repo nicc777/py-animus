@@ -7,6 +7,8 @@
     - [The `implemented_manifest_differ_from_this_manifest` method](#the-implemented_manifest_differ_from_this_manifest-method)
     - [The `apply_manifest` method](#the-apply_manifest-method)
     - [The `delete_manifest` method](#the-delete_manifest-method)
+  - [The `Variable` base class and `VariableCache`](#the-variable-base-class-and-variablecache)
+    - [How data is passed around](#how-data-is-passed-around)
 
 # py_animus Documentation
 
@@ -158,3 +160,13 @@ The intent of this method is to implement logic that will create a state that sa
 When an delete command is provided to the application, it will call this method.
 
 The intent of this method is to implement logic that will delete a current implementation and it may or may not depend on the `spec` of the manifest.
+
+## The `Variable` base class and `VariableCache`
+
+### How data is passed around
+
+The `ManifestManager` class instance is generally responsible to orchestrate the applying of commands based on manifests file content and implementations of `ManifestBase`.
+
+A part of this orchestrations deals with having some way to share data among all calls to various class instances. This is done via the `VariableCache` implementation that stores `Variable` instances which other processes can store and/or read as required.
+
+
