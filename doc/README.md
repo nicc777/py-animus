@@ -214,3 +214,5 @@ The default work flow as implemented in `src/py_animus/py_animus.py` is basicall
 3. Source files (implementations of `ManifestBase`) is parsed and class instances are stored in `ManifestManager`.
 4. The YAML manifest files are read and stored in `ManifestManager`. Every parsed YAML manifest is processed by looking at the `kind` value and see if there is an implementation of `ManifestBase` that matches the same name (and version or supported version) before it is stored. (_**Note**_: The implementation of the exact functionality may still be in progress at the time of writing this documentation and implementation may either not work correctly or may change)
 5. Based on the command (`apply` or `delete`), a call is made to either the function `apply_command()` or `delete_command`. Within these functions, a loop is done over every parsed YAML manifest and a call is made to the appropriate implementation of `ManifestBase` based on the `kind`.
+
+By using `src/py_animus/py_animus.py` as an example of orchestration, it is possible for other projects to implement different orchestration logic.
