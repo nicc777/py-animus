@@ -190,13 +190,18 @@ class VariableCache:
           value_if_expired: What to return if the value is considered expired (Optional, default=None as by default an Exception will be raised)
           raise_exception_on_expired: Boolean to indicate an Exception must be thrown if the value is considered expired (optional, default=True)
           reset_timer_on_value_read: Boolean to reset timers for expiry is the value is read (Optional, default=False)
+          raise_exception_on_not_found: Boolean to determine if an exception is raised when the named variable is not found (optional, default=True)
+          default_value_if_not_found: Any default value that can be returned if `raise_exception_on_not_found` is set to `False` (optional, default=None)
 
         Returns:
-            A copy of the value stored in Variable with the given name
+            A copy of the value stored in Variable with the given name, or whatever is set in 
+            `default_value_if_not_found` if `raise_exception_on_not_found` is False and the named `Variable` was not
+            found. If the `Variable` has expired, the value of `value_if_expired` will be returned if 
+            `raise_exception_on_expired` is False.
 
         Raises:
-            Exception: When the value has expired (From Variable) (pass through)
-            Exception: When the Variable is not found
+            Exception: When the value has expired (From Variable) (pass through), and if `raise_exception_on_expired` is True
+            Exception: When the Variable is not found, and if `raise_exception_on_not_found` is True
         """
         if variable_name not in self.values and raise_exception_on_not_found is True:
             self.logger.debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to True'.format(variable_name))
