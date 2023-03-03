@@ -557,6 +557,7 @@ class ManifestManager:
         self.logger.info('Registered classes: {}'.format(list(self.manifest_class_register.keys())))
 
     def get_manifest_instance_by_name(self, name: str):
+        # TODO Add parameter for version to consider current version and supported versions
         if name not in self.manifest_instances:
             raise Exception('No manifest instance for "{}" found'.format(name))
         return self.manifest_instances[name]
