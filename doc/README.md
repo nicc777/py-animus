@@ -10,6 +10,7 @@
   - [The `Variable` base class and `VariableCache`](#the-variable-base-class-and-variablecache)
     - [How data is passed around](#how-data-is-passed-around)
     - [Basic Workflow](#basic-workflow)
+  - [Orchestration through the `ManifestManager`](#orchestration-through-the-manifestmanager)
 
 # py_animus Documentation
 
@@ -202,4 +203,6 @@ for variable_name in tuple(variable_cache.values.keys()):
 > **Warning**:
 > Important to remember is that calls to the `VariableCache` methods `store_variable()` and `get_value()` could raise exceptions (depending on optional parameters set), and the implementation of `ManifestBase` should be able to handle that appropriately as required.
 
+## Orchestration through the `ManifestManager`
 
+TODO
