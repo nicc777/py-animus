@@ -28,4 +28,29 @@ class MyManifest1(ManifestBase):
                 )
             )
         )
+        self.log(
+            message='Applied implementation kind "{}" of version "{}" with manifest checksum "{}"', level='info'.format(
+                self.metadata['name'],
+                self.version,
+                self.checksum
+            )
+        )
         return  # Assume some implementation
+    
+    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
+        try:
+            var = variable_cache.values['{}:{}'.format(self.kind, self.metadata['name'])]
+            if var is not None:
+                var.ttl = 1
+                var.init_timestamp = 1
+            variable_cache.store_variable(variable=var, overwrite_existing=True) # Store the expired version of this deleted variable
+        except:
+            self.log(message='Looks like "{}" version "{}" was deleted already'.format(self.metadata['name'],self.version,), level='warning')
+        self.log(
+            message='Deleted implementation kind "{}" of version "{}" with manifest checksum "{}"', level='info'.format(
+                self.metadata['name'],
+                self.version,
+                self.checksum
+            )
+        )
+        return

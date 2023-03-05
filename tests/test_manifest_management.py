@@ -507,11 +507,17 @@ spec:
             mm.apply_manifest(name=name)
         for name in tuple(vc.values.keys()):
             print('RESULT: {}={}'.format(name, vc.get_value(variable_name=name)))
-        self.assertIsNotNone(vc.get_value(variable_name='MyManifest1:test1-1'))
-        self.assertIsNotNone(vc.get_value(variable_name='MyManifest1:test1-2'))
-        self.assertIsNotNone(vc.get_value(variable_name='MyManifest2:test2-1'))
-        self.assertIsNotNone(vc.get_value(variable_name='MyManifest2:test2-2'))
-        self.assertIsNotNone(vc.get_value(variable_name='MyManifest2:test2-3'))
+
+        var_names = (
+            'MyManifest1:test1-1',
+            'MyManifest1:test1-2',
+            'MyManifest2:test2-1',
+            'MyManifest2:test2-2',
+            'MyManifest2:test2-3'
+        )
+        for v_name in var_names:
+            self.assertIsNotNone(vc.get_value(variable_name=v_name), 'Unexpected None for variable named "{}"'.format(v_name))
+        
 
         ###
         ### Test mm.get_manifest_class_by_kind() call for kind with no version - ensure we get the latest version
@@ -521,6 +527,18 @@ spec:
         self.assertIsInstance(latest_instance_of_manifest2, ManifestBase)
         self.assertEqual(latest_instance_of_manifest2.kind, 'MyManifest2')
         self.assertEqual(latest_instance_of_manifest2.version, 'v0.3')
+
+        ###
+        ### Mimic the main() function delete all call
+        ###
+        for ref in tuple(mm.manifest_instances.keys()):
+            name, version, checksum = ref.split(':')
+            print('Deleting manifest named "{}" version "{}'.format(name, version))
+            mm.delete_manifest(name=name, version=version)
+        for v_name in var_names:
+            with self.assertRaises(Exception) as context:
+                vc.get_value(variable_name=v_name)
+            self.assertTrue('Expired' in str(context.exception), 'Expected variable named "{}" to have expired!'.format(v_name))
 
 
 if __name__ == '__main__':
