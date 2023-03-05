@@ -574,32 +574,10 @@ class ManifestManager:
 
     def get_manifest_instance_by_name(self, name: str):
         for key, manifest_instance in self.manifest_instances.items():
-            # TODO check in the raw manifest name matches the parameter name. If true, return the manifest instance
             if manifest_instance.metadata['name'] == name:
                 return manifest_instance
         raise Exception('No manifest instance for "{}" found'.format(name))
     
-        # if version is not None:
-        #     idx = '{}:{}'.format(name, version)
-        # else:
-        #     versions_discovered = list()
-        #     for versioned_manifest_idx in tuple(self.manifest_class_register.keys()):
-        #         if versioned_manifest_idx.startswith('{}:'.format(name)):
-        #             if versioned_manifest_idx not in versions_discovered:
-        #                 versions_discovered.append(versioned_manifest_idx)
-        #             for supported_version_id in self.manifest_class_register[versioned_manifest_idx].supported_versions:
-        #                 supported_version_key = '{}:{}'.format(name, supported_version_id)
-        #                 if supported_version_key not in versions_discovered:
-        #                     versions_discovered.append(versioned_manifest_idx)
-        #                 # versions_discovered may now have something like ['v1', 'v0.1', 'v2', 'v1.5']
-
-        #     versions_discovered.sort()  # Based on the example, this will now be ['v0.1', 'v1', 'v1.5', 'v2']
-        #     idx = versions_discovered[-1] # latest, expecting v2
-        #     self.logger.debug('All versions registered for kind "{}": {}'.format(name, versions_discovered))
-        # if idx not in self.manifest_instances:
-        #     raise Exception('No manifest instance for "{}" found'.format(name))
-        # return self.manifest_instances[name]
-
     def apply_manifest(self, name: str):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
         manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
