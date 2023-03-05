@@ -319,6 +319,7 @@ class ManifestBase:
         self.kind = self.__class__.__name__
         self.metadata = dict()
         self.version = version
+        self.ingested_manifest_version = None
         self.supported_versions = supported_versions
         self.debug = is_debug_set_in_environment()
         self.logger = logger
@@ -372,6 +373,7 @@ class ManifestBase:
             if supported_version_found is False:
                 self.log(message='Version {} not supported by this implementation. Supported versions: {}'.format(converted_data['version'], self.supported_versions), level='error')
                 raise Exception('Version {} not supported by this implementation.'.format(converted_data['version']))
+            self.ingested_manifest_version = converted_data['version']
         else:
             self.log(message='Version property not present in data. Data={}'.format(manifest_data), level='error')
             raise Exception('Version property not present in data.')
