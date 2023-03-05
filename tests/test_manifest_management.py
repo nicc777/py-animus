@@ -368,8 +368,6 @@ class TestManifestManager(unittest.TestCase):    # pragma: no cover
         self.assertEqual(len(mm.manifest_instances), 2)
         for key in tuple(mm.manifest_instances.keys()):
             self.assertTrue(key.startswith('test'))
-        # self.assertTrue('test1' in mm.manifest_instances)
-        # self.assertTrue('test2' in mm.manifest_instances)
 
         mm.apply_manifest(name='test2')
         self.assertEqual(len(vc.values), 2)
