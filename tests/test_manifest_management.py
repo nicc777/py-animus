@@ -400,7 +400,112 @@ class TestManifestManager(unittest.TestCase):    # pragma: no cover
         self.assertTrue('No manifest instance for "does-not-exist" found' in str(context.exception))
 
     def test_multiple_versions_of_manifest(self):
-        pass
+        ###
+        ### Manifest Setup
+        ###
+
+        manifest_1_v01_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-1
+spec:
+    val: 1
+    more:
+    - one
+    - two
+    - three
+"""
+
+        manifest_1_v02_data =  """---
+    kind: MyManifest1
+    version: v0.2
+    metadata:
+        name: test1-2
+    spec:
+        val: 2
+        more:
+        - four
+        - five
+        - six
+"""
+
+        manifest_1_v03_data =  """---
+    kind: MyManifest1
+    version: v0.3
+    metadata:
+        name: test1-3
+    spec:
+        val: 3
+        more:
+        - seven
+"""
+
+        manifest_2_v01_data=  """---
+kind: MyManifest2
+version: v0.1
+metadata:
+    name: test2-1
+spec:
+    val: AAA
+    parent: test1-2
+"""
+
+        manifest_2_v02_data=  """---
+kind: MyManifest2
+version: v0.2
+metadata:
+    name: test2-2
+spec:
+    val: BBB
+    parent: test1-2
+"""
+
+        manifest_2_v03_data=  """---
+kind: MyManifest2
+version: v0.3
+metadata:
+    name: test2-3
+spec:
+    val: CCC
+    parent: test1-2
+"""
+
+        ###
+        ### Init VariableCache and ManifestManager
+        ###
+        vc = VariableCache()
+        mm = ManifestManager(variable_cache=vc)
+
+        ###
+        ### Consume classes that extend ManifestBase and register with ManifestManager
+        ###
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
+        self.assertEqual(len(mm.manifest_class_register), 6)
+
+        ###
+        ### Consume Manifests and link with class implementations registered in ManifestManager
+        ###
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v02_data)['part_1'])
+        # mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v03_data)['part_1']) # Deliberately leave this one out - pretend it is still in concept phase or something...
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v01_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v02_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v03_data)['part_1'])
+
+        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.manifest_instances), 5)         # One less, if "manifest_1_v03_data" is not parsed (commented out above)
+
+        ###
+        ### Mimic the main() function apply all call
+        ###
+        for name in tuple(mm.manifest_instances.keys()):
+            print('Applying manifest named "{}"'.format(name))
+            mm.apply_manifest(name=name)
+        for name in tuple(vc.values.keys()):
+            print('RESULT: {}={}'.format(name, vc.get_value(variable_name=name)))
+
 
 
 if __name__ == '__main__':
