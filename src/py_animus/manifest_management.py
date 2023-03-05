@@ -559,10 +559,6 @@ class ManifestManager:
 
     def load_manifest_class_definition_from_file(self, plugin_file_path: str):
         for returned_class, kind in get_modules_in_package(target_dir=plugin_file_path, logger=self.logger):
-            #  init_args_full_spec = inspect.getfullargspec(returned_class).defaults
-            #  version = init_args_full_spec[2]
-            #  supported_versions = init_args_full_spec[3]
-            #  self.logger.debug('Class "{}" with version "{}" and supporting versions "{}" of manifests loaded'.format(kind, version, supported_versions))
              self.register_manifest_class(manifest=returned_class(logger=self.logger))
         self.logger.info('Registered classes: {}'.format(list(self.manifest_class_register.keys())))
 
