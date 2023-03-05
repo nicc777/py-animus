@@ -549,6 +549,7 @@ class ManifestManager:
     def __init__(self, variable_cache: VariableCache, logger=get_logger()):
         self.manifest_class_register = dict()
         self.manifest_instances = dict()
+        self.manifest_data_by_manifest_name = dict()
         self.variable_cache = variable_cache
         self.logger = logger
 
@@ -569,10 +570,12 @@ class ManifestManager:
              self.register_manifest_class(manifest=returned_class(logger=self.logger))
         self.logger.info('Registered classes: {}'.format(list(self.manifest_class_register.keys())))
 
-    def get_manifest_instance_by_name(self, name: str, version: str=None):
-        if name not in self.manifest_instances:
-            raise Exception('No manifest instance for "{}" found'.format(name))
-        return self.manifest_instances[name]
+    def get_manifest_instance_by_name(self, name: str):
+        for key, manifest_instance in self.manifest_instances.items():
+            # TODO check in the raw manifest name matches the parameter name. If true, return the manifest instance
+            if manifest_instance.metadata['name'] == name:
+                return manifest_instance
+        raise Exception('No manifest instance for "{}" found'.format(name))
     
         # if version is not None:
         #     idx = '{}:{}'.format(name, version)
@@ -631,10 +634,19 @@ class ManifestManager:
         raise Exception('Manifest kind "{}" not registered'.format(kind))
     
     def parse_manifest(self, manifest_data: dict):
+        manifest_data = dict((k.lower(), v) for k,v in manifest_data.items())   # Convert first level keys to lower case
         version = None
         if 'version' in manifest_data:
             version = manifest_data['version']
         class_instance_copy = copy.deepcopy(self.get_manifest_class_by_kind(kind=manifest_data['kind'], version=version))
         class_instance_copy.parse_manifest(manifest_data=manifest_data)
-        self.manifest_instances[class_instance_copy.metadata['name']] = class_instance_copy
+        idx = '{}:{}:{}'.format(
+            class_instance_copy.metadata['name'],
+            class_instance_copy.version,
+            class_instance_copy.checksum
+        )
+        # self.manifest_instances[class_instance_copy.metadata['name']] = class_instance_copy
+        self.logger.info('parse_manifest(): Stored parsed manifest instance "{}"'.format(idx))
+        self.manifest_instances[idx] = class_instance_copy
+        self.manifest_data_by_manifest_name[manifest_data['metadata']['name']] = manifest_data
 
