@@ -534,7 +534,8 @@ spec:
         for ref in tuple(mm.manifest_instances.keys()):
             name, version, checksum = ref.split(':')
             print('Deleting manifest named "{}" version "{}'.format(name, version))
-            mm.delete_manifest(name=name, version=version)
+            # mm.delete_manifest(name=name, version=version)
+            mm.delete_manifest(name=name)
         for v_name in var_names:
             with self.assertRaises(Exception) as context:
                 vc.get_value(variable_name=v_name)
