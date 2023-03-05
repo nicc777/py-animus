@@ -46,6 +46,22 @@ spec:
     the spec.   
 ```
 
+_**Manifest Specification**_
+
+| Field           | Description                                                                                                                                                         |
+|-----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `kind`          | Maps to the Class name that handles the processing of this manifest file.                                                                                           |
+| `version`       | Some form of version is required. It helps with maintaining implementations of the same kind as systems evolve.                                                     |
+| `metadata.name` | A unique name. Any other manifest could have some reference to this manifest, and therefore the name must be unique at runtime across all ingested manifest files.  |
+| `spec.<dict>`   | The intent is that the `spec` contains the data required for processing the manifest file by the implementation class for this version of the manifest.             |
+
+_**Manifest General Rules**_
+
+* Each of the provided fields are required
+* Field names must be lower case (they will be converted during parsing to lower case, if not)
+* The `metadata.name` field is unique, even across different versions of a manifest. For example, `kind: Example` of `version: 1` must have a different name than `kind: Example` of `version: 2`
+* There is no formal way to reference one manifest from another and this is up to implementation of the classes that extend `ManifestBase` to decide how references to other manifests will be managed. For example, the implementation could expect a `spec.parent` field that has the name (which of course is unique) to refer to another manifest file. By using the `manifest_lookup_function` parameter that is a reference to a lookup function, the implementation can lookup the other manifest by calling `m1 = manifest_lookup_function(name=self.spec['parent'])` which will now hold the processing instance of that manifest. To ensure it is applied, it will be best practice to execute `m1.apply_manifest(variable_cache=variable_cache)` next and then consume output from one or more `Variable` instances that `m1` have set in the `VariableCache`. Please see `tests/manifest_classes/test2v0-2.py` for en example implementation that is also used in the unit tests.
+
 > **Note**
 > An example is provided. The file above is from `examples/hello-world/manifest/hello-v1.yaml`.
 

@@ -319,6 +319,7 @@ class ManifestBase:
         self.kind = self.__class__.__name__
         self.metadata = dict()
         self.version = version
+        self.ingested_manifest_version = None
         self.supported_versions = supported_versions
         self.debug = is_debug_set_in_environment()
         self.logger = logger
@@ -362,9 +363,17 @@ class ManifestBase:
             self.log(message='Kind property not present in data. Data={}'.format(manifest_data), level='error')
             raise Exception('Kind property not present in data.')
         if 'version' in converted_data:
-            if converted_data['version'] not in self.supported_versions:
+            supported_version_found = False
+            if converted_data['version'] in self.supported_versions:
+                supported_version_found = True
+                self.log(message='Manifest version "{}" found in class supported versions'.format(converted_data['version']), level='info')
+            elif converted_data['version'] == self.version:
+                supported_version_found = True
+                self.log(message='Manifest version "{}" found in class main versions'.format(converted_data['version']), level='info')
+            if supported_version_found is False:
                 self.log(message='Version {} not supported by this implementation. Supported versions: {}'.format(converted_data['version'], self.supported_versions), level='error')
                 raise Exception('Version {} not supported by this implementation.'.format(converted_data['version']))
+            self.ingested_manifest_version = converted_data['version']
         else:
             self.log(message='Version property not present in data. Data={}'.format(manifest_data), level='error')
             raise Exception('Version property not present in data.')
@@ -542,14 +551,21 @@ class ManifestManager:
     def __init__(self, variable_cache: VariableCache, logger=get_logger()):
         self.manifest_class_register = dict()
         self.manifest_instances = dict()
+        self.manifest_data_by_manifest_name = dict()
         self.variable_cache = variable_cache
         self.logger = logger
 
     def register_manifest_class(self, manifest: ManifestBase):
         if isinstance(manifest, ManifestBase) is False:
             raise Exception('Incorrect Base Class')
-        self.manifest_class_register[manifest.kind] = manifest
+        idx = '{}:{}'.format(manifest.kind, manifest.version)
+        self.manifest_class_register[idx] = manifest
         self.logger.info('Registered manifest "{}" of version {}'.format(manifest.__class__.__name__, manifest.version))
+        for idx_sv in manifest.supported_versions:
+            idx = '{}:{}'.format(manifest.kind, idx_sv)
+            if idx not in self.manifest_class_register:
+                self.manifest_class_register[idx] = manifest
+                self.logger.info('Registered manifest "{}" of version {}'.format(manifest.__class__.__name__, manifest.version))
 
     def load_manifest_class_definition_from_file(self, plugin_file_path: str):
         for returned_class, kind in get_modules_in_package(target_dir=plugin_file_path, logger=self.logger):
@@ -557,11 +573,11 @@ class ManifestManager:
         self.logger.info('Registered classes: {}'.format(list(self.manifest_class_register.keys())))
 
     def get_manifest_instance_by_name(self, name: str):
-        # TODO Add parameter for version to consider current version and supported versions
-        if name not in self.manifest_instances:
-            raise Exception('No manifest instance for "{}" found'.format(name))
-        return self.manifest_instances[name]
-
+        for key, manifest_instance in self.manifest_instances.items():
+            if manifest_instance.metadata['name'] == name or '{}:{}:{}'.format(manifest_instance.metadata['name'],manifest_instance.version,manifest_instance.checksum) == name:
+                return manifest_instance
+        raise Exception('No manifest instance for "{}" found'.format(name))
+    
     def apply_manifest(self, name: str):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
         manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
@@ -570,13 +586,45 @@ class ManifestManager:
         manifest_instance = self.get_manifest_instance_by_name(name=name)
         manifest_instance.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
 
-    def get_manifest_class_by_kind(self, kind: str):
-        if kind in self.manifest_class_register:
-            return self.manifest_class_register[kind]
+    def get_manifest_class_by_kind(self, kind: str, version: str=None):
+        idx = kind
+        if version is not None:
+            idx = '{}:{}'.format(kind, version)
+        else:
+            versions_discovered = list()
+            for versioned_manifest_idx in tuple(self.manifest_class_register.keys()):
+                if versioned_manifest_idx.startswith('{}:'.format(kind)):
+                    if versioned_manifest_idx not in versions_discovered:
+                        versions_discovered.append(versioned_manifest_idx)
+                    for supported_version_id in self.manifest_class_register[versioned_manifest_idx].supported_versions:
+                        supported_version_key = '{}:{}'.format(kind, supported_version_id)
+                        if supported_version_key not in versions_discovered:
+                            versions_discovered.append(versioned_manifest_idx)
+                        # versions_discovered may now have something like ['v1', 'v0.1', 'v2', 'v1.5']
+
+            versions_discovered.sort()  # Based on the example, this will now be ['v0.1', 'v1', 'v1.5', 'v2']
+            if len(versions_discovered) > 0:
+                idx = versions_discovered[-1] # latest, expecting v2
+            self.logger.debug('All versions registered for kind "{}": {}'.format(kind, versions_discovered))
+
+        if idx in self.manifest_class_register:
+            return self.manifest_class_register[idx]
         raise Exception('Manifest kind "{}" not registered'.format(kind))
     
     def parse_manifest(self, manifest_data: dict):
-        class_instance_copy = copy.deepcopy(self.get_manifest_class_by_kind(kind=manifest_data['kind']))
+        manifest_data = dict((k.lower(), v) for k,v in manifest_data.items())   # Convert first level keys to lower case
+        version = None
+        if 'version' in manifest_data:
+            version = manifest_data['version']
+        class_instance_copy = copy.deepcopy(self.get_manifest_class_by_kind(kind=manifest_data['kind'], version=version))
         class_instance_copy.parse_manifest(manifest_data=manifest_data)
-        self.manifest_instances[class_instance_copy.metadata['name']] = class_instance_copy
+        idx = '{}:{}:{}'.format(
+            class_instance_copy.metadata['name'],
+            class_instance_copy.version,
+            class_instance_copy.checksum
+        )
+        # self.manifest_instances[class_instance_copy.metadata['name']] = class_instance_copy
+        self.logger.info('parse_manifest(): Stored parsed manifest instance "{}"'.format(idx))
+        self.manifest_instances[idx] = class_instance_copy
+        self.manifest_data_by_manifest_name[manifest_data['metadata']['name']] = manifest_data
 

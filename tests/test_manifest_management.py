@@ -340,14 +340,26 @@ class TestManifestManager(unittest.TestCase):    # pragma: no cover
         os.mkdir(path='/tmp/test_manifest_classes')
         os.mkdir(path='/tmp/test_manifest_classes/test1')
         os.mkdir(path='/tmp/test_manifest_classes/test2')
-        with open('{}/tests/manifest_classes/test1.py'.format(running_path), 'r') as f1r:
-            with open('/tmp/test_manifest_classes/test1/test1.py', 'w') as f1w:
-                f1w.write(f1r.read())
-                print('Copied "{}" to "/tmp/test_manifest_classes/test1/test1.py"'.format('{}/tests/manifest_classes/test1.py'.format(running_path)))
-        with open('{}/tests/manifest_classes/test2.py'.format(running_path), 'r') as f2r:
-            with open('/tmp/test_manifest_classes/test2/test2.py', 'w') as f2w:
-                f2w.write(f2r.read())
-                print('Copied "{}" to "/tmp/test_manifest_classes/test1/test1.py"'.format('{}/tests/manifest_classes/test2.py'.format(running_path)))
+
+        self.source_to_dest_files = {
+            # MyManifest1 versions
+            '{}/tests/manifest_classes/test1v0-1.py'.format(running_path): '/tmp/test_manifest_classes/test1/test1v0-1.py',
+            '{}/tests/manifest_classes/test1v0-2.py'.format(running_path): '/tmp/test_manifest_classes/test1/test1v0-2.py',
+            '{}/tests/manifest_classes/test1v0-3.py'.format(running_path): '/tmp/test_manifest_classes/test1/test1v0-3.py',
+
+            # MyManifest2 versions
+            '{}/tests/manifest_classes/test2v0-1.py'.format(running_path): '/tmp/test_manifest_classes/test2/test2v0-1.py',
+            '{}/tests/manifest_classes/test2v0-2.py'.format(running_path): '/tmp/test_manifest_classes/test2/test2v0-2.py',
+            '{}/tests/manifest_classes/test2v0-3.py'.format(running_path): '/tmp/test_manifest_classes/test2/test2v0-3.py',
+        }
+
+        for source_file, dest_file in self.source_to_dest_files.items():
+            with open(source_file, 'r') as f1r:
+                with open(dest_file, 'w') as f1w:
+                    f1w.write(f1r.read())
+                    print('Copied "{}" to "{}"'.format(source_file, dest_file))
+
+        
         print('PREP COMPLETED')
         print('~'*80)
 
@@ -361,19 +373,20 @@ class TestManifestManager(unittest.TestCase):    # pragma: no cover
         mm = ManifestManager(variable_cache=vc)
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
-        self.assertEqual(len(mm.manifest_class_register), 2)
+        self.assertEqual(len(mm.manifest_class_register), 6)
 
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=my_manifest_1_data)['part_1'])
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=my_manifest_2_data)['part_1'])
         self.assertEqual(len(mm.manifest_instances), 2)
-        self.assertTrue('test1' in mm.manifest_instances)
-        self.assertTrue('test2' in mm.manifest_instances)
+        for key in tuple(mm.manifest_instances.keys()):
+            self.assertTrue(key.startswith('test'))
+
         mm.apply_manifest(name='test2')
         self.assertEqual(len(vc.values), 2)
         self.assertTrue('MyManifest1:test1' in vc.values)
         self.assertTrue('MyManifest2:test2' in vc.values)
-        self.assertEqual(vc.values['MyManifest1:test1'].value, 'Some Result Worth Saving')
-        self.assertEqual(vc.values['MyManifest2:test2'].value, 'Another value worth storing')
+        self.assertEqual(vc.values['MyManifest1:test1'].value, 'Result from MyManifest1 "v0.1" applying manifest named "test1" with manifest version "v0.1"')
+        self.assertEqual(vc.values['MyManifest2:test2'].value, 'Result from MyManifest2 "v0.2" applying manifest named "test2" with manifest version "v0.2"')
         for k,v in vc.values.items():
             print('{}={}'.format(k,v.value))
 
@@ -385,6 +398,148 @@ class TestManifestManager(unittest.TestCase):    # pragma: no cover
         with self.assertRaises(Exception) as context:
             mm.get_manifest_instance_by_name(name='does-not-exist')
         self.assertTrue('No manifest instance for "does-not-exist" found' in str(context.exception))
+
+    def test_multiple_versions_of_manifest(self):
+        ###
+        ### Manifest Setup
+        ###
+
+        manifest_1_v01_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-1
+spec:
+    val: 1
+    more:
+    - one
+    - two
+    - three
+"""
+
+        manifest_1_v02_data =  """---
+    kind: MyManifest1
+    version: v0.2
+    metadata:
+        name: test1-2
+    spec:
+        val: 2
+        more:
+        - four
+        - five
+        - six
+"""
+
+        manifest_1_v03_data =  """---
+    kind: MyManifest1
+    version: v0.3
+    metadata:
+        name: test1-3
+    spec:
+        val: 3
+        more:
+        - seven
+"""
+
+        manifest_2_v01_data=  """---
+kind: MyManifest2
+version: v0.1
+metadata:
+    name: test2-1
+spec:
+    val: AAA
+    parent: test1-2
+"""
+
+        manifest_2_v02_data=  """---
+kind: MyManifest2
+version: v0.2
+metadata:
+    name: test2-2
+spec:
+    val: BBB
+    parent: test1-2
+"""
+
+        manifest_2_v03_data=  """---
+kind: MyManifest2
+version: v0.3
+metadata:
+    name: test2-3
+spec:
+    val: CCC
+    parent: test1-2
+"""
+
+        ###
+        ### Init VariableCache and ManifestManager
+        ###
+        vc = VariableCache()
+        mm = ManifestManager(variable_cache=vc)
+
+        ###
+        ### Consume classes that extend ManifestBase and register with ManifestManager
+        ###
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
+        self.assertEqual(len(mm.manifest_class_register), 6)
+
+        ###
+        ### Consume Manifests and link with class implementations registered in ManifestManager
+        ###
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v02_data)['part_1'])
+        # mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v03_data)['part_1']) # Deliberately leave this one out - pretend it is still in concept phase or something...
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v03_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v02_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v01_data)['part_1'])
+        
+        
+
+        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.manifest_instances), 5)         # One less, if "manifest_1_v03_data" is not parsed (commented out above)
+
+        ###
+        ### Mimic the main() function apply all call
+        ###
+        for name in tuple(mm.manifest_instances.keys()):
+            print('Applying manifest named "{}"'.format(name))
+            mm.apply_manifest(name=name)
+        for name in tuple(vc.values.keys()):
+            print('RESULT: {}={}'.format(name, vc.get_value(variable_name=name)))
+
+        var_names = (
+            'MyManifest1:test1-1',
+            'MyManifest1:test1-2',
+            'MyManifest2:test2-1',
+            'MyManifest2:test2-2',
+            'MyManifest2:test2-3'
+        )
+        for v_name in var_names:
+            self.assertIsNotNone(vc.get_value(variable_name=v_name), 'Unexpected None for variable named "{}"'.format(v_name))
+        
+
+        ###
+        ### Test mm.get_manifest_class_by_kind() call for kind with no version - ensure we get the latest version
+        ###
+        latest_instance_of_manifest2 = mm.get_manifest_class_by_kind(kind='MyManifest2')
+        self.assertIsNotNone(latest_instance_of_manifest2)
+        self.assertIsInstance(latest_instance_of_manifest2, ManifestBase)
+        self.assertEqual(latest_instance_of_manifest2.kind, 'MyManifest2')
+        self.assertEqual(latest_instance_of_manifest2.version, 'v0.3')
+
+        ###
+        ### Mimic the main() function delete all call
+        ###
+        for ref in tuple(mm.manifest_instances.keys()):
+            name, version, checksum = ref.split(':')
+            print('Deleting manifest named "{}" version "{}'.format(name, version))
+            # mm.delete_manifest(name=name, version=version)
+            mm.delete_manifest(name=name)
+        for v_name in var_names:
+            with self.assertRaises(Exception) as context:
+                vc.get_value(variable_name=v_name)
+            self.assertTrue('Expired' in str(context.exception), 'Expected variable named "{}" to have expired!'.format(v_name))
 
 
 if __name__ == '__main__':
