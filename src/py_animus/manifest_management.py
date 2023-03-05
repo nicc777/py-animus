@@ -362,7 +362,14 @@ class ManifestBase:
             self.log(message='Kind property not present in data. Data={}'.format(manifest_data), level='error')
             raise Exception('Kind property not present in data.')
         if 'version' in converted_data:
-            if converted_data['version'] not in self.supported_versions:
+            supported_version_found = False
+            if converted_data['version'] in self.supported_versions:
+                supported_version_found = True
+                self.log(message='Manifest version "{}" found in class supported versions'.format(converted_data['version']), level='info')
+            elif converted_data['version'] == self.version:
+                supported_version_found = True
+                self.log(message='Manifest version "{}" found in class main versions'.format(converted_data['version']), level='info')
+            if supported_version_found is False:
                 self.log(message='Version {} not supported by this implementation. Supported versions: {}'.format(converted_data['version'], self.supported_versions), level='error')
                 raise Exception('Version {} not supported by this implementation.'.format(converted_data['version']))
         else:
@@ -622,7 +629,10 @@ class ManifestManager:
         raise Exception('Manifest kind "{}" not registered'.format(kind))
     
     def parse_manifest(self, manifest_data: dict):
-        class_instance_copy = copy.deepcopy(self.get_manifest_class_by_kind(kind=manifest_data['kind']))
+        version = None
+        if 'version' in manifest_data:
+            version = manifest_data['version']
+        class_instance_copy = copy.deepcopy(self.get_manifest_class_by_kind(kind=manifest_data['kind'], version=version))
         class_instance_copy.parse_manifest(manifest_data=manifest_data)
         self.manifest_instances[class_instance_copy.metadata['name']] = class_instance_copy
 
