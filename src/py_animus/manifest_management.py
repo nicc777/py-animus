@@ -574,7 +574,7 @@ class ManifestManager:
 
     def get_manifest_instance_by_name(self, name: str):
         for key, manifest_instance in self.manifest_instances.items():
-            if manifest_instance.metadata['name'] == name:
+            if manifest_instance.metadata['name'] == name or '{}:{}:{}'.format(manifest_instance.metadata['name'],manifest_instance.version,manifest_instance.checksum) == name:
                 return manifest_instance
         raise Exception('No manifest instance for "{}" found'.format(name))
     

@@ -505,6 +505,11 @@ spec:
             mm.apply_manifest(name=name)
         for name in tuple(vc.values.keys()):
             print('RESULT: {}={}'.format(name, vc.get_value(variable_name=name)))
+        self.assertIsNotNone(vc.get_value(variable_name='MyManifest1:test1-1'))
+        self.assertIsNotNone(vc.get_value(variable_name='MyManifest1:test1-2'))
+        self.assertIsNotNone(vc.get_value(variable_name='MyManifest2:test2-1'))
+        self.assertIsNotNone(vc.get_value(variable_name='MyManifest2:test2-2'))
+        self.assertIsNotNone(vc.get_value(variable_name='MyManifest2:test2-3'))
 
 
 
