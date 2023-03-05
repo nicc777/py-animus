@@ -490,9 +490,11 @@ spec:
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_data)['part_1'])
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v02_data)['part_1'])
         # mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v03_data)['part_1']) # Deliberately leave this one out - pretend it is still in concept phase or something...
-        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v01_data)['part_1'])
-        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v02_data)['part_1'])
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v03_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v02_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v01_data)['part_1'])
+        
+        
 
         self.assertEqual(len(mm.manifest_class_register), 6)
         self.assertEqual(len(mm.manifest_instances), 5)         # One less, if "manifest_1_v03_data" is not parsed (commented out above)
@@ -511,6 +513,14 @@ spec:
         self.assertIsNotNone(vc.get_value(variable_name='MyManifest2:test2-2'))
         self.assertIsNotNone(vc.get_value(variable_name='MyManifest2:test2-3'))
 
+        ###
+        ### Test mm.get_manifest_class_by_kind() call for kind with no version - ensure we get the latest version
+        ###
+        latest_instance_of_manifest2 = mm.get_manifest_class_by_kind(kind='MyManifest2')
+        self.assertIsNotNone(latest_instance_of_manifest2)
+        self.assertIsInstance(latest_instance_of_manifest2, ManifestBase)
+        self.assertEqual(latest_instance_of_manifest2.kind, 'MyManifest2')
+        self.assertEqual(latest_instance_of_manifest2.version, 'v0.3')
 
 
 if __name__ == '__main__':
