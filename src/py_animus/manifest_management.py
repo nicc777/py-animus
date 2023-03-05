@@ -599,8 +599,10 @@ class ManifestManager:
         manifest_instance = self.get_manifest_instance_by_name(name=name)
         manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
 
-    def delete_manifest(self, name: str):
-        manifest_instance = self.get_manifest_instance_by_name(name=name)
+    def delete_manifest(self, name: str, version: str):
+        if version is None:
+            raise Exception('Version is required')
+        manifest_instance = self.get_manifest_instance_by_name(name=name, version=version)
         manifest_instance.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
 
     def get_manifest_class_by_kind(self, kind: str, version: str=None):
