@@ -9,7 +9,7 @@
     - [The `delete_manifest` method](#the-delete_manifest-method)
   - [The `Variable` base class and `VariableCache`](#the-variable-base-class-and-variablecache)
     - [How data is passed around](#how-data-is-passed-around)
-    - [Basic Workflow](#basic-workflow)
+    - [Basic Variable Workflow](#basic-variable-workflow)
   - [Orchestration through the `ManifestManager`](#orchestration-through-the-manifestmanager)
 
 # py_animus Documentation
@@ -77,11 +77,11 @@ mkdir /tmp/results
 
 rm -frR /tmp/results/*
 
-docker run --rm -e "DEBUG=1" \
-  -v $PWD/examples/hello-world/src:/tmp/src \
-  -v $PWD/examples/hello-world/manifest:/tmp/data \
-  -v /tmp/results:/tmp/hello-world-result \
-  ghcr.io/nicc777/py-animus:release apply -m /tmp/data/hello-v1.yaml -s /tmp/src
+docker run --rm -e "DEBUG=0" \
+  -v $PWD/examples/linked-manifests/src:/tmp/src \
+  -v $PWD/examples/linked-manifests/manifest:/tmp/data \
+  -v /tmp/results:/tmp/example-page-result \
+  ghcr.io/nicc777/py-animus:release apply -m /tmp/data/linked-v1.yaml -s /tmp/src
 ```
 
 You can run the exact same docker command a couple of times.
@@ -113,60 +113,67 @@ If you edit either the file in `/tmp/results/output.txt` or the manifest, any ne
 
 Whet the example is run, output on the terminal may look something like the following:
 
-| Line #  | Log Level | Log Text                                                                                                                                                                                                                                                            |
-|:-------:|:---------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 01 - 07 | INFO      | `Logging init done`                                                                                                                                                                                                                                                 |
-| 08      | INFO      | `ok`                                                                                                                                                                                                                                                                |
-| 09      | INFO      | `Returning CLI Argument Parser`                                                                                                                                                                                                                                     |
-| 10      | DEBUG     | `Command line arguments parsed...`                                                                                                                                                                                                                                  |
-| 11      | DEBUG     | `   parsed_args: Namespace(manifest_locations=[['/tmp/data/hello-v1.yaml']], src_locations=[['/tmp/src']])`                                                                                                                                                         |
-| 12      | DEBUG     | `   unknown_args: []`                                                                                                                                                                                                                                               |
-| 13      | DEBUG     | `Ingesting source file /tmp/src`                                                                                                                                                                                                                                    |
-| 14      | INFO      | `Logging init done`                                                                                                                                                                                                                                                 |
-| 15      | INFO      | `Registered manifest "HelloWorld" of version v1`                                                                                                                                                                                                                    |
-| 16      | INFO      | `Registered classes: ['HelloWorld']`                                                                                                                                                                                                                                |
-| 17      | DEBUG     | `configuration={'part_1': {'kind': 'HelloWorld', 'version': 'v1', 'metadata': {'name': 'hello-world'}, 'spec': {'file': '/tmp/hello-world-result/output.txt', 'content': 'This is the contents of the file\nspecified in the file property of\nthe spec.   \n'}}}`  |
-| 18      | DEBUG     | `Applying manifest named "hello-world"`                                                                                                                                                                                                                             |
-| 19      | INFO      | `[HelloWorld] Not yet applied. Applying "HelloWorld" named "hello-world"`                                                                                                                                                                                           |
-| 20      | INFO      | `[Variable:HelloWorld:hello-world] NOT EXPIRED - TTL less than zero - expiry ignored`                                                                                                                                                                               |
-| 21      | INFO      | `[Variable:HelloWorld:hello-world] Returning value`                                                                                                                                                                                                                 |
-| 22      | INFO      | `RESULT: HelloWorld:hello-world=True`                                                                                                                                                                                                                               |
+| Line #  | Log Level | Log Text                                                                                                                               |
+|:-------:|:---------:|----------------------------------------------------------------------------------------------------------------------------------------|
+| 01      | INFO      | `ok`                                                                                                                                   |
+| 02      | INFO      | `Returning CLI Argument Parser`                                                                                                        |
+| 03      | INFO      | `Registered manifest "DownloadWebPageContent" of version v1`                                                                           |
+| 04      | INFO      | `Registered manifest "WebsiteUpTest" of version v1`                                                                                    |
+| 05      | INFO      | `Registered classes: ['DownloadWebPageContent:v1', 'WebsiteUpTest:v1']`                                                                |
+| 06      | INFO      | `[WebsiteUpTest] Manifest version "v1" found in class supported versions`                                                              |
+| 07      | INFO      | `parse_manifest(): Stored parsed manifest instance "is-page-up:v1:068c8f31113d14c9fc11dad0255dc264599bbedf19ce2663863bc3e350bdf33a"`   |
+| 08      | INFO      | `[DownloadWebPageContent] Manifest version "v1" found in class supported versions`                                                     |
+| 09      | INFO      | `parse_manifest(): Stored parsed manifest instance "example_page:v1:4e1ed642b6e30111be96621078f831dc1bb2ad69959c6254fa733f42261ebded"` |
+| 10      | WARNING   | `ManifestManager:apply_manifest(): Manifest named "is-page-up" skipped because of skipApplyAll setting`                                |
+| 11      | INFO      | `[DownloadWebPageContent] DownloadWebPageContent.apply_manifest() CALLED`                                                              |
+| 12      | ERROR     | `[DownloadWebPageContent] Could not read file`                                                                                         |
+| 13      | INFO      | `[WebsiteUpTest] WebsiteUpTest.apply_manifest() CALLED`                                                                                |
+| 14      | INFO      | `[WebsiteUpTest] Testing website: https://raw.githubusercontent.com/nicc777/py-animus/main/README.md`                                  |
+| 15      | INFO      | `[WebsiteUpTest]   return_code: 200`                                                                                                   |
+| 16      | INFO      | `[DownloadWebPageContent] Is site up? Test=True`                                                                                       |
+| 17      | INFO      | `[DownloadWebPageContent] Retrieving https://raw.githubusercontent.com/nicc777/py-animus/main/README.md`                               |
+| 18      | INFO      | `[DownloadWebPageContent] Reading content from: https://raw.githubusercontent.com/nicc777/py-animus/main/README.md`                    |
+| 19      | INFO      | `[DownloadWebPageContent] Saved content in /tmp/example-page-result/output.txt`                                                        |
+| 20      | INFO      | `RESULT: example_page=True`                                                                                                            |
+| 21      | INFO      | `RESULT: is-page-up=True`                                                                                                              |
+| 22      | INFO      | `RESULT: example_page-state=applied`                                                                                                   |
 
 > **Note**
 > Some logging details may change and may not reflect exactly as shown above. 
 
 The interesting lines are the following:
 
-* Line 13 - THe application now goes through the Python files in the directory `/tmp/src` and looks for classes to ingest
-* Line 15 - A class called `HelloWorld` is registered in the `ManifestManager`
-* Line 18 - Based on the `kind` defined in the Manifest, the `ManifestManager` will apply the manifest by calling the apply method of the registered `HelloWorld`
-* Line 19 - From the `HelloWorld` class, we see that the manifest has not yet been applied, or the data is different (this implementation just checks if the output file exists or not and if it exists, the content is compared to the manifest supplied data)
-* Line 22 - After the application completes it's run, all the current variables are dumped. In this case, there is only one variable
+* Line 3 to 5 - The application now goes through the Python files in the directory `/tmp/src` and looks for classes to ingest
+* Line 6 and 9 - A manifest is parsed and stored with an appropriate class instance of the same kind and supporting that version of the manifest
+* Between lines 9 and 10 - The application will no loop through all the ingested manifests and apply them all
+* Line 11 - The main manifest is applied
+* Line 12 - The manifest call to `implemented_manifest_differ_from_this_manifest()` checks if the file was already downloaded and returns the appropriate value (`true`). The main manifest now internally applies the initial manifest that was skipped, if required.
+* Line 13 to 15 - The originally skipped manifest now run's through it's own process to check if the remote site is up
+* Line 16 to 19 - The main manifest now downloads the file
+* Line 20 to 22 - The stored variables are printed out
 
-If the data in the newly created file is not changed and we run the exact same command again, we notice the following difference in the log messages: `[HelloWorld] Already Applied "HelloWorld" named "hello-world"` 
-
-In the `HelloWorld` there are at least four methods to pay attention to.
+There are at least four methods to pay attention to.
 
 ### The `__init__` method
 
 The init method is fairly standard for all classes:
 
 ```python
-class HelloWorld(ManifestBase):
+class DownloadWebPageContent(ManifestBase):
 
     def __init__(self, logger=get_logger(), post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):
         super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
 ```
 
-The exact implementation may change in the near future (see [the road map](../TODO.md)), but at the moment, the `ManifestManager` only registers one version of a class, even if given multiple classes of the same name.
+Multiple versions of `DownloadWebPageContent` can exist, as long as they are in different source files.
 
 ### The `implemented_manifest_differ_from_this_manifest` method
 
 This method must implement logic to determine the following:
 
 * If the manifest have not yet been applied, return `TRUE`
-* If the manifest have previously been applied, but the implemented state is now different from the provided manifest `sped`, return `TRUE`
-* If the manifest have previously been applied, and the implemented state is still matching the provided manifest `sped`, return `FALSE`
+* If the manifest have previously been applied, but the implemented state is now different from the provided manifest `spec`, return `TRUE`
+* If the manifest have previously been applied, and the implemented state is still matching the provided manifest `spec`, return `FALSE`
 
 ### The `apply_manifest` method
 
@@ -193,7 +200,7 @@ Each time the `ManifestManager` calls a method in an implementation of `Manifest
 > **Warning**:
 > There are no specific safeguards built into `VariableCache` and it is possible for an implementation of `ManifestBase` to override any value set in the `VariableCache`. Best practice is to only _read_ a `Variable` not "owned" or controlled by the specific implementation of `ManifestBase`
 
-### Basic Workflow
+### Basic Variable Workflow
 
 When the `ManifestManager` is initialized, an instance of `VariableCache` is created. Only one copy of the `VariableCache` should ever exist.
 
