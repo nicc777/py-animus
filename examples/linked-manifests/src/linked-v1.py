@@ -53,6 +53,7 @@ class WebsiteUpTest(ManifestBase):
     def apply_manifest(self, manifest_lookup_function: object=None, variable_cache: VariableCache=VariableCache()):
         """Do the check if a previous check was not yet performed
         """
+        self.log(message='WebsiteUpTest.apply_manifest() CALLED', level='info')
         website_up = False
         if self.implemented_manifest_differ_from_this_manifest() is True:
             self.log(message='Testing website: {}'.format(self.spec['url']), level='info')
@@ -71,6 +72,7 @@ class WebsiteUpTest(ManifestBase):
         return 
     
     def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
+        self.log(message='WebsiteUpTest.delete_manifest() CALLED', level='info')
         return
     
 
@@ -131,6 +133,7 @@ class DownloadWebPageContent(ManifestBase):
         4) Save to a file defined in the Manifest
         5) Set variables and return
         """
+        self.log(message='DownloadWebPageContent.apply_manifest() CALLED', level='info')
         if self.implemented_manifest_differ_from_this_manifest() is False:
             self.log(message='Already retrieved {}'.format(self.spec['url']), level='info')
             return
@@ -159,6 +162,7 @@ class DownloadWebPageContent(ManifestBase):
         return  
     
     def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
+        self.log(message='DownloadWebPageContent.delete_manifest() CALLED', level='info')
         try:
             if os.path.exists(path=self.spec['outputFile']) is True:
                 os.remove(path=self.spec['outputFile'])
