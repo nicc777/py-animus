@@ -73,7 +73,7 @@ def get_logger(
     if h is not None:
         logger.addHandler(h)
 
-    logger.info('Logging init done')
+    logger.debug('Logging init done')
     return logger
 
 
