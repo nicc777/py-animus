@@ -3,6 +3,8 @@ kind: WebsiteUpTest
 version: v1
 metadata:
   name: is-page-up
+  skipApplyAll: true
+  skipDeleteAll: true
 spec:
   url: https://raw.githubusercontent.com/nicc777/py-animus/main/README.md
   acceptableResponseCodes:
