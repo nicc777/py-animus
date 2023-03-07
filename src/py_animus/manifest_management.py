@@ -648,12 +648,15 @@ class ManifestManager:
                 return manifest_instance
         raise Exception('No manifest instance for "{}" found'.format(name))
     
-    def apply_manifest(self, name: str):
+    def apply_manifest(self, name: str, skip_dependency_processing: bool=False):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
         if 'skipApplyAll' in manifest_instance.metadata:
             if manifest_instance.metadata['skipApplyAll'] is True:
                 self.logger.warning('ManifestManager:apply_manifest(): Manifest named "{}" skipped because of skipApplyAll setting'.format(manifest_instance.metadata['name']))
                 return
+        if skip_dependency_processing is True:
+            manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
+            return
         manifest_instance.process_dependencies(
             action='apply',
             process_dependency_if_already_applied=False,
@@ -663,12 +666,15 @@ class ManifestManager:
             process_self_post_dependency_processing=True
         )
 
-    def delete_manifest(self, name: str):
+    def delete_manifest(self, name: str, skip_dependency_processing: bool=False):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
         if 'skipDeleteAll' in manifest_instance.metadata:
             if manifest_instance.metadata['skipApplyAll'] is True:
                 self.logger.warning('ManifestManager:delete_manifest(): Manifest named "{}" skipped because of skipApplyAll setting'.format(manifest_instance.metadata['name']))
                 return
+        if skip_dependency_processing is True:
+            manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
+            return
         manifest_instance.process_dependencies(
             action='apply',
             process_dependency_if_already_applied=True,
