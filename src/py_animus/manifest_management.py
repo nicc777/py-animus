@@ -416,7 +416,7 @@ class ManifestBase:
                     if action == 'delete':
                         manifest_applied_previously = not manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
                         if manifest_applied_previously is True:
-                            manifest_implementation.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
+                            manifest_implementation.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
         else:
             self.log(message='No dependencies for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='info')
 
