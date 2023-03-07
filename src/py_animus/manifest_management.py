@@ -395,6 +395,15 @@ class ManifestBase:
         self.checksum = hashlib.sha256(json.dumps(converted_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest() # Credit to https://stackoverflow.com/users/2082964/chris-maes for his hint on https://stackoverflow.com/questions/6923780/python-checksum-of-a-dict
 
     def process_dependencies(self, action: str, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
+        """Called via the ManifestManager just before calling the `apply_manifest()` or `delete_manifest()`
+
+        Looks at `metadata.dependencies.*` to determine which other manifests has to be processed before the main action for this manifest is processed
+
+        Args:
+          action: String with the appropriate command by which the lookup in `metadata.dependencies.*` will be done
+          manifest_lookup_function: A function passed in by the ManifestManager. Called with `manifest_lookup_function(name='...')`. Implemented in ManifestManager.get_manifest_instance_by_name()
+          variable_cache: A reference to the current instance of the VariableCache
+        """
         if 'dependencies' in self.metadata:
             if action in self.metadata['dependencies']:
                 for dependant_manifest_name in self.metadata['dependencies'][action]:
