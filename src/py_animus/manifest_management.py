@@ -408,7 +408,14 @@ class ManifestBase:
             if action in self.metadata['dependencies']:
                 for dependant_manifest_name in self.metadata['dependencies'][action]:
                     manifest_implementation = manifest_lookup_function(name=dependant_manifest_name)
-                    manifest_implementation.apply_manifest(variable_cache=variable_cache)
+                    if action == 'apply':
+                        manifest_applied_previously = not manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
+                        if manifest_applied_previously is False:
+                            manifest_implementation.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
+                    if action == 'delete':
+                        manifest_applied_previously = not manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
+                        if manifest_applied_previously is True:
+                            manifest_implementation.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
 
     def to_dict(self):
         """When the user or some other part of the systems required the data as a Dict, for example when to produce a
