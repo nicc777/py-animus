@@ -407,6 +407,7 @@ class ManifestBase:
         if 'dependencies' in self.metadata:
             if action in self.metadata['dependencies']:
                 for dependant_manifest_name in self.metadata['dependencies'][action]:
+                    self.log(message='Processing dependency named "{}" for manifest "{}" while processing action "{}"'.format(dependant_manifest_name, self.metadata['name'], action), level='info')
                     manifest_implementation = manifest_lookup_function(name=dependant_manifest_name)
                     if action == 'apply':
                         manifest_applied_previously = not manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
@@ -416,6 +417,8 @@ class ManifestBase:
                         manifest_applied_previously = not manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
                         if manifest_applied_previously is True:
                             manifest_implementation.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
+        else:
+            self.log(message='No dependencies for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='info')
 
     def to_dict(self):
         """When the user or some other part of the systems required the data as a Dict, for example when to produce a
