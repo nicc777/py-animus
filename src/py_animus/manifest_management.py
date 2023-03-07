@@ -410,26 +410,27 @@ class ManifestBase:
                     self.log(message='Processing dependency named "{}" for manifest "{}" while processing action "{}"'.format(dependant_manifest_name, self.metadata['name'], action), level='info')
                     manifest_implementation = manifest_lookup_function(name=dependant_manifest_name)
                     if action == 'apply':
-                        manifest_applied_previously = not manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=variable_cache)
+                        manifest_applied_previously = not manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
                         if manifest_applied_previously is False:
-                            manifest_implementation.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=variable_cache)
+                            manifest_implementation.apply_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
                     if action == 'delete':
-                        manifest_applied_previously = not manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=variable_cache)
+                        manifest_applied_previously = not manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
                         if manifest_applied_previously is True:
-                            manifest_implementation.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=variable_cache)
-                        
+                            manifest_implementation.delete_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
+            else:
+                self.log(message='No dependencies for action "{}" for manifest "{}"'.format(action, self.metadata['name']), level='warning')
         else:
             self.log(message='No dependencies for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='info')
 
         if process_self_post_dependency_processing is True:
             if action == 'apply':
-                self.log(message='Processing SELF for manifest "{}" while processing action "{}"'.format(dependant_manifest_name, self.metadata['name'], action), level='info')
-                self.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=variable_cache)
+                self.log(message='Processing SELF for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='info')
+                self.apply_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
             if action == 'delete':
-                self.log(message='Processing SELF for manifest "{}" while processing action "{}"'.format(dependant_manifest_name, self.metadata['name'], action), level='info')
-                self.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=variable_cache)
+                self.log(message='Processing SELF for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='info')
+                self.delete_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
         else:
-            self.log(message='SELF was NOT YET PROCESSED for manifest "{}" while processing action "{}"'.format(dependant_manifest_name, self.metadata['name'], action), level='info')
+            self.log(message='SELF was NOT YET PROCESSED for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='info')
 
     def to_dict(self):
         """When the user or some other part of the systems required the data as a Dict, for example when to produce a
