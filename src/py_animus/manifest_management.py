@@ -394,7 +394,7 @@ class ManifestBase:
                 self.log(message='post_parsing_method failed with EXCEPTION: {}'.format(traceback.format_exc()), level='error')
         self.checksum = hashlib.sha256(json.dumps(converted_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest() # Credit to https://stackoverflow.com/users/2082964/chris-maes for his hint on https://stackoverflow.com/questions/6923780/python-checksum-of-a-dict
 
-    def process_dependencies(self, action: str, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
+    def process_dependencies(self, action: str, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), process_self_post_dependency_processing: bool=True):
         """Called via the ManifestManager just before calling the `apply_manifest()` or `delete_manifest()`
 
         Looks at `metadata.dependencies.*` to determine which other manifests has to be processed before the main action for this manifest is processed
@@ -413,10 +413,14 @@ class ManifestBase:
                         manifest_applied_previously = not manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
                         if manifest_applied_previously is False:
                             manifest_implementation.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
+                        if process_self_post_dependency_processing is True:
+                            self.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
                     if action == 'delete':
                         manifest_applied_previously = not manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
                         if manifest_applied_previously is True:
                             manifest_implementation.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
+                        if process_self_post_dependency_processing is True:
+                            self.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
         else:
             self.log(message='No dependencies for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='info')
 
