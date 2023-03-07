@@ -394,7 +394,15 @@ class ManifestBase:
                 self.log(message='post_parsing_method failed with EXCEPTION: {}'.format(traceback.format_exc()), level='error')
         self.checksum = hashlib.sha256(json.dumps(converted_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest() # Credit to https://stackoverflow.com/users/2082964/chris-maes for his hint on https://stackoverflow.com/questions/6923780/python-checksum-of-a-dict
 
-    def process_dependencies(self, action: str, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), process_self_post_dependency_processing: bool=True):
+    def process_dependencies(
+        self,
+        action: str,
+        process_dependency_if_already_applied: bool,
+        process_dependency_if_not_already_applied: bool,
+        manifest_lookup_function: object=dummy_manifest_lookup_function,
+        variable_cache: VariableCache=VariableCache(),
+        process_self_post_dependency_processing: bool=True
+    ):
         """Called via the ManifestManager just before calling the `apply_manifest()` or `delete_manifest()`
 
         Looks at `metadata.dependencies.*` to determine which other manifests has to be processed before the main action for this manifest is processed
@@ -408,15 +416,39 @@ class ManifestBase:
             if action in self.metadata['dependencies']:
                 for dependant_manifest_name in self.metadata['dependencies'][action]:
                     self.log(message='Processing dependency named "{}" for manifest "{}" while processing action "{}"'.format(dependant_manifest_name, self.metadata['name'], action), level='info')
-                    manifest_implementation = manifest_lookup_function(name=dependant_manifest_name)
-                    if action == 'apply':
-                        manifest_applied_previously = not manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
-                        if manifest_applied_previously is False:
-                            manifest_implementation.apply_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
-                    if action == 'delete':
-                        manifest_applied_previously = not manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
-                        if manifest_applied_previously is True:
-                            manifest_implementation.delete_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
+                    dependency_manifest_implementation = manifest_lookup_function(name=dependant_manifest_name)
+                    dependency_manifest_applied_previously = not dependency_manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
+                    self.log(
+                        message='Dependency named "{}" previously applied: {}'.format(
+                            dependency_manifest_implementation.metadata['name'],
+                            dependency_manifest_applied_previously
+                        ),
+                        level='info'
+                    )
+                    if dependency_manifest_applied_previously == process_dependency_if_already_applied:
+                        self.log(message='Dependency named "{}" will be applied because process_dependency_if_already_applied is TRUE'.format(dependency_manifest_implementation.metadata['name']),level='info')   
+                        dependency_manifest_implementation.process_dependencies(
+                            action=action,
+                            manifest_lookup_function=manifest_lookup_function,
+                            variable_cache=variable_cache,
+                            process_self_post_dependency_processing=process_self_post_dependency_processing,
+                            process_dependency_if_already_applied=process_dependency_if_already_applied,
+                            process_dependency_if_not_already_applied=process_dependency_if_not_already_applied
+                        )
+                    else:
+                        self.log(message='Dependency named "{}" will NOT be applied because process_dependency_if_already_applied is FALSE'.format(dependency_manifest_implementation.metadata['name']),level='info')   
+                    if dependency_manifest_applied_previously == process_dependency_if_not_already_applied:
+                        self.log(message='Dependency named "{}" will be applied because process_dependency_if_not_already_applied is TRUE'.format(dependency_manifest_implementation.metadata['name']),level='info')   
+                        dependency_manifest_implementation.process_dependencies(
+                            action=action,
+                            manifest_lookup_function=manifest_lookup_function,
+                            variable_cache=variable_cache,
+                            process_self_post_dependency_processing=process_self_post_dependency_processing,
+                            process_dependency_if_already_applied=process_dependency_if_already_applied,
+                            process_dependency_if_not_already_applied=process_dependency_if_not_already_applied
+                        )
+                    else:
+                        self.log(message='Dependency named "{}" will be applied because process_dependency_if_not_already_applied is FALSE'.format(dependency_manifest_implementation.metadata['name']),level='info')   
             else:
                 self.log(message='No dependencies for action "{}" for manifest "{}"'.format(action, self.metadata['name']), level='warning')
         else:
@@ -622,7 +654,14 @@ class ManifestManager:
             if manifest_instance.metadata['skipApplyAll'] is True:
                 self.logger.warning('ManifestManager:apply_manifest(): Manifest named "{}" skipped because of skipApplyAll setting'.format(manifest_instance.metadata['name']))
                 return
-        manifest_instance.process_dependencies(action='apply', manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache, process_self_post_dependency_processing=True)
+        manifest_instance.process_dependencies(
+            action='apply',
+            process_dependency_if_already_applied=False,
+            process_dependency_if_not_already_applied=True,
+            manifest_lookup_function=self.get_manifest_instance_by_name,
+            variable_cache=self.variable_cache,
+            process_self_post_dependency_processing=True
+        )
 
     def delete_manifest(self, name: str):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
@@ -630,7 +669,14 @@ class ManifestManager:
             if manifest_instance.metadata['skipApplyAll'] is True:
                 self.logger.warning('ManifestManager:delete_manifest(): Manifest named "{}" skipped because of skipApplyAll setting'.format(manifest_instance.metadata['name']))
                 return
-        manifest_instance.process_dependencies(action='delete', manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache, process_self_post_dependency_processing=True)
+        manifest_instance.process_dependencies(
+            action='apply',
+            process_dependency_if_already_applied=True,
+            process_dependency_if_not_already_applied=False,
+            manifest_lookup_function=self.get_manifest_instance_by_name,
+            variable_cache=self.variable_cache,
+            process_self_post_dependency_processing=True
+        )
 
     def get_manifest_class_by_kind(self, kind: str, version: str=None):
         idx = kind
