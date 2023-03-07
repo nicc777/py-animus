@@ -673,7 +673,7 @@ class ManifestManager:
                 self.logger.warning('ManifestManager:delete_manifest(): Manifest named "{}" skipped because of skipApplyAll setting'.format(manifest_instance.metadata['name']))
                 return
         if skip_dependency_processing is True:
-            manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
+            manifest_instance.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
             return
         manifest_instance.process_dependencies(
             action='apply',
