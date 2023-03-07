@@ -621,8 +621,7 @@ class ManifestManager:
             if manifest_instance.metadata['skipApplyAll'] is True:
                 self.logger.warning('ManifestManager:apply_manifest(): Manifest named "{}" skipped because of skipApplyAll setting'.format(manifest_instance.metadata['name']))
                 return
-        manifest_instance.process_dependencies(action='apply', manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
-        manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
+        manifest_instance.process_dependencies(action='apply', manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache, process_self_post_dependency_processing=True)
 
     def delete_manifest(self, name: str):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
@@ -630,8 +629,7 @@ class ManifestManager:
             if manifest_instance.metadata['skipApplyAll'] is True:
                 self.logger.warning('ManifestManager:delete_manifest(): Manifest named "{}" skipped because of skipApplyAll setting'.format(manifest_instance.metadata['name']))
                 return
-        manifest_instance.process_dependencies(action='delete', manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
-        manifest_instance.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
+        manifest_instance.process_dependencies(action='delete', manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache, process_self_post_dependency_processing=True)
 
     def get_manifest_class_by_kind(self, kind: str, version: str=None):
         idx = kind
