@@ -394,6 +394,13 @@ class ManifestBase:
                 self.log(message='post_parsing_method failed with EXCEPTION: {}'.format(traceback.format_exc()), level='error')
         self.checksum = hashlib.sha256(json.dumps(converted_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest() # Credit to https://stackoverflow.com/users/2082964/chris-maes for his hint on https://stackoverflow.com/questions/6923780/python-checksum-of-a-dict
 
+    def process_dependencies(self, action: str, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
+        if 'dependencies' in self.metadata:
+            if action in self.metadata['dependencies']:
+                for dependant_manifest_name in self.metadata['dependencies'][action]:
+                    manifest_implementation = manifest_lookup_function(name=dependant_manifest_name)
+                    manifest_implementation.apply_manifest(variable_cache=variable_cache)
+
     def to_dict(self):
         """When the user or some other part of the systems required the data as a Dict, for example when to produce a
         YAML file.
@@ -584,6 +591,7 @@ class ManifestManager:
             if manifest_instance.metadata['skipApplyAll'] is True:
                 self.logger.warning('ManifestManager:apply_manifest(): Manifest named "{}" skipped because of skipApplyAll setting'.format(manifest_instance.metadata['name']))
                 return
+        manifest_instance.process_dependencies(action='apply', manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
         manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
 
     def delete_manifest(self, name: str):
@@ -592,6 +600,7 @@ class ManifestManager:
             if manifest_instance.metadata['skipApplyAll'] is True:
                 self.logger.warning('ManifestManager:delete_manifest(): Manifest named "{}" skipped because of skipApplyAll setting'.format(manifest_instance.metadata['name']))
                 return
+        manifest_instance.process_dependencies(action='delete', manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
         manifest_instance.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
 
     def get_manifest_class_by_kind(self, kind: str, version: str=None):
