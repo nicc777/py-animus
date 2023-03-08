@@ -51,9 +51,6 @@ _**Manifest General Rules**_
 * The `metadata.name` field is unique, even across different versions of a manifest. For example, `kind: Example` of `version: 1` must have a different name than `kind: Example` of `version: 2`
 * Any manifest listed under dependencies will be processed first before the current manifest is processed.
 
-> **Note**
-> An example is provided. The file above is from `examples/hello-world/manifest/hello-v1.yaml`.
-
 The application will expect some implementation of `ManifestBase` that is called `HelloWorld`. You can have a look at the file `examples/hello-world/src/hello-v1.py` for an example.
 
 Using the docker version of this application, on a *nix host you can try out the example with the following commands:
@@ -93,7 +90,7 @@ cat /tmp/results/output.txt
 If you edit either the file in `/tmp/results/output.txt` or the manifest, any next run will update the file contents again to align to what is defined in the manifest. 
 
 > **Note**
-> Keep in mind the manifest always contains the desired state. Therefore, in this example, the implementation will ensure that the specified file always contain the text as specified in the manifest.
+> Keep in mind the manifest always contains the desired state. Also, in this example, the `WebsiteUpTest` is never processed on it's own and is only ever referred to by other manifests in their dependencies list, as needed.
 
 To delete the downloaded file, just run the same docker command, but instead of `apply` use the `delete` command. The previously downloaded file should now be gone
 
