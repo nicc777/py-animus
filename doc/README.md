@@ -1,5 +1,6 @@
 
 - [py\_animus Documentation](#py_animus-documentation)
+- [Terminology](#terminology)
 - [Basic Concepts](#basic-concepts)
   - [Manifests and Handler Classes for Manifests](#manifests-and-handler-classes-for-manifests)
   - [The Classes Implementing the Manifest](#the-classes-implementing-the-manifest)
@@ -10,7 +11,6 @@
   - [The `Variable` base class and `VariableCache`](#the-variable-base-class-and-variablecache)
     - [How data is passed around](#how-data-is-passed-around)
     - [Basic Variable Workflow](#basic-variable-workflow)
-  - [Orchestration through the `ManifestManager`](#orchestration-through-the-manifestmanager)
 
 # py_animus Documentation
 
@@ -18,6 +18,15 @@ The documentation focus on two parts:
 
 * The implementation of classes that extend `ManifestBase`
 * How to work with the `ManifestManager` and roll your own solution (TODO)
+
+# Terminology
+
+| Term/Phrase                   | Meaning                                                                                          |
+|-------------------------------|--------------------------------------------------------------------------------------------------|
+| Apply or Applying a Manifest  | The process of implementing procedures to achieve a desired state as defined in a manifest       |
+| Delete or Deleting a Manifest | The process of implementing procedures to delete artifacts created previously by an apply action |
+| Manifest                      | A YAML file expressing a desired state                                                           |
+| Process or processing         | Similar to the concept of "implementing procedures" - basically executing code                   |
 
 # Basic Concepts
 
@@ -190,16 +199,3 @@ for variable_name in tuple(variable_cache.values.keys()):
 > **Warning**:
 > Important to remember is that calls to the `VariableCache` methods `store_variable()` and `get_value()` could raise exceptions (depending on optional parameters set), and the implementation of `ManifestBase` should be able to handle that appropriately as required.
 
-## Orchestration through the `ManifestManager`
-
-The `ManifestManager` has methods to assist with the orchestration related to the reading source files and manifests and then applying changes as required.
-
-The default work flow as implemented in `src/py_animus/py_animus.py` is basically the following:
-
-1. Parse the command line arguments - the purpose is to get the locations (paths) of the source files (implementations of `ManifestBase`) and the YAML manifest files themselves as well as the desired command (`apply` or `delete`).
-2. Instances of `VariableCache` and `ManifestManager` is created. A reference of `VariableCache` is passed in the initialization of `ManifestManager`.
-3. Source files (implementations of `ManifestBase`) is parsed and class instances are stored in `ManifestManager`.
-4. The YAML manifest files are read and stored in `ManifestManager`. Every parsed YAML manifest is processed by looking at the `kind` value and see if there is an implementation of `ManifestBase` that matches the same name (and version or supported version) before it is stored. (_**Note**_: The implementation of the exact functionality may still be in progress at the time of writing this documentation and implementation may either not work correctly or may change)
-5. Based on the command (`apply` or `delete`), a call is made to either the function `apply_command()` or `delete_command`. Within these functions, a loop is done over every parsed YAML manifest and a call is made to the appropriate implementation of `ManifestBase` based on the `kind`.
-
-By using `src/py_animus/py_animus.py` as an example of orchestration, it is possible for other projects to implement different orchestration logic.
