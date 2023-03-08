@@ -676,7 +676,7 @@ class ManifestManager:
             manifest_instance.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
             return
         manifest_instance.process_dependencies(
-            action='apply',
+            action='delete',
             process_dependency_if_already_applied=True,
             process_dependency_if_not_already_applied=False,
             manifest_lookup_function=self.get_manifest_instance_by_name,
