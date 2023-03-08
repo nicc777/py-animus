@@ -21,12 +21,13 @@ The documentation focus on two parts:
 
 # Terminology
 
-| Term/Phrase                   | Meaning                                                                                          |
-|-------------------------------|--------------------------------------------------------------------------------------------------|
-| Apply or Applying a Manifest  | The process of implementing procedures to achieve a desired state as defined in a manifest       |
-| Delete or Deleting a Manifest | The process of implementing procedures to delete artifacts created previously by an apply action |
-| Manifest                      | A YAML file expressing a desired state                                                           |
-| Process or processing         | Similar to the concept of "implementing procedures" - basically executing code                   |
+| Term/Phrase                   | Meaning                                                                                                        |
+|-------------------------------|----------------------------------------------------------------------------------------------------------------|
+| Apply or Applying a Manifest  | The process of implementing procedures to achieve a desired state as defined in a manifest                     |
+| Delete or Deleting a Manifest | The process of implementing procedures to delete artifacts created previously by an apply action               |
+| Desired State                 | Could mean several things, but in general refers to some end-result that can be reliably verified through code |
+| Manifest                      | A YAML file expressing a desired state                                                                         |
+| Process or processing         | Similar to the concept of "implementing procedures" - basically executing code                                 |
 
 # Basic Concepts
 
