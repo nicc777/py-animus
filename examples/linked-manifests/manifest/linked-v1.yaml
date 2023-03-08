@@ -17,8 +17,10 @@ kind: DownloadWebPageContent
 version: v1
 metadata:
   name: example_page
+  dependencies:
+    apply:
+    - is-page-up
 spec:
   url: https://raw.githubusercontent.com/nicc777/py-animus/main/README.md
   outputFile: /tmp/example-page-result/output.txt
-  livenessFunction: is-page-up
   
