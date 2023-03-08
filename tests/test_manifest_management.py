@@ -738,6 +738,97 @@ spec:
         result2 = vc.get_value(variable_name='MyManifest1:test1-1')    # Implementation dictates that this variables must still be available
         self.assertIsNotNone(result2)
 
+    def test_skip_dependency_scenarios(self):
+        ###
+        ### Manifest Setup
+        ###
+
+        manifest_1_v01_a_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-1
+    skipApplyAll: true
+    skipDeleteAll: true
+spec:
+    val: 1
+"""
+
+        manifest_1_v01_b_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-2
+    skipApplyAll: true
+    skipDeleteAll: true
+spec:
+    val: 0
+"""
+
+        manifest_2_v01_data=  """---
+kind: MyManifest2
+version: v0.1
+metadata:
+    name: test2-1
+    dependencies:
+        apply:
+        - test1-1
+        delete:
+        - test1-2
+spec:
+    val: AAA
+"""
+
+
+        ###
+        ### Init VariableCache and ManifestManager
+        ###
+        vc = VariableCache()
+        mm = ManifestManager(variable_cache=vc)
+
+        ###
+        ### Consume classes that extend ManifestBase and register with ManifestManager
+        ###
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
+        self.assertEqual(len(mm.manifest_class_register), 6)
+
+        ###
+        ### Consume Manifests and link with class implementations registered in ManifestManager
+        ###
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_a_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_b_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v01_data)['part_1'])
+
+        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.manifest_instances), 3)
+
+        ###
+        ### Mimic the main() function apply all call
+        ###
+        for name in tuple(mm.manifest_instances.keys()):
+            print('Applying manifest named "{}"'.format(name))
+            mm.apply_manifest(name=name, skip_dependency_processing=True)
+        result1 = vc.get_value(variable_name='MyManifest1:test1-1', raise_exception_on_not_found=False, default_value_if_not_found=None)    # Ensure that processing manifest 2, that manifest 1 was NOT executed
+        self.assertIsNone(result1)
+        for name in tuple(vc.values.keys()):
+            print('RESULT: {}={}'.format(name, vc.get_value(variable_name=name))) 
+
+        ###
+        ### Mimic the main() function delete all call
+        ###
+        for ref in tuple(mm.manifest_instances.keys()):
+            name, version, checksum = ref.split(':')
+            print('Deleting manifest named "{}" version "{}'.format(name, version))
+            # mm.delete_manifest(name=name, version=version)
+            mm.delete_manifest(name=name, skip_dependency_processing=True)
+        for v_name in ('MyManifest2:test2-1',):
+            with self.assertRaises(Exception) as context:
+                vc.get_value(variable_name=v_name)
+            self.assertTrue('Expired' in str(context.exception), 'Expected variable named "{}" to have expired!'.format(v_name))
+        result2 = vc.get_value(variable_name='MyManifest1:test1-1', raise_exception_on_not_found=False, default_value_if_not_found=None)    # Implementation dictates that this variables must still not be available
+        self.assertIsNone(result2)
+
 
 
 if __name__ == '__main__':
