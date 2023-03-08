@@ -73,7 +73,8 @@ The application will expect some implementation of `ManifestBase` that is called
 Using the docker version of this application, on a *nix host you can try out the example with the following commands:
 
 ```shell
-// Assuming we are running from the cloned project path...
+# Assuming we are running from the cloned project path...
+# Also assuming you are running on a *nix like system
 
 mkdir /tmp/results
 
@@ -92,13 +93,10 @@ What happens?
 
 On the FIRST run, the following will happen:
 
-* Docker will create the various mount points where `/tmp/src` will contain our custom Python implementation, `/tmp/data` will contain the YAML manifest and the output will be stored in `/tmp/hello-world-result` which is on the local host filesystem located in `/tmp/results`, which should be empty on the first run.
+* Docker will create the various mount points where `/tmp/src` will contain our custom Python implementation, `/tmp/data` will contain the YAML manifest and the output will be stored in `/tmp/example-page-result` which is on the local host filesystem located in `/tmp/results`, which should be empty on the first run.
 * The application loads the custom source code and registers it in the `ManifestManager`
 * Next, the application loads the YAML manifest and stores it in the `ManifestManager`
-* Finally, the application loops through all the parsed manifest files and applied them to the appropriate custom implementation. The match is made by matching the `kind` (`HelloWorld`) in the manifest to an implementation defined in the `ManifestManager` which will be our class named `HelloWorld`
-* In the `HelloWorld` class, we first check if the file already exists by making a call to the `implemented_manifest_differ_from_this_manifest()` method. Finally, the result is recorded in the `VariableCache`
-* The application now loops through available variables in the `VariableCache` and dumps the values.
-* The application exists
+* Finally, the application loops through all the parsed manifest files and applied them to the appropriate custom implementation.
 
 You can see the file created by issuing the following command:
 
@@ -111,50 +109,30 @@ If you edit either the file in `/tmp/results/output.txt` or the manifest, any ne
 > **Note**
 > Keep in mind the manifest always contains the desired state. Therefore, in this example, the implementation will ensure that the specified file always contain the text as specified in the manifest.
 
+To delete the downloaded file, just run the same docker command, but instead of `apply` use the `delete` command. The previously downloaded file should now be gone
+
 ## The Classes Implementing the Manifest
 
-Whet the example is run, output on the terminal may look something like the following:
+From the example, the source file `examples/linked-manifests/src/linked-v1.py` ([link](../examples/linked-manifests/src/linked-v1.py)) implements two classes that extend `ManifestBase`:
 
-| Line #  | Log Level | Log Text                                                                                                                               |
-|:-------:|:---------:|----------------------------------------------------------------------------------------------------------------------------------------|
-| 01      | INFO      | `ok`                                                                                                                                   |
-| 02      | INFO      | `Returning CLI Argument Parser`                                                                                                        |
-| 03      | INFO      | `Registered manifest "DownloadWebPageContent" of version v1`                                                                           |
-| 04      | INFO      | `Registered manifest "WebsiteUpTest" of version v1`                                                                                    |
-| 05      | INFO      | `Registered classes: ['DownloadWebPageContent:v1', 'WebsiteUpTest:v1']`                                                                |
-| 06      | INFO      | `[WebsiteUpTest] Manifest version "v1" found in class supported versions`                                                              |
-| 07      | INFO      | `parse_manifest(): Stored parsed manifest instance "is-page-up:v1:068c8f31113d14c9fc11dad0255dc264599bbedf19ce2663863bc3e350bdf33a"`   |
-| 08      | INFO      | `[DownloadWebPageContent] Manifest version "v1" found in class supported versions`                                                     |
-| 09      | INFO      | `parse_manifest(): Stored parsed manifest instance "example_page:v1:4e1ed642b6e30111be96621078f831dc1bb2ad69959c6254fa733f42261ebded"` |
-| 10      | WARNING   | `ManifestManager:apply_manifest(): Manifest named "is-page-up" skipped because of skipApplyAll setting`                                |
-| 11      | INFO      | `[DownloadWebPageContent] DownloadWebPageContent.apply_manifest() CALLED`                                                              |
-| 12      | ERROR     | `[DownloadWebPageContent] Could not read file`                                                                                         |
-| 13      | INFO      | `[WebsiteUpTest] WebsiteUpTest.apply_manifest() CALLED`                                                                                |
-| 14      | INFO      | `[WebsiteUpTest] Testing website: https://raw.githubusercontent.com/nicc777/py-animus/main/README.md`                                  |
-| 15      | INFO      | `[WebsiteUpTest]   return_code: 200`                                                                                                   |
-| 16      | INFO      | `[DownloadWebPageContent] Is site up? Test=True`                                                                                       |
-| 17      | INFO      | `[DownloadWebPageContent] Retrieving https://raw.githubusercontent.com/nicc777/py-animus/main/README.md`                               |
-| 18      | INFO      | `[DownloadWebPageContent] Reading content from: https://raw.githubusercontent.com/nicc777/py-animus/main/README.md`                    |
-| 19      | INFO      | `[DownloadWebPageContent] Saved content in /tmp/example-page-result/output.txt`                                                        |
-| 20      | INFO      | `RESULT: example_page=True`                                                                                                            |
-| 21      | INFO      | `RESULT: is-page-up=True`                                                                                                              |
-| 22      | INFO      | `RESULT: example_page-state=applied`                                                                                                   |
+* `WebsiteUpTest`
+* `DownloadWebPageContent`
 
-> **Note**
-> Some logging details may change and may not reflect exactly as shown above. 
+When the manifests are applied, the logic is that first a check is done to see if the site is up and then the page is downloaded. When the downloaded content is "deleted", (delete action), there is no need to check if the site is up and therefore that check can be skipped.
 
-The interesting lines are the following:
+The current workflow will try to apply all manifests, looping through the whole list of ingested manifest files and doing a lookup to see if an implementation is available that can apply that manifest. This is done in two phases:
 
-* Line 3 to 5 - The application now goes through the Python files in the directory `/tmp/src` and looks for classes to ingest
-* Line 6 and 9 - A manifest is parsed and stored with an appropriate class instance of the same kind and supporting that version of the manifest
-* Between lines 9 and 10 - The application will no loop through all the ingested manifests and apply them all
-* Line 11 - The main manifest is applied
-* Line 12 - The manifest call to `implemented_manifest_differ_from_this_manifest()` checks if the file was already downloaded and returns the appropriate value (`true`). The main manifest now internally applies the initial manifest that was skipped, if required.
-* Line 13 to 15 - The originally skipped manifest now run's through it's own process to check if the remote site is up
-* Line 16 to 19 - The main manifest now downloads the file
-* Line 20 to 22 - The stored variables are printed out
+1. The first phase reads all the source files (`*.py` from the `-s` command line parameter), which is stored in the `ManifestManager`
+2. Next each of the manifest files are read (any file found in the directories pointed to by the `-m` command line parameter)
 
-There are at least four methods to pay attention to.
+In this example, the `WebsiteUpTest` is a dependency of the `DownloadWebPageContent` manifest which only has to be processed on an "_apply_" action. Therefore, not the `metadata` section in the file `examples/linked-manifests/manifest/linked-v1.yaml` ([link](../examples/linked-manifests/manifest/linked-v1.yaml)). Note the following:
+
+* Because the `WebsiteUpTest` manifest does not have to be processed every time, the `skipApplyAll` and `skipDeleteAll` is set to true.
+* Because the `WebsiteUpTest` manifest has to be processed before the `DownloadWebPageContent` is processed, the latter contains a `metadata.dependencies.apply` dependency with the name of the `WebsiteUpTest` manifest
+
+Therefore, when all the manifests are processed (via an _apply_ or _delete_ action), the `ManifestManager` will loop through all the manifests and retrieve their implementation class. Once an instance of that class is retrieved, the `skipApplyAll` and `skipDeleteAll` booleans are evaluated to see if processing for that instance must proceed. Finally, if the class must be processed, the `process_dependencies()` method of the class instance is called with the appropriate parameters set depending on the _apply_ or _delete_ action.
+
+Next, a more detailed look at the anatomy of the classes that extend `ManifestBase`, specifically those methods the user needs to override.
 
 ### The `__init__` method
 
