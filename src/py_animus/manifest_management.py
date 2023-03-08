@@ -415,7 +415,7 @@ class ManifestBase:
         if 'dependencies' in self.metadata:
             if action in self.metadata['dependencies']:
                 for dependant_manifest_name in self.metadata['dependencies'][action]:
-                    self.log(message='Processing dependency named "{}" for manifest "{}" while processing action "{}"'.format(dependant_manifest_name, self.metadata['name'], action), level='info')
+                    self.log(message='Processing dependency named "{}" for manifest "{}" while processing action "{}"'.format(dependant_manifest_name, self.metadata['name'], action), level='debug')
                     dependency_manifest_implementation = manifest_lookup_function(name=dependant_manifest_name)
                     dependency_manifest_applied_previously = not dependency_manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
                     self.log(
@@ -423,10 +423,10 @@ class ManifestBase:
                             dependency_manifest_implementation.metadata['name'],
                             dependency_manifest_applied_previously
                         ),
-                        level='info'
+                        level='debug'
                     )
                     if dependency_manifest_applied_previously == process_dependency_if_already_applied:
-                        self.log(message='Dependency named "{}" will be applied because process_dependency_if_already_applied is TRUE'.format(dependency_manifest_implementation.metadata['name']),level='info')   
+                        self.log(message='Dependency named "{}" will be applied because process_dependency_if_already_applied is TRUE'.format(dependency_manifest_implementation.metadata['name']),level='debug')   
                         dependency_manifest_implementation.process_dependencies(
                             action=action,
                             manifest_lookup_function=manifest_lookup_function,
@@ -436,9 +436,9 @@ class ManifestBase:
                             process_dependency_if_not_already_applied=process_dependency_if_not_already_applied
                         )
                     else:
-                        self.log(message='Dependency named "{}" will NOT be applied because process_dependency_if_already_applied is FALSE'.format(dependency_manifest_implementation.metadata['name']),level='info')   
+                        self.log(message='Dependency named "{}" will NOT be applied because process_dependency_if_already_applied is FALSE'.format(dependency_manifest_implementation.metadata['name']),level='debug')   
                     if dependency_manifest_applied_previously == process_dependency_if_not_already_applied:
-                        self.log(message='Dependency named "{}" will be applied because process_dependency_if_not_already_applied is TRUE'.format(dependency_manifest_implementation.metadata['name']),level='info')   
+                        self.log(message='Dependency named "{}" will be applied because process_dependency_if_not_already_applied is TRUE'.format(dependency_manifest_implementation.metadata['name']),level='debug')   
                         dependency_manifest_implementation.process_dependencies(
                             action=action,
                             manifest_lookup_function=manifest_lookup_function,
@@ -448,21 +448,21 @@ class ManifestBase:
                             process_dependency_if_not_already_applied=process_dependency_if_not_already_applied
                         )
                     else:
-                        self.log(message='Dependency named "{}" will be applied because process_dependency_if_not_already_applied is FALSE'.format(dependency_manifest_implementation.metadata['name']),level='info')   
+                        self.log(message='Dependency named "{}" will be applied because process_dependency_if_not_already_applied is FALSE'.format(dependency_manifest_implementation.metadata['name']),level='debug')   
             else:
                 self.log(message='No dependencies for action "{}" for manifest "{}"'.format(action, self.metadata['name']), level='warning')
         else:
-            self.log(message='No dependencies for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='info')
+            self.log(message='No dependencies for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='debug')
 
         if process_self_post_dependency_processing is True:
             if action == 'apply':
-                self.log(message='Processing SELF for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='info')
+                self.log(message='Processing SELF for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='debug')
                 self.apply_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
             if action == 'delete':
-                self.log(message='Processing SELF for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='info')
+                self.log(message='Processing SELF for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='debug')
                 self.delete_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
         else:
-            self.log(message='SELF was NOT YET PROCESSED for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='info')
+            self.log(message='SELF was NOT YET PROCESSED for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='debug')
 
     def to_dict(self):
         """When the user or some other part of the systems required the data as a Dict, for example when to produce a

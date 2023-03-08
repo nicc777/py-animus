@@ -66,8 +66,8 @@ class WebsiteUpTest(ManifestBase):
                     self.log(message='  Code was not found in list of acceptable return codes: {}'.format(self.spec['acceptableResponseCodes']), level='warning')
             except:
                 self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
-            variable_cache.store_variable(variable=Variable(name='{}'.format(self.metadata['name']), initial_value=website_up, ttl=30, logger=self.logger), overwrite_existing=True)
             self.log(message='variable_cache now: {}'.format(str(variable_cache)), level='debug')
+        variable_cache.store_variable(variable=Variable(name='{}'.format(self.metadata['name']), initial_value=website_up, ttl=30, logger=self.logger), overwrite_existing=True)
         self.log(message='Is site up TEST: {}'.format(variable_cache.get_value(variable_name=self.metadata['name'])), level='debug')
         return 
     
@@ -136,10 +136,10 @@ class DownloadWebPageContent(ManifestBase):
         self.log(message='DownloadWebPageContent.apply_manifest() CALLED', level='info')
         if self.implemented_manifest_differ_from_this_manifest() is False:
             self.log(message='Already retrieved {}'.format(self.spec['url']), level='info')
+            variable_cache.store_variable(variable=Variable(name='{}'.format(self.metadata['name']), initial_value=True, ttl=30, logger=self.logger), overwrite_existing=True)
+            variable_cache.store_variable(variable=Variable(name='{}-state'.format(self.metadata['name']), initial_value='applied', ttl=30, logger=self.logger), overwrite_existing=True)
             return
         variable_cache.store_variable(variable=Variable(name='{}'.format(self.metadata['name']), initial_value=False, ttl=30, logger=self.logger), overwrite_existing=True)
-        m1 = manifest_lookup_function(name=self.spec['livenessFunction'])
-        m1.apply_manifest(variable_cache=variable_cache)
         site_up = variable_cache.get_value(variable_name=self.spec['livenessFunction'], value_if_expired=False, raise_exception_on_expired=False)
         self.log(message='variable_cache now: {}'.format(str(variable_cache)), level='debug')
         self.log(message='Is site up? Test={}'.format(site_up), level='info')
