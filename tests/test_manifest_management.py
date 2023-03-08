@@ -157,7 +157,17 @@ class MyManifest1(ManifestBase):
 
     def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
         variable_cache.store_variable(variable=Variable(name='{}:{}'.format(self.kind, self.metadata['name']), initial_value='Some Result Worth Saving'))
+        variable_cache.store_variable(variable=Variable(name='{}:{}-val'.format(self.kind, self.metadata['name']), initial_value=self.spec['val']), overwrite_existing=True)
+        variable_cache.store_variable(variable=Variable(name='{}:{}-applied'.format(self.kind, self.metadata['name']), initial_value=True), overwrite_existing=True)
+        variable_cache.store_variable(variable=Variable(name='{}:{}-deleted'.format(self.kind, self.metadata['name']), initial_value=False), overwrite_existing=True)
         return  # Assume some implementation
+    
+    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
+        variable_cache.store_variable(variable=Variable(name='{}:{}'.format(self.kind, self.metadata['name']), initial_value='Some Result Worth Saving'))
+        variable_cache.store_variable(variable=Variable(name='{}:{}-val'.format(self.kind, self.metadata['name']), initial_value=None), overwrite_existing=True)
+        variable_cache.store_variable(variable=Variable(name='{}:{}-applied'.format(self.kind, self.metadata['name']), initial_value=False), overwrite_existing=True)
+        variable_cache.store_variable(variable=Variable(name='{}:{}-deleted'.format(self.kind, self.metadata['name']), initial_value=True), overwrite_existing=True)
+        return  
     
 
 my_manifest_1_data=  """---
@@ -190,10 +200,21 @@ class MyManifest2(ManifestBase):
         return True # We are always different
 
     def apply_manifest(self, manifest_lookup_function: object=manifest_lookup_that_always_returns_MyManifest1, variable_cache: VariableCache=VariableCache()):
-        m1 = manifest_lookup_function(name=self.spec['parent'])
-        m1.apply_manifest(variable_cache=variable_cache)
+        if 'parent' in self.spec:
+            m1 = manifest_lookup_function(name=self.spec['parent'])
+            m1.apply_manifest(variable_cache=variable_cache)
         variable_cache.store_variable(variable=Variable(name='{}:{}'.format(self.kind, self.metadata['name']), initial_value='Another value worth storing'))
+        variable_cache.store_variable(variable=Variable(name='{}:{}-val'.format(self.kind, self.metadata['name']), initial_value=self.spec['val']), overwrite_existing=True)
+        variable_cache.store_variable(variable=Variable(name='{}:{}-applied'.format(self.kind, self.metadata['name']), initial_value=True), overwrite_existing=True)
+        variable_cache.store_variable(variable=Variable(name='{}:{}-deleted'.format(self.kind, self.metadata['name']), initial_value=False), overwrite_existing=True)
         return  # Assume some implementation
+    
+    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
+        variable_cache.store_variable(variable=Variable(name='{}:{}'.format(self.kind, self.metadata['name']), initial_value='Some Result Worth Saving'))
+        variable_cache.store_variable(variable=Variable(name='{}:{}-val'.format(self.kind, self.metadata['name']), initial_value=None), overwrite_existing=True)
+        variable_cache.store_variable(variable=Variable(name='{}:{}-applied'.format(self.kind, self.metadata['name']), initial_value=False), overwrite_existing=True)
+        variable_cache.store_variable(variable=Variable(name='{}:{}-deleted'.format(self.kind, self.metadata['name']), initial_value=True), overwrite_existing=True)
+        return
 
 
 my_manifest_2_data=  """---
@@ -323,7 +344,13 @@ class TestMyManifest2(unittest.TestCase):    # pragma: no cover
         m2.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=my_manifest_2_data)['part_1'])
         vc = VariableCache()
         m2.apply_manifest(manifest_lookup_function=manifest_lookup_that_always_returns_MyManifest1, variable_cache=vc)
-        self.assertEqual(len(vc.values), 2)
+        self.assertEqual(len(vc.values), 8)
+
+        print('='*80)
+        print('# TestMyManifest2.test_init_with_defaults Variables')
+        print(str(vc))
+        print('='*80)
+
         self.assertTrue('MyManifest1:test1' in vc.values)
         self.assertTrue('MyManifest2:test2' in vc.values)
         self.assertEqual(vc.get_value(variable_name='MyManifest1:test1'), 'Some Result Worth Saving')
@@ -382,7 +409,7 @@ class TestManifestManager(unittest.TestCase):    # pragma: no cover
             self.assertTrue(key.startswith('test'))
 
         mm.apply_manifest(name='test2')
-        self.assertEqual(len(vc.values), 2)
+        self.assertEqual(len(vc.values), 8)
         self.assertTrue('MyManifest1:test1' in vc.values)
         self.assertTrue('MyManifest2:test2' in vc.values)
         self.assertEqual(vc.values['MyManifest1:test1'].value, 'Result from MyManifest1 "v0.1" applying manifest named "test1" with manifest version "v0.1"')
@@ -593,6 +620,97 @@ spec:
 
         self.assertEqual(len(mm.manifest_class_register), 6)
         self.assertEqual(len(mm.manifest_instances), 2)
+
+        ###
+        ### Mimic the main() function apply all call
+        ###
+        for name in tuple(mm.manifest_instances.keys()):
+            print('Applying manifest named "{}"'.format(name))
+            mm.apply_manifest(name=name)
+        result1 = vc.get_value(variable_name='MyManifest1:test1-1')    # Ensure that processing manifest 2, that manifest 1 was executed
+        self.assertIsNotNone(result1)
+        for name in tuple(vc.values.keys()):
+            print('RESULT: {}={}'.format(name, vc.get_value(variable_name=name))) 
+
+        ###
+        ### Mimic the main() function delete all call
+        ###
+        for ref in tuple(mm.manifest_instances.keys()):
+            name, version, checksum = ref.split(':')
+            print('Deleting manifest named "{}" version "{}'.format(name, version))
+            # mm.delete_manifest(name=name, version=version)
+            mm.delete_manifest(name=name)
+        for v_name in ('MyManifest2:test2-1',):
+            with self.assertRaises(Exception) as context:
+                vc.get_value(variable_name=v_name)
+            self.assertTrue('Expired' in str(context.exception), 'Expected variable named "{}" to have expired!'.format(v_name))
+        result2 = vc.get_value(variable_name='MyManifest1:test1-1')    # Implementation dictates that this variables must still be available
+        self.assertIsNotNone(result2)
+
+    def test_dependency_scenarios(self):
+        ###
+        ### Manifest Setup
+        ###
+
+        manifest_1_v01_a_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-1
+    skipApplyAll: true
+    skipDeleteAll: true
+spec:
+    val: 1
+"""
+
+        manifest_1_v01_b_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-2
+    skipApplyAll: true
+    skipDeleteAll: true
+spec:
+    val: 0
+"""
+
+        manifest_2_v01_data=  """---
+kind: MyManifest2
+version: v0.1
+metadata:
+    name: test2-1
+    dependencies:
+        apply:
+        - test1-1
+        delete:
+        - test1-2
+spec:
+    val: AAA
+"""
+
+
+        ###
+        ### Init VariableCache and ManifestManager
+        ###
+        vc = VariableCache()
+        mm = ManifestManager(variable_cache=vc)
+
+        ###
+        ### Consume classes that extend ManifestBase and register with ManifestManager
+        ###
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
+        self.assertEqual(len(mm.manifest_class_register), 6)
+
+        ###
+        ### Consume Manifests and link with class implementations registered in ManifestManager
+        ###
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_a_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_b_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v01_data)['part_1'])
+
+        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.manifest_instances), 3)
 
         ###
         ### Mimic the main() function apply all call

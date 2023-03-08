@@ -13,6 +13,7 @@
 * [x] Add `metadata` field `applyOrderSequence` (integer value) to indicate to the `apply_command()` function in `src/py_animus/py_animus.py` if this manifest has to be applied in a certain order. Manifests with this field will be considered first, and applied from low to high numbers. Manifests with the same integer value will be processed in more-or-less random order. Manifests without this field will be processed afterwards in more-or-less random order. The `delete_command()` will operate in the reverse order. If a manifest has the `skipApplyAll` value set to `true`, the additional `applyOrderSequence` will have no effect, regardless of it's value. ([Issue 9](https://github.com/nicc777/py-animus/issues/9))
 * [x] Add logic in `ManifestManager.get_manifest_instance_by_name()` to also support version consideration when looking up a `ManifestBase` implementation. Pass the YAML manifest version when applying or deleting a manifest. (depends on [Issue 7](https://github.com/nicc777/py-animus/issues/7))
 * [ ] Detect circular referenced dependencies 
+* [ ] Add a delete variable method to `VariableCache`
 
 # Version 2 Features
 
