@@ -140,7 +140,7 @@ class DownloadWebPageContent(ManifestBase):
             variable_cache.store_variable(variable=Variable(name='{}-state'.format(self.metadata['name']), initial_value='applied', ttl=30, logger=self.logger), overwrite_existing=True)
             return
         variable_cache.store_variable(variable=Variable(name='{}'.format(self.metadata['name']), initial_value=False, ttl=30, logger=self.logger), overwrite_existing=True)
-        site_up = variable_cache.get_value(variable_name=self.spec['livenessFunction'], value_if_expired=False, raise_exception_on_expired=False)
+        site_up = variable_cache.get_value(variable_name=self.metadata['dependencies']['apply'][0], value_if_expired=False, raise_exception_on_expired=False)
         self.log(message='variable_cache now: {}'.format(str(variable_cache)), level='debug')
         self.log(message='Is site up? Test={}'.format(site_up), level='info')
         if site_up is True:
@@ -166,6 +166,7 @@ class DownloadWebPageContent(ManifestBase):
         try:
             if os.path.exists(path=self.spec['outputFile']) is True:
                 os.remove(path=self.spec['outputFile'])
+            variable_cache.store_variable(variable=Variable(name='{}'.format(self.metadata['name']), initial_value=True, ttl=30, logger=self.logger), overwrite_existing=True)
             variable_cache.store_variable(variable=Variable(name='{}-state'.format(self.metadata['name']), initial_value='deleted', ttl=30, logger=self.logger), overwrite_existing=True)
         except:
             self.log(message='Failed to delete file {}'.format(self.spec['outputFile']), level='error')

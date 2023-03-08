@@ -48,14 +48,16 @@ spec:
 
 _**Manifest Specification**_
 
-| Field                    | Type    | Required | Description                                                                                                                                                              |
-|--------------------------|:-------:|:--------:|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `kind`                   | String  | Yes      | Maps to the Class name that handles the processing of this manifest file.                                                                                                |
-| `version`                | String  | Yes      | Some form of version is required. It helps with maintaining implementations of the same kind as systems evolve.                                                          |
-| `metadata.name`          | String  | Yes      | A unique name. Any other manifest could have some reference to this manifest, and therefore the name must be unique at runtime across all ingested manifest files.       |
-| `metadata.skipApplyAll`  | Boolean | No       | When all manifests are applied, any manifest with this entry and a value of `true` will be skipped. Ideal for "child" manifests invoked by "parent" manifests as needed. |
-| `metadata.skipDeleteAll` | Boolean | No       | When all manifests are deleted, any manifest with this entry and a value of `true` will be skipped. Ideal for "child" manifests invoked by "parent" manifests as needed. |
-| `spec.<dict>`            | Dict    | Yes      | The intent is that the `spec` contains the data required for processing the manifest file by the implementation class for this version of the manifest.                  |
+| Field                           | Type    | Required | Description                                                                                                                                                              |
+|---------------------------------|:-------:|:--------:|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `kind`                          | String  | Yes      | Maps to the Class name that handles the processing of this manifest file.                                                                                                |
+| `version`                       | String  | Yes      | Some form of version is required. It helps with maintaining implementations of the same kind as systems evolve.                                                          |
+| `metadata.name`                 | String  | Yes      | A unique name. Any other manifest could have some reference to this manifest, and therefore the name must be unique at runtime across all ingested manifest files.       |
+| `metadata.skipApplyAll`         | Boolean | No       | When all manifests are applied, any manifest with this entry and a value of `true` will be skipped. Ideal for "child" manifests invoked by "parent" manifests as needed. |
+| `metadata.skipDeleteAll`        | Boolean | No       | When all manifests are deleted, any manifest with this entry and a value of `true` will be skipped. Ideal for "child" manifests invoked by "parent" manifests as needed. |
+| `metadata.dependencies.apply`   | List    | No       |  |
+| `metadata.dependencies.delete`  | List    | No       |  |
+| `spec.<dict>`                   | Dict    | Yes      | The intent is that the `spec` contains the data required for processing the manifest file by the implementation class for this version of the manifest.                  |
 
 _**Manifest General Rules**_
 
