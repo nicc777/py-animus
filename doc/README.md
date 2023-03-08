@@ -30,21 +30,7 @@ Thr `animus` solution allows users to create application logic that can implemen
 > **Note**
 > Keep in mind the manifest always contains the desired state. 
 
-Take an example manifest like the following:
-
-```yaml
----
-kind: HelloWorld
-version: v1
-metadata:
-  name: hello-world
-spec:
-  file: /tmp/hello-world-result/output.txt
-  content: |
-    This is the contents of the file
-    specified in the file property of
-    the spec.   
-```
+The file `examples/linked-manifests/manifest/linked-v1.yaml` ([link](../examples/linked-manifests/manifest/linked-v1.yaml)) contains the example manifest to be used in this quick introduction.
 
 _**Manifest Specification**_
 
@@ -63,7 +49,7 @@ _**Manifest General Rules**_
 
 * Field names must be lower case (they will be converted during parsing to lower case, if not)
 * The `metadata.name` field is unique, even across different versions of a manifest. For example, `kind: Example` of `version: 1` must have a different name than `kind: Example` of `version: 2`
-* There is no formal way to reference one manifest from another and this is up to implementation of the classes that extend `ManifestBase` to decide how references to other manifests will be managed. For example, the implementation could expect a `spec.parent` field that has the name (which of course is unique) to refer to another manifest file. By using the `manifest_lookup_function` parameter that is a reference to a lookup function, the implementation can lookup the other manifest by calling `m1 = manifest_lookup_function(name=self.spec['parent'])` which will now hold the processing instance of that manifest. To ensure it is applied, it will be best practice to execute `m1.apply_manifest(variable_cache=variable_cache)` next and then consume output from one or more `Variable` instances that `m1` have set in the `VariableCache`. Please see `tests/manifest_classes/test2v0-2.py` for en example implementation that is also used in the unit tests.
+* Any manifest listed under dependencies will be processed first before the current manifest is processed.
 
 > **Note**
 > An example is provided. The file above is from `examples/hello-world/manifest/hello-v1.yaml`.
