@@ -27,4 +27,4 @@
 * [x] Add a command line parameter `--on-error` which can have values of either `rollback` (default) or `halt`. If the value is rollback, and any manifest apply/delete command fails, the application will run through the previously applied manifests in reverse order and call the `rollback` method of each. If the value is `halt`, the application will simply stop at the point where a apply/delete action of a manifest fails. Failure of an apply/delete action must be done via a `ActionFailException`
 * [x] Add a command line parameter `--report` which takes a directory name where a post apply/delete report will be generated. The default report will be done in CSV and MarkDown format. 
 * [x] Add a command line parameter `--report-html` which, if present, will convert the MarkDown report to HTML (see https://python-markdown.github.io/)
-* [ ] Produce an execution plan/graph given a set of manifests for a particular action. Use the DOT Language from [Graphviz](https://www.graphviz.org/)
+* [x] Produce an execution plan/graph given a set of manifests for a particular action. Use the DOT Language from [Graphviz](https://www.graphviz.org/)
