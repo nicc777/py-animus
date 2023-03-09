@@ -20,7 +20,7 @@
 > **Note**
 > Focus for version 2 is on roll back and reporting. Part of rollback will be the basic ability to persist checksums of previous command results
 
-* [ ] Create a base class `StatePersistance` that can store state and retrieve previously stored state. The `implemented_manifest_differ_from_this_manifest()` manifest in `ManifestBase` should be able to also make calls to an instance of this class to help determine if the current manifest differs from the running implementation.
+* [x] Create a base class `StatePersistance` that can store state and retrieve previously stored state. The `implemented_manifest_differ_from_this_manifest()` manifest in `ManifestBase` should be able to also make calls to an instance of this class to help determine if the current manifest differs from the running implementation.
 * [ ] Introduce a `ActionFailException` class which implementations of `ManifestBase` must raise when an apply/delete actions fails
 * [ ] Introduce a `RollbackFailException` class which implementations of `ManifestBase` must raise when a roll back actions fails
 * [ ] Implement a roll back method called `rollback` in `ManifestBase` for a user to implement roll back logic. A roll back must be done on every manifest, in reverse order of applying/deleting, in case some error occurs. In addition, some additional `metadata` fields will be required in the manifest to guide the roll back processing. These include: a) `ignoreRollback` (boolean) which, if `true`, will not execute the roll back for this manifest in the event of an error
