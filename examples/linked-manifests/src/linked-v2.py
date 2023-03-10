@@ -124,15 +124,16 @@ class DownloadWebPageContent(ManifestBase):
             return False
         return True 
 
-    def apply_manifest(self, manifest_lookup_function: object=None, variable_cache: VariableCache=VariableCache()):
-        """The apply process works implements the following flow:
+    def _create_directory_if_not_exists(self, dir: str, variable_cache: VariableCache=VariableCache()):
+        pass
 
-        1) Check if the file has previously been downloaded - if so, no further processing is required and the method returns
-        2) Check if the remote site is up by calling to the `WebsiteUpTest` manifest implementations apply action. If the site is not up, return
-        3) Download the page content
-        4) Save to a file defined in the Manifest
-        5) Set variables and return
-        """
+    def _extract_dir_structure(self, url: str, variable_cache: VariableCache=VariableCache()):
+        pass
+
+    def _download_file(self, url: str, target_dir: str, variable_cache: VariableCache=VariableCache()):
+        pass
+
+    def apply_manifest(self, manifest_lookup_function: object=None, variable_cache: VariableCache=VariableCache()):
         self.log(message='DownloadWebPageContent.apply_manifest() CALLED', level='info')
         if self.implemented_manifest_differ_from_this_manifest() is False:
             self.log(message='Already retrieved {}'.format(self.spec['url']), level='info')
