@@ -35,7 +35,7 @@ metadata:
     apply:
     - is-page-up
 spec:
-  url: 
+  urls: 
   - https://raw.githubusercontent.com/nicc777/py-animus/main/README.md
   - https://raw.githubusercontent.com/nicc777/py-animus/main/doc/README.md
   outputPath: /tmp/example-page-result

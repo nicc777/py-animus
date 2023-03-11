@@ -2,6 +2,10 @@ import traceback
 import urllib.request
 from urllib.request import urlopen
 import os
+import shutil
+import tempfile
+from pathlib import Path
+
 from py_animus.manifest_management import *
 from py_animus import get_logger
 
@@ -128,7 +132,36 @@ class DownloadWebPageContent(ManifestBase):
         pass
 
     def _extract_dir_structure(self, url: str, variable_cache: VariableCache=VariableCache()):
-        pass
+        """
+            With input like https://raw.githubusercontent.com/nicc777/py-animus/main/README.md
+            Expect a dir structure `nicc777/py-animus/main` relative to `spec.outputPath`
+
+            Input from `spec.url` (list of str)
+            Result in Variable named "metadata.name:URL_SRC_DST" containing a map with the URL as key and the 
+            destination directory as value
+
+            Assumption is that the URL always points to a page and that the last part of the page represents the actual
+            page, for example README.md
+        """
+        result = Variable(name='{}:URL_SRC_DST'.format(self.metadata['name']), logger=self.logger, initial_value=dict(), ttl=-1)
+        try:
+            for url in self.spec['urls']:
+                dst_dir = '{}/{}'.format(
+                    self.spec['outputPath'],
+                    '/'.join(url.split('/')[3:-1])
+                )
+                dst_page = '{}/{}'.format(
+                    self.spec['outputPath'],
+                    '/'.join(url.split('/')[3])
+                ) 
+                result.value[url] = dict()
+                result.value[url]['dst_dir'] = dst_dir
+                result.value[url]['dst_page'] = dst_page
+        except:
+            self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
+            result.value = dict()
+        variable_cache.store_variable(variable=result, overwrite_existing=True)
+
 
     def _download_file(self, url: str, target_dir: str, variable_cache: VariableCache=VariableCache()):
         pass
