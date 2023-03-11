@@ -191,6 +191,7 @@ class DownloadWebPageContent(ManifestBase):
         except:
             self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
             result.value = dict()
+        self.log(message='Variable as JSON: {}'.format(json.dumps(result.value)), level='debug')
         variable_cache.store_variable(variable=result, overwrite_existing=True)
 
     def _get_current_result_variable_instance(self, variable_cache: VariableCache=VariableCache())->Variable:
