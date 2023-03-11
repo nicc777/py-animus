@@ -35,7 +35,7 @@ class WebsiteUpTest(ManifestBase):
     * `spec.acceptableResponseCodes` - A list if integers with acceptable HTTP response codes
     """
 
-    def __init__(self, logger=get_logger(), post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):
+    def __init__(self, logger=get_logger(), post_parsing_method: object=None, version: str='v2', supported_versions: tuple=('v1', 'v2',)):
         super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
 
     def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache())->bool:
