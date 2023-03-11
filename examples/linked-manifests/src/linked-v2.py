@@ -131,7 +131,7 @@ class DownloadWebPageContent(ManifestBase):
     def _create_directory_if_not_exists(self, dir: str, variable_cache: VariableCache=VariableCache()):
         pass
 
-    def _extract_dir_structure(self, url: str, variable_cache: VariableCache=VariableCache()):
+    def _extract_dir_structure(self, variable_cache: VariableCache=VariableCache()):
         """
             With input like https://raw.githubusercontent.com/nicc777/py-animus/main/README.md
             Expect a dir structure `nicc777/py-animus/main` relative to `spec.outputPath`
