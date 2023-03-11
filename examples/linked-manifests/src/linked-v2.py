@@ -115,15 +115,15 @@ class DownloadWebPageContent(ManifestBase):
         )
         files_to_download_qty = len(self.spec['urls'])
         current_files = self._get_current_downloaded_files()
-        already_downloaded = 0
+        already_downloaded_qty = 0
         if 'url2destMap' in result:
             for url, file_data in result['url2destMap'].items():
                 dst_file_path = str(file_data['dst_page'])
                 if self._check_file_exists(file_path=dst_file_path):
-                    already_downloaded += 1
+                    already_downloaded_qty += 1
                     if dst_file_path in current_files:
                         current_files.pop(dst_file_path)
-        if files_to_download_qty != len(already_downloaded):
+        if files_to_download_qty != len(already_downloaded_qty):
             return True
         elif len(current_files) > 0:
             return True
