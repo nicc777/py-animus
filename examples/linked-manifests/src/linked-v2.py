@@ -144,6 +144,8 @@ class DownloadWebPageContent(ManifestBase):
             page, for example README.md
         """
         result = Variable(name='{}:URL_SRC_DST'.format(self.metadata['name']), logger=self.logger, initial_value=dict(), ttl=-1)
+        result.value['url2destMap'] = dict()
+        result.value['dst2urlMap'] = dict()
         try:
             for url in self.spec['urls']:
                 dst_dir = '{}/{}'.format(
@@ -154,12 +156,39 @@ class DownloadWebPageContent(ManifestBase):
                     self.spec['outputPath'],
                     '/'.join(url.split('/')[3])
                 ) 
-                result.value[url] = dict()
-                result.value[url]['dst_dir'] = dst_dir
-                result.value[url]['dst_page'] = dst_page
+                result.value['url2destMap'][url] = dict()
+                result.value['url2destMap'][url]['dst_dir'] = dst_dir
+                result.value['url2destMap'][url]['dst_page'] = dst_page
+                result.value['dst2urlMap'][dst_page] = url
         except:
             self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
             result.value = dict()
+        variable_cache.store_variable(variable=result, overwrite_existing=True)
+
+    def _get_current_downloaded_files(self, variable_cache: VariableCache=VariableCache()):
+        """
+            Walk the spec.outputPath and get all downloaded files. If they already exist, remove them from the Variable
+            named "metadata.name:URL_SRC_DST"
+        """
+        result = Variable(name='{}:URL_SRC_DST'.format(self.metadata['name']), logger=self.logger, initial_value=dict(), ttl=-1)
+        if '{}:URL_SRC_DST'.format(self.metadata['name']) in variable_cache.values:
+            result = variable_cache.values['{}:URL_SRC_DST'.format(self.metadata['name'])]
+        else:
+            variable_cache.store_variable(variable=result, overwrite_existing=True)
+            return
+        try:
+            for root, dirs, files in os.walk(self.spec['outputPath']):
+                for file in files:
+                    dst_page = '{}/{}'.format(root,file)
+                    if dst_page in result.value['dst2urlMap'] is True:
+                        # File already downloaded
+                        url = result.value['dst2urlMap'][dst_page]
+                        if url in result.value['url2destMap']:
+                            # URL already downloaded - remove from `result``
+                            result.value['url2destMap'].pop(url)
+                            result.value['dst2urlMap'].pop(dst_page)
+        except:
+            self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
         variable_cache.store_variable(variable=result, overwrite_existing=True)
 
 
@@ -168,6 +197,12 @@ class DownloadWebPageContent(ManifestBase):
 
     def apply_manifest(self, manifest_lookup_function: object=None, variable_cache: VariableCache=VariableCache()):
         self.log(message='DownloadWebPageContent.apply_manifest() CALLED', level='info')
+        
+        self._extract_dir_structure(variable_cache=variable_cache)
+        self._get_current_downloaded_files(variable_cache=variable_cache)
+
+        
+        
         if self.implemented_manifest_differ_from_this_manifest() is False:
             self.log(message='Already retrieved {}'.format(self.spec['url']), level='info')
             variable_cache.store_variable(variable=Variable(name='{}'.format(self.metadata['name']), initial_value=True, ttl=30, logger=self.logger), overwrite_existing=True)
