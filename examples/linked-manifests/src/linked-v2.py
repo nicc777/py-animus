@@ -3,9 +3,7 @@ import urllib.request
 from urllib.request import urlopen
 import os
 import shutil
-import tempfile
 from pathlib import Path
-
 from py_animus.manifest_management import *
 from py_animus import get_logger
 
@@ -215,45 +213,19 @@ class DownloadWebPageContent(ManifestBase):
 
     def apply_manifest(self, manifest_lookup_function: object=None, variable_cache: VariableCache=VariableCache()):
         self.log(message='DownloadWebPageContent.apply_manifest() CALLED', level='info')
-        
         self._download_files(variable_cache=variable_cache)
-
-        
-        
-        if self.implemented_manifest_differ_from_this_manifest() is False:
-            self.log(message='Already retrieved {}'.format(self.spec['url']), level='info')
-            variable_cache.store_variable(variable=Variable(name='{}'.format(self.metadata['name']), initial_value=True, ttl=30, logger=self.logger), overwrite_existing=True)
-            variable_cache.store_variable(variable=Variable(name='{}-state'.format(self.metadata['name']), initial_value='applied', ttl=30, logger=self.logger), overwrite_existing=True)
-            return
-        variable_cache.store_variable(variable=Variable(name='{}'.format(self.metadata['name']), initial_value=False, ttl=30, logger=self.logger), overwrite_existing=True)
-        site_up = variable_cache.get_value(variable_name=self.metadata['dependencies']['apply'][0], value_if_expired=False, raise_exception_on_expired=False)
-        self.log(message='variable_cache now: {}'.format(str(variable_cache)), level='debug')
-        self.log(message='Is site up? Test={}'.format(site_up), level='info')
-        if site_up is True:
-            self.log(message='Retrieving {}'.format(self.spec['url']), level='info')
-            try:
-                content = ''
-                self.log(message='Reading content from: {}'.format(self.spec['url']), level='info')
-                with urlopen(self.spec['url']) as webpage:
-                    content = webpage.read().decode()
-                with open(self.spec['outputFile'], 'w') as of:
-                    of.write(content)
-                self.log(message='Saved content in {}'.format(self.spec['outputFile']), level='info')
-                variable_cache.store_variable(variable=Variable(name='{}'.format(self.metadata['name']), initial_value=True, ttl=30, logger=self.logger), overwrite_existing=True)
-                variable_cache.store_variable(variable=Variable(name='{}-state'.format(self.metadata['name']), initial_value='applied', ttl=30, logger=self.logger), overwrite_existing=True)
-            except:
-                self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
-                variable_cache.store_variable(variable=Variable(name='{}'.format(self.metadata['name']), initial_value=False, ttl=30, logger=self.logger), overwrite_existing=True)
-                variable_cache.store_variable(variable=Variable(name='{}-state'.format(self.metadata['name']), initial_value='not-applied', ttl=30, logger=self.logger), overwrite_existing=True)
         return  
     
     def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
         self.log(message='DownloadWebPageContent.delete_manifest() CALLED', level='info')
         try:
-            if os.path.exists(path=self.spec['outputFile']) is True:
-                os.remove(path=self.spec['outputFile'])
-            variable_cache.store_variable(variable=Variable(name='{}'.format(self.metadata['name']), initial_value=True, ttl=30, logger=self.logger), overwrite_existing=True)
-            variable_cache.store_variable(variable=Variable(name='{}-state'.format(self.metadata['name']), initial_value='deleted', ttl=30, logger=self.logger), overwrite_existing=True)
+            os.remove(dir)
+            return True
         except:
-            self.log(message='Failed to delete file {}'.format(self.spec['outputFile']), level='error')
-        return 
+            self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
+            try:
+                shutil.rmtree(dir)
+                return True
+            except:
+                self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
+        return False
