@@ -107,29 +107,49 @@ class DownloadWebPageContent(ManifestBase):
         super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
 
     def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache())->bool:
-        """Attempt to see if the page was previously downloaded with the following checks:
+        self._extract_dir_structure(variable_cache=variable_cache)
+        result = variable_cache.get_value(
+            variable_name='{}:URL_SRC_DST'.format(self.metadata['name']),
+            value_if_expired=dict(),
+            default_value_if_not_found=dict(),
+            raise_exception_on_expired=False,
+            raise_exception_on_not_found=False
+        )
+        files_to_download_qty = len(self.spec['urls'])
+        current_files = self._get_current_downloaded_files()
+        already_downloaded = 0
+        if 'url2destMap' in result:
+            for url, file_data in result['url2destMap'].items():
+                dst_file_path = str(file_data['dst_page'])
+                if self._check_file_exists(file_path=dst_file_path):
+                    already_downloaded += 1
+                    if dst_file_path in current_files:
+                        current_files.pop(dst_file_path)
+        if files_to_download_qty != len(already_downloaded):
+            return True
+        elif len(current_files) > 0:
+            return True
+        return False
 
-        1) First check if there was somehow a delete action before this apply action by checking for the variable named '{}-state'.format(self.metadata['name'])
-        2) Try to read the downloaded file. If the file can be read and has more than 0 bytes, assume it was already downloaded
+    def _get_current_downloaded_files(self)->list:
         """
-        previously_delete = variable_cache.get_value(variable_name='{}-state'.format(self.metadata['name']), value_if_expired='unknown', raise_exception_on_expired=False, raise_exception_on_not_found=False, default_value_if_not_found='unknown')
-        if previously_delete == 'applied':
-            self.log(message='Appears to have recently been applied - no further action required. Returning no differences found status', level='warning')
-            return False    # Must have been recently applied
-        current_file_data = ''
-        if 'outputFile' in self.spec:
-            try:
-                with open(self.spec['outputFile'], 'r') as f:
-                    current_file_data = f.read()
-                self.log(message='Data length: {}'.format(len(current_file_data)), level='info')
-            except:
-                self.log(message='Could not read file', level='error')
-        if len(current_file_data) > 0:  # Looks like we have downloaded this before
-            return False
-        return True 
+            Walk the spec.outputPath and get all downloaded files. If they already exist, remove them from the Variable
+            named "metadata.name:URL_SRC_DST"
+        """
+        current_files = list()
+        try:
+            for root, dirs, files in os.walk(self.spec['outputPath']):
+                for file in files:
+                    current_files.append('{}/{}'.format(root,file))
+        except:
+            self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
+        return current_files()
 
-    def _create_directory_if_not_exists(self, dir: str, variable_cache: VariableCache=VariableCache()):
-        pass
+    def _check_file_exists(self, file_path: str)->bool:
+        if os.path.exists(file_path):
+            if os.path.isfile(file_path) is True:
+                return True
+        return False
 
     def _extract_dir_structure(self, variable_cache: VariableCache=VariableCache()):
         """
@@ -148,6 +168,7 @@ class DownloadWebPageContent(ManifestBase):
         result.value['dst2urlMap'] = dict()
         try:
             for url in self.spec['urls']:
+                result.value['url2destMap'][url] = dict()
                 dst_dir = '{}/{}'.format(
                     self.spec['outputPath'],
                     '/'.join(url.split('/')[3:-1])
@@ -156,50 +177,46 @@ class DownloadWebPageContent(ManifestBase):
                     self.spec['outputPath'],
                     '/'.join(url.split('/')[3])
                 ) 
-                result.value['url2destMap'][url] = dict()
+                Path(dst_dir).mkdir(parents=True, exist_ok=True)
                 result.value['url2destMap'][url]['dst_dir'] = dst_dir
                 result.value['url2destMap'][url]['dst_page'] = dst_page
+                result.value['url2destMap'][url]['downloaded'] = self._check_file_exists(file_path=dst_page)
                 result.value['dst2urlMap'][dst_page] = url
         except:
             self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
             result.value = dict()
         variable_cache.store_variable(variable=result, overwrite_existing=True)
 
-    def _get_current_downloaded_files(self, variable_cache: VariableCache=VariableCache()):
-        """
-            Walk the spec.outputPath and get all downloaded files. If they already exist, remove them from the Variable
-            named "metadata.name:URL_SRC_DST"
-        """
+    def _get_current_result_variable_instance(self, variable_cache: VariableCache=VariableCache())->Variable:
         result = Variable(name='{}:URL_SRC_DST'.format(self.metadata['name']), logger=self.logger, initial_value=dict(), ttl=-1)
         if '{}:URL_SRC_DST'.format(self.metadata['name']) in variable_cache.values:
-            result = variable_cache.values['{}:URL_SRC_DST'.format(self.metadata['name'])]
+            result = copy.deepcopy(variable_cache.values['{}:URL_SRC_DST'.format(self.metadata['name'])])
         else:
             variable_cache.store_variable(variable=result, overwrite_existing=True)
-            return
-        try:
-            for root, dirs, files in os.walk(self.spec['outputPath']):
-                for file in files:
-                    dst_page = '{}/{}'.format(root,file)
-                    if dst_page in result.value['dst2urlMap'] is True:
-                        # File already downloaded
-                        url = result.value['dst2urlMap'][dst_page]
-                        if url in result.value['url2destMap']:
-                            # URL already downloaded - remove from `result``
-                            result.value['url2destMap'].pop(url)
-                            result.value['dst2urlMap'].pop(dst_page)
-        except:
-            self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
+        return result
+
+    def _download_files(self, variable_cache: VariableCache=VariableCache()):
+        result = self._get_current_result_variable_instance(variable_cache=variable_cache)
+        if 'url2destMap' in result.value:
+            for url, file_data in result['url2destMap'].items():
+                try:
+                    if 'dst_page' in file_data and result.value['url2destMap'][url]['downloaded'] is False:
+                        content = ''
+                        self.log(message='Reading content from: {}'.format(url), level='info')
+                        with urlopen(url) as webpage:
+                            content = webpage.read().decode()
+                        with open(file_data['dst_page'], 'w') as of:
+                            of.write(content)
+                        self.log(message='Saved content in {}'.format(file_data['dst_page']), level='info')
+                        result.value['url2destMap'][url]['downloaded'] = True
+                except:
+                    self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
         variable_cache.store_variable(variable=result, overwrite_existing=True)
-
-
-    def _download_file(self, url: str, target_dir: str, variable_cache: VariableCache=VariableCache()):
-        pass
 
     def apply_manifest(self, manifest_lookup_function: object=None, variable_cache: VariableCache=VariableCache()):
         self.log(message='DownloadWebPageContent.apply_manifest() CALLED', level='info')
         
-        self._extract_dir_structure(variable_cache=variable_cache)
-        self._get_current_downloaded_files(variable_cache=variable_cache)
+        self._download_files(variable_cache=variable_cache)
 
         
         
