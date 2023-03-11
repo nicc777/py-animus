@@ -204,10 +204,32 @@ class DownloadWebPageContent(ManifestBase):
 
     def _download_files(self, variable_cache: VariableCache=VariableCache()):
         result = self._get_current_result_variable_instance(variable_cache=variable_cache)
+        """
+            result.value:
+
+                {
+                    "url2destMap": {
+                        "http://111": {             -> url
+                            "dst_dir": "dir:111",   -> file_data
+                            "dst_page": "file:111", -> file_data
+                            "downloaded": false     -> file_data
+                        },
+                        "http://222": {             -> url
+                            "dst_dir": "dir:222",   -> file_data
+                            "dst_page": "file:222", -> file_data
+                            "downloaded": false     -> file_data
+                        }
+                    },
+                    "dst2urlMap": {
+                        "file:111": "http://111"
+                        "file:222": "http://222"
+                    }
+                }
+        """
         if 'url2destMap' in result.value:
             for url, file_data in result['url2destMap'].items():
                 try:
-                    if 'dst_page' in file_data and result.value['url2destMap'][url]['downloaded'] is False:
+                    if 'dst_page' in file_data and file_data['downloaded'] is False:
                         content = ''
                         self.log(message='Reading content from: {}'.format(url), level='info')
                         with urlopen(url) as webpage:
@@ -220,11 +242,6 @@ class DownloadWebPageContent(ManifestBase):
                     self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
         variable_cache.store_variable(variable=result, overwrite_existing=True)
 
-    def apply_manifest(self, manifest_lookup_function: object=None, variable_cache: VariableCache=VariableCache()):
-        self.log(message='DownloadWebPageContent.apply_manifest() CALLED', level='info')
-        self._download_files(variable_cache=variable_cache)
-        return  
-    
     def _rm_dir(self, dir: str)->bool:
         try:
             os.remove(dir)
@@ -237,6 +254,11 @@ class DownloadWebPageContent(ManifestBase):
             except:
                 self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
         return False
+
+    def apply_manifest(self, manifest_lookup_function: object=None, variable_cache: VariableCache=VariableCache()):
+        self.log(message='DownloadWebPageContent.apply_manifest() CALLED', level='info')
+        self._download_files(variable_cache=variable_cache)
+        return  
 
     def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
         self.log(message='DownloadWebPageContent.delete_manifest() CALLED', level='info')
