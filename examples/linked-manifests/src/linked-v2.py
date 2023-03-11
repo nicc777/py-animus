@@ -142,6 +142,14 @@ class DownloadWebPageContent(ManifestBase):
         except:
             self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
         return current_files()
+    
+    def _get_sub_dirs(self)->list:
+        sub_dirs = list()
+        for root, dirs, files in os.walk(self.spec['outputPath']):
+                for dir in dirs:
+                    sub_dirs.append('{}/{}'.format(root,dir))
+        sub_dirs.sort(key=len, reverse=True)
+        return sub_dirs
 
     def _check_file_exists(self, file_path: str)->bool:
         if os.path.exists(file_path):
@@ -216,10 +224,30 @@ class DownloadWebPageContent(ManifestBase):
         self._download_files(variable_cache=variable_cache)
         return  
     
+    def _rm_dir(self, dir: str)->bool:
+        try:
+            os.remove(dir)
+            return True
+        except:
+            self.log(message='os.remove command failed. now trying shutil.rmtree', level='warning')
+            try:
+                shutil.rmtree(dir)
+                return True
+            except:
+                self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
+        return False
+
     def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
         self.log(message='DownloadWebPageContent.delete_manifest() CALLED', level='info')
         try:
-            os.remove(dir)
+            self.log(message='Removing files', level='info')
+            for file in self._get_current_downloaded_files():
+                self.log(message='Removing file "{}"'.format(file), level='debug')
+                os.unlink(file)
+            self.log(message='Removing directories', level='info')
+            for dir in self._get_sub_dirs():
+                self.log(message='Removing directory "{}"'.format(dir), level='debug')
+                self._rm_dir(dir=dir)
             return True
         except:
             self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
