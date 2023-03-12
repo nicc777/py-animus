@@ -27,6 +27,12 @@ Advantages of this system or approach:
 * None of your existing tooling have to be replaced and often no additional modifications are required
 * This tool can assist in orchestration of several existing tools to accomplish a single goal, for example the provisioning of infrastructure to support the deployment of an application
 * This tool has no knowledge of anything, and all logic to process any manifest needs to be provided as Python code. In the future there will hopefully be a growing library of manifest processing implementations that support a growing number of environments and tools
+* Implementation classes can be versioned and can be tied to specific versions of a manifest. In a real life scenario you could maintain various versions of implementation logic and manifests along side each other.
+* A built in manifest dependency reference system allows you to dictate which manifests depend on which other manifests. The system will determine from this the order in which manifests needs to be applied
+* The solution provides a class to store various variables that are shared and usable among all manifest implementations. Therefore, some context derived in the processing of one manifest can be stored and made available for consuming while processing other manifest implementations.
+* The logic for applying and deleting manifest state is provided and in future releases also rollback and other features will be supported
+* A basic command line tool is provided, as well as a containerized version of the command line tool. Just point to the class sources and the manifests and the system will process and implement state as defined and implemented.
+* Apart from the command line tool, it is also possible to have full control over the processing of manifests, as all classes can be extended as required. You can therefore roll your own unique version of the command line tools.
 
 # The Manifest File
 
