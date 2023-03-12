@@ -874,6 +874,8 @@ class TestVersionedClassRegister(unittest.TestCase):    # pragma: no cover
         self.assertNotEqual(c1, v4)
         self.assertNotEqual(c2, v4)
 
+        # Scenario: Version one class is no longer ingested, but several newer classes still support processing
+        # manifests of version 1. Return the latest implementation of a class supporting version 1 processing.
         v1 = registry.get_version_of_class(kind='Test', version='v1')
         self.assertEqual(c2, v1)
         self.assertNotEqual(c1, v1)
