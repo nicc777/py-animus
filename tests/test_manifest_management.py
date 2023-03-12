@@ -93,6 +93,9 @@ class TestClassVariable(unittest.TestCase):    # pragma: no cover
 
 class TestClassVariableCache(unittest.TestCase):    # pragma: no cover
 
+    def setUp(self):
+        print('-'*80)
+    
     def test_init_with_defaults(self):
         result = VariableCache()
         self.assertIsNotNone(result)
@@ -230,6 +233,9 @@ spec:
 
 class TestMyManifest1(unittest.TestCase):    # pragma: no cover
 
+    def setUp(self):
+        print('-'*80)
+
     def test_init_with_defaults(self):
         result = manifest_lookup_that_always_returns_MyManifest1(name='test1')
         self.assertIsNotNone(result)
@@ -338,6 +344,9 @@ spec:
 
 
 class TestMyManifest2(unittest.TestCase):    # pragma: no cover
+
+    def setUp(self):
+        print('-'*80)
 
     def test_init_with_defaults(self):
         m2 = MyManifest2(post_parsing_method=my_post_parsing_method)
@@ -828,6 +837,47 @@ spec:
             self.assertTrue('Expired' in str(context.exception), 'Expected variable named "{}" to have expired!'.format(v_name))
         result2 = vc.get_value(variable_name='MyManifest1:test1-1', raise_exception_on_not_found=False, default_value_if_not_found=None)    # Implementation dictates that this variables must still not be available
         self.assertIsNone(result2)
+
+
+class TestVersionedClassRegister(unittest.TestCase):    # pragma: no cover
+
+    def setUp(self):
+        print('-'*80)
+
+    def test_init_with_defaults(self):
+        registry = VersionedClassRegister()
+        self.assertIsNotNone(registry)
+        self.assertIsInstance(registry, VersionedClassRegister)
+        c1 = ManifestBase(version='v2', supported_versions=['v1', 'v2',])
+        c2 = ManifestBase(version='v3', supported_versions=['v1', 'v2', 'v3',])
+        c3 = ManifestBase(version='v4', supported_versions=['v4',])
+        c1.kind = 'Test'
+        c2.kind = 'Test'
+        c3.kind = 'Test'
+        registry.add_class(clazz=c1)
+        registry.add_class(clazz=c2)
+        registry.add_class(clazz=c3)
+        self.assertEqual(len(registry.classes), 3)
+
+        v2 = registry.get_version_of_class(kind='Test', version='v2')
+        self.assertEqual(c1, v2)
+        self.assertNotEqual(c2, v2)
+        self.assertNotEqual(c3, v2)
+
+        v3 = registry.get_version_of_class(kind='Test', version='v3')
+        self.assertEqual(c2, v3)
+        self.assertNotEqual(c1, v3)
+        self.assertNotEqual(c3, v3)
+
+        v4 = registry.get_version_of_class(kind='Test', version='v4')
+        self.assertEqual(c3, v4)
+        self.assertNotEqual(c1, v4)
+        self.assertNotEqual(c2, v4)
+
+        v1 = registry.get_version_of_class(kind='Test', version='v1')
+        self.assertEqual(c2, v1)
+        self.assertNotEqual(c1, v1)
+        self.assertNotEqual(c3, v1)
 
 
 
