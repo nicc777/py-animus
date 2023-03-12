@@ -878,6 +878,7 @@ class TestVersionedClassRegister(unittest.TestCase):    # pragma: no cover
         self.assertEqual(c2, v1)
         self.assertNotEqual(c1, v1)
         self.assertNotEqual(c3, v1)
+        self.assertEqual(c2.version, 'v3')
 
 
 
