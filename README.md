@@ -73,7 +73,7 @@ More complex example:
 ```shell
 docker run --rm -e "DEBUG=1" \
   -v $PWD/examples/linked-manifests/src:/tmp/src \
-  -v $PWD/examples/linked-manifests/manifest:/tmp/data \
+  -v $PWD/examples/linked-manifests/manifest/round_1:/tmp/data \
   -v /tmp/results:/tmp/example-page-result \
   ghcr.io/nicc777/py-animus:release apply -m /tmp/data/linked-v1.yaml -s /tmp/src
 ```
