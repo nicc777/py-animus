@@ -409,7 +409,7 @@ class TestManifestManager(unittest.TestCase):    # pragma: no cover
         mm = ManifestManager(variable_cache=vc)
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
-        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
 
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=my_manifest_1_data)['part_1'])
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=my_manifest_2_data)['part_1'])
@@ -429,7 +429,7 @@ class TestManifestManager(unittest.TestCase):    # pragma: no cover
         # Test exceptions
         with self.assertRaises(Exception) as context:
             mm.get_manifest_class_by_kind(kind='NotRegisteredKind')
-        self.assertTrue('Manifest kind "NotRegisteredKind" not registered' in str(context.exception))
+        self.assertTrue('Version is required' in str(context.exception))
 
         with self.assertRaises(Exception) as context:
             mm.get_manifest_instance_by_name(name='does-not-exist')
@@ -518,7 +518,7 @@ spec:
         ###
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
-        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
 
         ###
         ### Consume Manifests and link with class implementations registered in ManifestManager
@@ -532,7 +532,7 @@ spec:
         
         
 
-        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
         self.assertEqual(len(mm.manifest_instances), 5)         # One less, if "manifest_1_v03_data" is not parsed (commented out above)
 
         ###
@@ -558,7 +558,7 @@ spec:
         ###
         ### Test mm.get_manifest_class_by_kind() call for kind with no version - ensure we get the latest version
         ###
-        latest_instance_of_manifest2 = mm.get_manifest_class_by_kind(kind='MyManifest2')
+        latest_instance_of_manifest2 = mm.get_manifest_class_by_kind(kind='MyManifest2', version='v0.3')
         self.assertIsNotNone(latest_instance_of_manifest2)
         self.assertIsInstance(latest_instance_of_manifest2, ManifestBase)
         self.assertEqual(latest_instance_of_manifest2.kind, 'MyManifest2')
@@ -619,7 +619,7 @@ spec:
         ###
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
-        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
 
         ###
         ### Consume Manifests and link with class implementations registered in ManifestManager
@@ -627,7 +627,7 @@ spec:
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_data)['part_1'])
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v01_data)['part_1'])
 
-        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
         self.assertEqual(len(mm.manifest_instances), 2)
 
         ###
@@ -709,7 +709,7 @@ spec:
         ###
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
-        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
 
         ###
         ### Consume Manifests and link with class implementations registered in ManifestManager
@@ -718,7 +718,7 @@ spec:
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_b_data)['part_1'])
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v01_data)['part_1'])
 
-        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
         self.assertEqual(len(mm.manifest_instances), 3)
 
         ###
@@ -800,7 +800,7 @@ spec:
         ###
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
-        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
 
         ###
         ### Consume Manifests and link with class implementations registered in ManifestManager
@@ -809,7 +809,7 @@ spec:
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_b_data)['part_1'])
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v01_data)['part_1'])
 
-        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
         self.assertEqual(len(mm.manifest_instances), 3)
 
         ###
