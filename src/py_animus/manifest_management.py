@@ -616,6 +616,90 @@ class ManifestBase:
         raise Exception('To be implemented by user')
 
 
+class VersionedClassRegister:
+
+    def __init__(self, logger=get_logger()):
+        self.classes = list()
+        self.logger = logger
+    
+    def is_class_registered(self, kind: str, version: str=None)->bool:
+        """Find a registered class of a certain kind, optionally matching the version as well
+        
+        Args:
+          kind: String containing the class kind name
+          version: String containing the class primary version (optional, ignored if not supplied)
+
+        Returns:
+            Boolean true if the registered class with kind name was found. If version was also supplied, return true if
+            the kind name and primary version matches.
+        """
+        registered = False
+        for registered_class in self.classes:
+            if kind == registered_class.kind:
+                if version is not None:
+                    if version == registered_class.version:
+                        return True
+                else:
+                    registered = True
+        return registered
+    
+    def get_version_of_class(self, kind: str, version: str, _secondary_pass: bool=False)->ManifestBase:
+        """Find a registered class of a certain kind, that support the supplied version
+        
+        Args:
+          kind: String containing the class kind name
+          version: String containing the version that must be supported
+
+        Returns:
+            If a class matching the kind that can process the required version is found a reference to it will be 
+            returned.
+
+        Raises:
+            Exception: If no matching class supporting the requested version was found
+        """
+        current_identified_clazz = None
+        supported_versions = dict()
+
+        # Try and find a version of the class that is supported
+        for registered_class in self.classes:
+            if kind == registered_class.kind:
+                if registered_class.version == version:
+                    current_identified_clazz = registered_class
+                    return registered_class
+                for supported_version in registered_class.supported_versions:
+                    if supported_version not in supported_versions:
+                        supported_versions[supported_version] = list()
+                    else:
+                        supported_versions[supported_version].append(registered_class.version)
+
+        # If we have not found a direct version match yet, look at the highest version of class that supports this version
+        if _secondary_pass is False:
+            if current_identified_clazz is None:
+                if version in supported_versions:
+                    potential_versions = copy.deepcopy(supported_versions[version])
+                    if len(potential_versions) > 0:
+                        potential_versions.sort(reverse=True)   # Rank from highest version to lowest
+                        current_identified_clazz = self.get_version_of_class(kind=kind, version=potential_versions[0], _secondary_pass=True)
+
+        # The result...
+        if current_identified_clazz is None:
+            raise Exception('No supported implementation of "{}" for version "{}" found'.format(kind, version))
+        return current_identified_clazz
+
+    def add_class(self, clazz: ManifestBase):
+        if self.is_class_registered(kind=clazz.kind, version=clazz.version) is False:
+            self.classes.append(clazz)
+            self.logger.info(
+                'Registered class kind "{}" version "{}" supporting also versions "{}" of manifests'.format(
+                    clazz.kind,
+                    clazz.version,
+                    clazz.supported_versions
+                )
+            )
+        else:
+            self.logger.info('Class "{}" with version "{}" already registered - ignoring'.format(clazz.kind, clazz.version))
+
+
 class ManifestManager:
 
     def __init__(self, variable_cache: VariableCache, logger=get_logger()):
