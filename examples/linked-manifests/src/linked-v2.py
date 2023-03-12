@@ -123,7 +123,7 @@ class DownloadWebPageContent(ManifestBase):
                     already_downloaded_qty += 1
                     if dst_file_path in current_files:
                         current_files.pop(dst_file_path)
-        if files_to_download_qty != len(already_downloaded_qty):
+        if files_to_download_qty != already_downloaded_qty:
             return True
         elif len(current_files) > 0:
             return True
@@ -141,7 +141,7 @@ class DownloadWebPageContent(ManifestBase):
                     current_files.append('{}/{}'.format(root,file))
         except:
             self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
-        return current_files()
+        return current_files
     
     def _get_sub_dirs(self)->list:
         sub_dirs = list()
