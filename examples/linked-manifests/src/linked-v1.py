@@ -52,7 +52,7 @@ class WebsiteUpTest(ManifestBase):
         self.log(message='already_checked={}'.format(already_checked), level='info')
         return already_checked
 
-    def apply_manifest(self, manifest_lookup_function: object=None, variable_cache: VariableCache=VariableCache()):
+    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False):
         """Do the check if a previous check was not yet performed
         """
         self.log(message='WebsiteUpTest.apply_manifest() CALLED', level='info')
@@ -76,7 +76,7 @@ class WebsiteUpTest(ManifestBase):
             self.log(message='Already checked', level='info')
         return 
     
-    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
+    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False):
         self.log(message='WebsiteUpTest.delete_manifest() CALLED', level='info')
         return
     
@@ -129,7 +129,7 @@ class DownloadWebPageContent(ManifestBase):
             return False
         return True 
 
-    def apply_manifest(self, manifest_lookup_function: object=None, variable_cache: VariableCache=VariableCache()):
+    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False):
         """The apply process works implements the following flow:
 
         1) Check if the file has previously been downloaded - if so, no further processing is required and the method returns
@@ -166,7 +166,7 @@ class DownloadWebPageContent(ManifestBase):
                 variable_cache.store_variable(variable=Variable(name='{}-state'.format(self.metadata['name']), initial_value='not-applied', ttl=30, logger=self.logger), overwrite_existing=True)
         return  
     
-    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
+    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False):
         self.log(message='DownloadWebPageContent.delete_manifest() CALLED', level='info')
         try:
             if os.path.exists(path=self.spec['outputFile']) is True:

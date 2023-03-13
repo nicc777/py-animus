@@ -174,13 +174,13 @@ class DownloadWebPageContent(ManifestBase):
                 self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
         return False
 
-    def apply_manifest(self, manifest_lookup_function: object=None, variable_cache: VariableCache=VariableCache()):
+    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False):
         self.log(message='DownloadWebPageContent.apply_manifest() CALLED', level='info')
         self._prep_download_dir(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
         self._download_files(variable_cache=variable_cache)
         return  
 
-    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
+    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False):
         self.log(message='DownloadWebPageContent.delete_manifest() CALLED', level='info')
         try:
             self.log(message='Removing files', level='info')
