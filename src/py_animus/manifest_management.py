@@ -778,6 +778,8 @@ class ManifestManager:
         self.manifest_data_by_manifest_name = dict()
         self.variable_cache = variable_cache
         self.logger = logger
+        self.apply_drs = DependencyReferences()
+        self.delete_drs = DependencyReferences()
 
     def register_manifest_class(self, manifest_base: ManifestBase):
         if isinstance(manifest_base, ManifestBase) is False:
@@ -848,7 +850,24 @@ class ManifestManager:
             class_instance_copy.version,
             class_instance_copy.checksum
         )
-        # self.manifest_instances[class_instance_copy.metadata['name']] = class_instance_copy
+
+        # Dependency Circular Reference Detection
+        self.logger.debug('parse_manifest(): Direct Dependency Circular Reference Detection for manifest named "{}"'.format(class_instance_copy.metadata['name']))
+        if 'dependencies' in class_instance_copy.metadata:
+            if 'apply' in class_instance_copy.metadata['dependencies']:
+                for dst in class_instance_copy.metadata['dependencies']['apply']:
+                    self.logger.debug('parse_manifest():    For manifest named "{}" storing apply dependency to manifest named "{}"'.format(class_instance_copy.metadata['name'], dst))
+                    self.apply_drs.add_dependency(src=class_instance_copy.metadata['name'], dst=dst)
+            if self.apply_drs.direct_circular_references_detected() is True:
+                raise Exception('Direct dependency violation detected in class "{}" when parsing manifest named "{}" (apply section)'.format(class_instance_copy.kind, class_instance_copy.metadata['name']))
+            if 'delete' in class_instance_copy.metadata['dependencies']:
+                for dst in class_instance_copy.metadata['dependencies']['delete']:
+                    self.logger.debug('parse_manifest():    For manifest named "{}" storing delete dependency to manifest named "{}"'.format(class_instance_copy.metadata['name'], dst))
+                    self.delete_drs.add_dependency(src=class_instance_copy.metadata['name'], dst=dst)
+            if self.delete_drs.direct_circular_references_detected() is True:
+                raise Exception('Direct dependency violation detected in class "{}" when parsing manifest named "{}" (delete section)'.format(class_instance_copy.kind, class_instance_copy.metadata['name']))
+        self.logger.info('parse_manifest(): NO direct dependency circular reference detected for manifest named "{}"'.format(class_instance_copy.metadata['name']))
+
         self.logger.info('parse_manifest(): Stored parsed manifest instance "{}"'.format(idx))
         self.manifest_instances[idx] = class_instance_copy
         self.manifest_data_by_manifest_name[manifest_data['metadata']['name']] = manifest_data
