@@ -122,7 +122,7 @@ class DownloadWebPageContent(ManifestBase):
                 if self._check_file_exists(file_path=dst_file_path):
                     already_downloaded_qty += 1
                     if dst_file_path in current_files:
-                        current_files.pop(dst_file_path)
+                        current_files.remove(dst_file_path)
         if files_to_download_qty != already_downloaded_qty:
             return True
         elif len(current_files) > 0:
@@ -181,7 +181,7 @@ class DownloadWebPageContent(ManifestBase):
                 )
                 dst_page = '{}/{}'.format(
                     self.spec['outputPath'],
-                    '/'.join(url.split('/')[3])
+                    '/'.join(url.split('/')[3:])
                 ) 
                 Path(dst_dir).mkdir(parents=True, exist_ok=True)
                 result.value['url2destMap'][url]['dst_dir'] = dst_dir
@@ -228,6 +228,7 @@ class DownloadWebPageContent(ManifestBase):
         """
         if 'url2destMap' in result.value:
             for url, file_data in result.value['url2destMap'].items():
+                self.log(message='file_data={}'.format(file_data), level='info')
                 try:
                     if 'dst_page' in file_data and file_data['downloaded'] is False:
                         content = ''
