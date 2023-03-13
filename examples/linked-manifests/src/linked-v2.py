@@ -227,7 +227,7 @@ class DownloadWebPageContent(ManifestBase):
                 }
         """
         if 'url2destMap' in result.value:
-            for url, file_data in result['url2destMap'].items():
+            for url, file_data in result.value['url2destMap'].items():
                 try:
                     if 'dst_page' in file_data and file_data['downloaded'] is False:
                         content = ''
