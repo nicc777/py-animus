@@ -718,6 +718,43 @@ class VersionedClassRegister:
         return json.dumps(self.to_dict())
 
 
+class DependencyReference:
+
+    def __init__(self, src: str, dst: str, count: int=1):
+        self.src = src
+        self.dst = dst
+        self.count = count
+
+    def add_count(self):
+        self.count += 1
+
+
+class DependencyReferences:
+
+    def __init__(self):
+        self.dependencies = list()
+
+    def exists(self, src: str, dst: str)->bool:
+        for dr in self.dependencies:
+            if dr.src == src and dr.dst == dst:
+                return True
+        return False
+
+    def increment_counter(self, src: str, dst: str):
+        updated_dependencies = list()
+        for dr in self.dependencies:
+            if dr.src == src and dr.dst == dst:
+                dr.add_count()
+            updated_dependencies.append(copy.deepcopy(dr))
+        self.dependencies = updated_dependencies
+
+    def add_dependency(self, src: str, dst: str):
+        if self.exists(src=src, dst=dst) is True:
+            self.increment_counter(src=src, dst=dst)
+        else:
+            self.dependencies.append(DependencyReference(src=src, dst=dst))
+
+
 class ManifestManager:
 
     def __init__(self, variable_cache: VariableCache, logger=get_logger()):
