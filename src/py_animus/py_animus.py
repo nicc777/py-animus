@@ -45,7 +45,7 @@ def _get_arg_parser(
 
 def apply_command(vc, mm, logger):
     for name in tuple(mm.manifest_instances.keys()):
-        logger.debug('Applying manifest named "{}"'.format(name))
+        logger.info('Applying manifest named "{}"'.format(name))
         mm.apply_manifest(name=name)
     for name in tuple(vc.values.keys()):
         logger.info('RESULT: {}={}'.format(name, vc.get_value(variable_name=name)))
