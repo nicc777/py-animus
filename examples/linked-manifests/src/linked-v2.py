@@ -146,7 +146,7 @@ class DownloadWebPageContent(ManifestBase):
         result = self._get_current_result_variable_instance(variable_cache=variable_cache)
         if 'url2destMap' in result.value:
             for url, file_data in result.value['url2destMap'].items():
-                self.log(message='file_data={}'.format(file_data), level='info')
+                self.log(message='file_data={}'.format(file_data), level='debug')
                 try:
                     if 'dst_page' in file_data and file_data['downloaded'] is False:
                         content = ''
