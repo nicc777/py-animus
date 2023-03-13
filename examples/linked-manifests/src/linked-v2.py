@@ -15,20 +15,25 @@ class DownloadWebPageContent(ManifestBase):
 
     ```yaml
     kind: DownloadWebPageContent
-    version: v1
+    version: v2
     metadata:
-      name: example_page
+        name: multi_page_download
+        dependencies:
+            apply:
+            - is-page-up
     spec:
-      url: https://raw.githubusercontent.com/nicc777/py-animus/main/README.md
-      outputFile: /tmp/example-page-result/output.txt
-      livenessFunction: is-page-up
+        urls: 
+        - https://raw.githubusercontent.com/nicc777/py-animus/main/README.md
+        - https://raw.githubusercontent.com/nicc777/py-animus/main/doc/README.md
+        outputPath: /tmp/example-page-result
+        emptyOutput: true
     ```
 
     In the `spec` section, the following fields are required:
 
     * `spec.url` - The URL to check
-    * `spec.outputFile` - The output file
-    * `spec.livenessFunction` - The name of the `WebsiteUpTest` manifest that has the implementation to check if this site is alive.
+    * `spec.outputPath` - The directory where files will be saved
+    * `spec.emptyOutput` - If set to true, first empty directories and delete the directories before downloading content.
     """
 
     def __init__(self, logger=get_logger(), post_parsing_method: object=None, version: str='v2', supported_versions: tuple=('v2',)):
@@ -58,6 +63,11 @@ class DownloadWebPageContent(ManifestBase):
         elif len(current_files) > 0:
             return True
         return False
+
+    def _prep_download_dir(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):
+        if 'emptyOutput' in self.spec:
+            if self.spec['emptyOutput'] is True:
+                self.log(message='"emptyOutput" option is not implemented yet', level='warning')
 
     def _get_current_downloaded_files(self)->list:
         """
@@ -134,28 +144,6 @@ class DownloadWebPageContent(ManifestBase):
 
     def _download_files(self, variable_cache: VariableCache=VariableCache()):
         result = self._get_current_result_variable_instance(variable_cache=variable_cache)
-        """
-            result.value:
-
-                {
-                    "url2destMap": {
-                        "http://111": {             -> url
-                            "dst_dir": "dir:111",   -> file_data
-                            "dst_page": "file:111", -> file_data
-                            "downloaded": false     -> file_data
-                        },
-                        "http://222": {             -> url
-                            "dst_dir": "dir:222",   -> file_data
-                            "dst_page": "file:222", -> file_data
-                            "downloaded": false     -> file_data
-                        }
-                    },
-                    "dst2urlMap": {
-                        "file:111": "http://111"
-                        "file:222": "http://222"
-                    }
-                }
-        """
         if 'url2destMap' in result.value:
             for url, file_data in result.value['url2destMap'].items():
                 self.log(message='file_data={}'.format(file_data), level='info')
@@ -188,6 +176,7 @@ class DownloadWebPageContent(ManifestBase):
 
     def apply_manifest(self, manifest_lookup_function: object=None, variable_cache: VariableCache=VariableCache()):
         self.log(message='DownloadWebPageContent.apply_manifest() CALLED', level='info')
+        self._prep_download_dir(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
         self._download_files(variable_cache=variable_cache)
         return  
 
