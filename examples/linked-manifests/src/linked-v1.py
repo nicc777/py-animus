@@ -48,7 +48,9 @@ class WebsiteUpTest(ManifestBase):
         | Yes (Expired)   | False                | True            |
         | Yes             | True (Stored value)  | False           |
         """
-        return not variable_cache.get_value(variable_name=self.metadata['name'], value_if_expired=False, raise_exception_on_expired=False, raise_exception_on_not_found=False, default_value_if_not_found=False)
+        already_checked = not variable_cache.get_value(variable_name=self.metadata['name'], value_if_expired=False, raise_exception_on_expired=False, raise_exception_on_not_found=False, default_value_if_not_found=False)
+        self.log(message='already_checked={}'.format(already_checked), level='info')
+        return already_checked
 
     def apply_manifest(self, manifest_lookup_function: object=None, variable_cache: VariableCache=VariableCache()):
         """Do the check if a previous check was not yet performed
