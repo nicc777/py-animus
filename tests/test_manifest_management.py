@@ -883,6 +883,28 @@ class TestVersionedClassRegister(unittest.TestCase):    # pragma: no cover
         self.assertEqual(c2.version, 'v3')
 
 
+class TestDependencyReferences(unittest.TestCase):    # pragma: no cover
+
+    def setUp(self):
+        print('-'*80)
+
+    def test_direct_dependency_negative_test(self):
+        drs = DependencyReferences()
+
+        # The following represent a deep circular reference, but will test negative for a direct dependency reference check
+        drs.add_dependency(src='a', dst='b')
+        drs.add_dependency(src='b', dst='c')
+        drs.add_dependency(src='c', dst='a')
+
+        self.assertFalse(drs.direct_circular_references_detected())
+
+    def test_direct_dependency_positive_test(self):
+        drs = DependencyReferences()
+        drs.add_dependency(src='a', dst='b')
+        drs.add_dependency(src='b', dst='a')
+        self.assertTrue(drs.direct_circular_references_detected())
+
+
 
 if __name__ == '__main__':
     unittest.main()
