@@ -48,27 +48,32 @@ class WebsiteUpTest(ManifestBase):
         | Yes (Expired)   | False                | True            |
         | Yes             | True (Stored value)  | False           |
         """
-        return not variable_cache.get_value(variable_name=self.metadata['name'], value_if_expired=False, raise_exception_on_expired=False, raise_exception_on_not_found=False, default_value_if_not_found=False)
+        already_checked = not variable_cache.get_value(variable_name=self.metadata['name'], value_if_expired=False, raise_exception_on_expired=False, raise_exception_on_not_found=False, default_value_if_not_found=False)
+        self.log(message='already_checked={}'.format(already_checked), level='info')
+        return already_checked
 
     def apply_manifest(self, manifest_lookup_function: object=None, variable_cache: VariableCache=VariableCache()):
         """Do the check if a previous check was not yet performed
         """
         self.log(message='WebsiteUpTest.apply_manifest() CALLED', level='info')
-        website_up = False
-        if self.implemented_manifest_differ_from_this_manifest() is True:
-            self.log(message='Testing website: {}'.format(self.spec['url']), level='info')
-            try:
-                return_code = urllib.request.urlopen(self.spec['url']).getcode()
-                self.log(message='  return_code: {}'.format(return_code), level='info')
-                if return_code in self.spec['acceptableResponseCodes']:
-                    website_up = True
-                else:
-                    self.log(message='  Code was not found in list of acceptable return codes: {}'.format(self.spec['acceptableResponseCodes']), level='warning')
-            except:
-                self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
-            self.log(message='variable_cache now: {}'.format(str(variable_cache)), level='debug')
-        variable_cache.store_variable(variable=Variable(name='{}'.format(self.metadata['name']), initial_value=website_up, ttl=30, logger=self.logger), overwrite_existing=True)
-        self.log(message='Is site up TEST: {}'.format(variable_cache.get_value(variable_name=self.metadata['name'])), level='debug')
+        if variable_cache.get_value(variable_name=self.metadata['name'], value_if_expired=False, raise_exception_on_expired=False, raise_exception_on_not_found=False, default_value_if_not_found=False) is False:
+            website_up = False
+            if self.implemented_manifest_differ_from_this_manifest() is True:
+                self.log(message='Testing website: {}'.format(self.spec['url']), level='info')
+                try:
+                    return_code = urllib.request.urlopen(self.spec['url']).getcode()
+                    self.log(message='  return_code: {}'.format(return_code), level='info')
+                    if return_code in self.spec['acceptableResponseCodes']:
+                        website_up = True
+                    else:
+                        self.log(message='  Code was not found in list of acceptable return codes: {}'.format(self.spec['acceptableResponseCodes']), level='warning')
+                except:
+                    self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
+                self.log(message='variable_cache now: {}'.format(str(variable_cache)), level='debug')
+            variable_cache.store_variable(variable=Variable(name='{}'.format(self.metadata['name']), initial_value=website_up, ttl=30, logger=self.logger), overwrite_existing=True)
+            self.log(message='Is site up TEST: {}'.format(variable_cache.get_value(variable_name=self.metadata['name'])), level='debug')
+        else:
+            self.log(message='Already checked', level='info')
         return 
     
     def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache()):

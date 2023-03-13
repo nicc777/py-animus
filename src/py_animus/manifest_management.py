@@ -338,13 +338,13 @@ class ManifestBase:
         """
         if level.lower().startswith('d'):
             if self.debug:
-                self.logger.debug('[{}] {}'.format(self.kind, message))
+                self.logger.debug('[{}:{}] {}'.format(self.kind, self.version, message))
         elif level.lower().startswith('i'):
-            self.logger.info('[{}] {}'.format(self.kind, message))
+            self.logger.info('[{}:{}] {}'.format(self.kind, self.version, message))
         elif level.lower().startswith('w'):
-            self.logger.warning('[{}] {}'.format(self.kind, message))
+            self.logger.warning('[{}:{}] {}'.format(self.kind, self.version, message))
         elif level.lower().startswith('e'):
-            self.logger.error('[{}] {}'.format(self.kind, message))
+            self.logger.error('[{}:{}] {}'.format(self.kind, self.version, message))
 
     def parse_manifest(self, manifest_data: dict):
         """Called via the ManifestManager when manifests files are parsed and one is found to belong to a class of this implementation.
