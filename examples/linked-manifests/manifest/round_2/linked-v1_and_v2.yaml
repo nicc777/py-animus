@@ -1,0 +1,42 @@
+---
+kind: WebsiteUpTest
+version: v1
+metadata:
+  name: is-page-up
+  skipApplyAll: true
+  skipDeleteAll: true
+spec:
+  url: https://raw.githubusercontent.com/nicc777/py-animus/main/README.md
+  acceptableResponseCodes:
+  - 200
+  - 201
+  - 301
+  - 302
+---
+kind: DownloadWebPageContent
+version: v1
+metadata:
+  name: example_page
+  dependencies:
+    apply:
+    - is-page-up
+    - multi_page_download
+    delete:
+    - multi_page_download
+spec:
+  url: https://raw.githubusercontent.com/nicc777/py-animus/main/README.md
+  outputFile: /tmp/example-page-result/output.txt
+---
+kind: DownloadWebPageContent
+version: v2
+metadata:
+  name: multi_page_download
+  dependencies:
+    apply:
+    - is-page-up
+spec:
+  urls: 
+  - https://raw.githubusercontent.com/nicc777/py-animus/main/README.md
+  - https://raw.githubusercontent.com/nicc777/py-animus/main/doc/README.md
+  outputPath: /tmp/example-page-result
+  emptyOutput: true

@@ -93,6 +93,9 @@ class TestClassVariable(unittest.TestCase):    # pragma: no cover
 
 class TestClassVariableCache(unittest.TestCase):    # pragma: no cover
 
+    def setUp(self):
+        print('-'*80)
+    
     def test_init_with_defaults(self):
         result = VariableCache()
         self.assertIsNotNone(result)
@@ -230,6 +233,9 @@ spec:
 
 class TestMyManifest1(unittest.TestCase):    # pragma: no cover
 
+    def setUp(self):
+        print('-'*80)
+
     def test_init_with_defaults(self):
         result = manifest_lookup_that_always_returns_MyManifest1(name='test1')
         self.assertIsNotNone(result)
@@ -339,6 +345,9 @@ spec:
 
 class TestMyManifest2(unittest.TestCase):    # pragma: no cover
 
+    def setUp(self):
+        print('-'*80)
+
     def test_init_with_defaults(self):
         m2 = MyManifest2(post_parsing_method=my_post_parsing_method)
         m2.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=my_manifest_2_data)['part_1'])
@@ -400,7 +409,7 @@ class TestManifestManager(unittest.TestCase):    # pragma: no cover
         mm = ManifestManager(variable_cache=vc)
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
-        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
 
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=my_manifest_1_data)['part_1'])
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=my_manifest_2_data)['part_1'])
@@ -420,7 +429,7 @@ class TestManifestManager(unittest.TestCase):    # pragma: no cover
         # Test exceptions
         with self.assertRaises(Exception) as context:
             mm.get_manifest_class_by_kind(kind='NotRegisteredKind')
-        self.assertTrue('Manifest kind "NotRegisteredKind" not registered' in str(context.exception))
+        self.assertTrue('Version is required' in str(context.exception))
 
         with self.assertRaises(Exception) as context:
             mm.get_manifest_instance_by_name(name='does-not-exist')
@@ -509,7 +518,7 @@ spec:
         ###
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
-        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
 
         ###
         ### Consume Manifests and link with class implementations registered in ManifestManager
@@ -523,7 +532,7 @@ spec:
         
         
 
-        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
         self.assertEqual(len(mm.manifest_instances), 5)         # One less, if "manifest_1_v03_data" is not parsed (commented out above)
 
         ###
@@ -549,7 +558,7 @@ spec:
         ###
         ### Test mm.get_manifest_class_by_kind() call for kind with no version - ensure we get the latest version
         ###
-        latest_instance_of_manifest2 = mm.get_manifest_class_by_kind(kind='MyManifest2')
+        latest_instance_of_manifest2 = mm.get_manifest_class_by_kind(kind='MyManifest2', version='v0.3')
         self.assertIsNotNone(latest_instance_of_manifest2)
         self.assertIsInstance(latest_instance_of_manifest2, ManifestBase)
         self.assertEqual(latest_instance_of_manifest2.kind, 'MyManifest2')
@@ -610,7 +619,7 @@ spec:
         ###
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
-        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
 
         ###
         ### Consume Manifests and link with class implementations registered in ManifestManager
@@ -618,7 +627,7 @@ spec:
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_data)['part_1'])
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v01_data)['part_1'])
 
-        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
         self.assertEqual(len(mm.manifest_instances), 2)
 
         ###
@@ -700,7 +709,7 @@ spec:
         ###
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
-        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
 
         ###
         ### Consume Manifests and link with class implementations registered in ManifestManager
@@ -709,7 +718,7 @@ spec:
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_b_data)['part_1'])
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v01_data)['part_1'])
 
-        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
         self.assertEqual(len(mm.manifest_instances), 3)
 
         ###
@@ -791,7 +800,7 @@ spec:
         ###
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
         mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
-        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
 
         ###
         ### Consume Manifests and link with class implementations registered in ManifestManager
@@ -800,7 +809,7 @@ spec:
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_b_data)['part_1'])
         mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_2_v01_data)['part_1'])
 
-        self.assertEqual(len(mm.manifest_class_register), 6)
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
         self.assertEqual(len(mm.manifest_instances), 3)
 
         ###
@@ -828,6 +837,50 @@ spec:
             self.assertTrue('Expired' in str(context.exception), 'Expected variable named "{}" to have expired!'.format(v_name))
         result2 = vc.get_value(variable_name='MyManifest1:test1-1', raise_exception_on_not_found=False, default_value_if_not_found=None)    # Implementation dictates that this variables must still not be available
         self.assertIsNone(result2)
+
+
+class TestVersionedClassRegister(unittest.TestCase):    # pragma: no cover
+
+    def setUp(self):
+        print('-'*80)
+
+    def test_init_with_defaults(self):
+        registry = VersionedClassRegister()
+        self.assertIsNotNone(registry)
+        self.assertIsInstance(registry, VersionedClassRegister)
+        c1 = ManifestBase(version='v2', supported_versions=['v1', 'v2',])
+        c2 = ManifestBase(version='v3', supported_versions=['v1', 'v2', 'v3',])
+        c3 = ManifestBase(version='v4', supported_versions=['v4',])
+        c1.kind = 'Test'
+        c2.kind = 'Test'
+        c3.kind = 'Test'
+        registry.add_class(clazz=c1)
+        registry.add_class(clazz=c2)
+        registry.add_class(clazz=c3)
+        self.assertEqual(len(registry.classes), 3)
+
+        v2 = registry.get_version_of_class(kind='Test', version='v2')
+        self.assertEqual(c1, v2)
+        self.assertNotEqual(c2, v2)
+        self.assertNotEqual(c3, v2)
+
+        v3 = registry.get_version_of_class(kind='Test', version='v3')
+        self.assertEqual(c2, v3)
+        self.assertNotEqual(c1, v3)
+        self.assertNotEqual(c3, v3)
+
+        v4 = registry.get_version_of_class(kind='Test', version='v4')
+        self.assertEqual(c3, v4)
+        self.assertNotEqual(c1, v4)
+        self.assertNotEqual(c2, v4)
+
+        # Scenario: Version one class is no longer ingested, but several newer classes still support processing
+        # manifests of version 1. Return the latest implementation of a class supporting version 1 processing.
+        v1 = registry.get_version_of_class(kind='Test', version='v1')
+        self.assertEqual(c2, v1)
+        self.assertNotEqual(c1, v1)
+        self.assertNotEqual(c3, v1)
+        self.assertEqual(c2.version, 'v3')
 
 
 

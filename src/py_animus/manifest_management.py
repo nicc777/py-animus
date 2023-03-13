@@ -338,13 +338,13 @@ class ManifestBase:
         """
         if level.lower().startswith('d'):
             if self.debug:
-                self.logger.debug('[{}] {}'.format(self.kind, message))
+                self.logger.debug('[{}:{}] {}'.format(self.kind, self.version, message))
         elif level.lower().startswith('i'):
-            self.logger.info('[{}] {}'.format(self.kind, message))
+            self.logger.info('[{}:{}] {}'.format(self.kind, self.version, message))
         elif level.lower().startswith('w'):
-            self.logger.warning('[{}] {}'.format(self.kind, message))
+            self.logger.warning('[{}:{}] {}'.format(self.kind, self.version, message))
         elif level.lower().startswith('e'):
-            self.logger.error('[{}] {}'.format(self.kind, message))
+            self.logger.error('[{}:{}] {}'.format(self.kind, self.version, message))
 
     def parse_manifest(self, manifest_data: dict):
         """Called via the ManifestManager when manifests files are parsed and one is found to belong to a class of this implementation.
@@ -616,31 +616,126 @@ class ManifestBase:
         raise Exception('To be implemented by user')
 
 
+class VersionedClassRegister:
+
+    def __init__(self, logger=get_logger()):
+        self.classes = list()
+        self.logger = logger
+    
+    def is_class_registered(self, kind: str, version: str=None)->bool:
+        """Find a registered class of a certain kind, optionally matching the version as well
+        
+        Args:
+          kind: String containing the class kind name
+          version: String containing the class primary version (optional, ignored if not supplied)
+
+        Returns:
+            Boolean true if the registered class with kind name was found. If version was also supplied, return true if
+            the kind name and primary version matches.
+        """
+        registered = False
+        for registered_class in self.classes:
+            if kind == registered_class.kind:
+                if version is not None:
+                    if version == registered_class.version:
+                        return True
+                else:
+                    registered = True
+        return registered
+    
+    def get_version_of_class(self, kind: str, version: str, _secondary_pass: bool=False)->ManifestBase:
+        """Find a registered class of a certain kind, that support the supplied version
+        
+        Args:
+          kind: String containing the class kind name
+          version: String containing the version that must be supported
+
+        Returns:
+            If a class matching the kind that can process the required version is found a reference to it will be 
+            returned.
+
+        Raises:
+            Exception: If no matching class supporting the requested version was found
+        """
+        current_identified_clazz = None
+        supported_versions = dict()
+
+        # Try and find a version of the class that is supported
+        for registered_class in self.classes:
+            if kind == registered_class.kind:
+                if registered_class.version == version:
+                    current_identified_clazz = registered_class
+                    return registered_class
+                for supported_version in registered_class.supported_versions:
+                    if supported_version not in supported_versions:
+                        supported_versions[supported_version] = list()
+                    else:
+                        supported_versions[supported_version].append(registered_class.version)
+
+        # If we have not found a direct version match yet, look at the highest version of class that supports this version
+        if _secondary_pass is False:
+            if current_identified_clazz is None:
+                if version in supported_versions:
+                    potential_versions = copy.deepcopy(supported_versions[version])
+                    if len(potential_versions) > 0:
+                        potential_versions.sort(reverse=True)   # Rank from highest version to lowest
+                        current_identified_clazz = self.get_version_of_class(kind=kind, version=potential_versions[0], _secondary_pass=True)
+
+        # The result...
+        if current_identified_clazz is None:
+            raise Exception('No supported implementation of "{}" for version "{}" found'.format(kind, version))
+        return current_identified_clazz
+
+    def add_class(self, clazz: ManifestBase):
+        if self.is_class_registered(kind=clazz.kind, version=clazz.version) is False:
+            self.classes.append(clazz)
+            self.logger.info(
+                'Registered class kind "{}" version "{}" supporting also versions "{}" of manifests'.format(
+                    clazz.kind,
+                    clazz.version,
+                    clazz.supported_versions
+                )
+            )
+        else:
+            self.logger.info('Class "{}" with version "{}" already registered - ignoring'.format(clazz.kind, clazz.version))
+
+    def to_dict(self):
+        result = dict()
+        for clazz in self.classes:
+            if clazz.kind not in result:
+                result[clazz.kind] = dict()
+                result[clazz.kind]['versions'] = list()
+            else:
+                if clazz.version not in result[clazz.kind]['versions']:
+                    result[clazz.kind]['versions'].append(clazz.version)
+                for version in clazz.supported_versions:
+                    if version not in result[clazz.kind]['versions']:
+                        result[clazz.kind]['versions'].append(version)
+                result[clazz.kind]['versions'].sort()
+        return result
+    
+    def __str__(self)->str:
+        return json.dumps(self.to_dict())
+
+
 class ManifestManager:
 
     def __init__(self, variable_cache: VariableCache, logger=get_logger()):
-        self.manifest_class_register = dict()
+        self.versioned_class_register = VersionedClassRegister(logger=logger)
         self.manifest_instances = dict()
         self.manifest_data_by_manifest_name = dict()
         self.variable_cache = variable_cache
         self.logger = logger
 
-    def register_manifest_class(self, manifest: ManifestBase):
-        if isinstance(manifest, ManifestBase) is False:
+    def register_manifest_class(self, manifest_base: ManifestBase):
+        if isinstance(manifest_base, ManifestBase) is False:
             raise Exception('Incorrect Base Class')
-        idx = '{}:{}'.format(manifest.kind, manifest.version)
-        self.manifest_class_register[idx] = manifest
-        self.logger.info('Registered manifest "{}" of version {}'.format(manifest.__class__.__name__, manifest.version))
-        for idx_sv in manifest.supported_versions:
-            idx = '{}:{}'.format(manifest.kind, idx_sv)
-            if idx not in self.manifest_class_register:
-                self.manifest_class_register[idx] = manifest
-                self.logger.info('Registered manifest "{}" of version {}'.format(manifest.__class__.__name__, manifest.version))
+        self.versioned_class_register.add_class(clazz=manifest_base)
 
     def load_manifest_class_definition_from_file(self, plugin_file_path: str):
         for returned_class, kind in get_modules_in_package(target_dir=plugin_file_path, logger=self.logger):
-             self.register_manifest_class(manifest=returned_class(logger=self.logger))
-        self.logger.info('Registered classes: {}'.format(list(self.manifest_class_register.keys())))
+             self.register_manifest_class(manifest_base=returned_class(logger=self.logger))
+        self.logger.info('Registered classes: {}'.format(str(self.versioned_class_register)))
 
     def get_manifest_instance_by_name(self, name: str):
         for key, manifest_instance in self.manifest_instances.items():
@@ -685,29 +780,9 @@ class ManifestManager:
         )
 
     def get_manifest_class_by_kind(self, kind: str, version: str=None):
-        idx = kind
-        if version is not None:
-            idx = '{}:{}'.format(kind, version)
-        else:
-            versions_discovered = list()
-            for versioned_manifest_idx in tuple(self.manifest_class_register.keys()):
-                if versioned_manifest_idx.startswith('{}:'.format(kind)):
-                    if versioned_manifest_idx not in versions_discovered:
-                        versions_discovered.append(versioned_manifest_idx)
-                    for supported_version_id in self.manifest_class_register[versioned_manifest_idx].supported_versions:
-                        supported_version_key = '{}:{}'.format(kind, supported_version_id)
-                        if supported_version_key not in versions_discovered:
-                            versions_discovered.append(versioned_manifest_idx)
-                        # versions_discovered may now have something like ['v1', 'v0.1', 'v2', 'v1.5']
-
-            versions_discovered.sort()  # Based on the example, this will now be ['v0.1', 'v1', 'v1.5', 'v2']
-            if len(versions_discovered) > 0:
-                idx = versions_discovered[-1] # latest, expecting v2
-            self.logger.debug('All versions registered for kind "{}": {}'.format(kind, versions_discovered))
-
-        if idx in self.manifest_class_register:
-            return self.manifest_class_register[idx]
-        raise Exception('Manifest kind "{}" not registered'.format(kind))
+        if version is None:
+            raise Exception('Version is required')
+        return self.versioned_class_register.get_version_of_class(kind=kind, version=version)
     
     def parse_manifest(self, manifest_data: dict):
         manifest_data = dict((k.lower(), v) for k,v in manifest_data.items())   # Convert first level keys to lower case
