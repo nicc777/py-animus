@@ -720,7 +720,7 @@ class VersionedClassRegister:
 
 class DependencyReference:
 
-    def __init__(self, src: str, dst: str, count: int=1):
+    def __init__(self, src: str, dst: str='NO-DEP', count: int=1):
         self.src = src
         self.dst = dst
         self.count = count
@@ -753,6 +753,21 @@ class DependencyReferences:
             self.increment_counter(src=src, dst=dst)
         else:
             self.dependencies.append(DependencyReference(src=src, dst=dst))
+
+    def get_dependency_for_src(self, src: str)->list:
+        deps = list()
+        if src != 'NO-DEP':
+            for dr in self.dependencies:
+                if dr.src == src:
+                    deps.append(dr.dst)
+        return deps
+
+    def direct_circular_references_detected(self)->bool:
+        for dr in self.dependencies:
+            dst_deps = self.get_dependency_for_src(src=dr.dst)
+            if dr.src in dst_deps:
+                return True
+        return False
 
 
 class ManifestManager:
