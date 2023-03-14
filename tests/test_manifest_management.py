@@ -838,6 +838,107 @@ spec:
         result2 = vc.get_value(variable_name='MyManifest1:test1-1', raise_exception_on_not_found=False, default_value_if_not_found=None)    # Implementation dictates that this variables must still not be available
         self.assertIsNone(result2)
 
+    def test_direct_circular_reference_in_apply_raise_exception(self):
+        ###
+        ### Manifest Setup
+        ###
+
+        manifest_1_v01_a_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-1
+    dependencies:
+        apply:
+            - test1-2
+spec:
+    val: 1
+"""
+
+        manifest_1_v01_b_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-2
+    dependencies:
+        apply:
+            - test1-1
+spec:
+    val: 1
+"""
+
+        ###
+        ### Init VariableCache and ManifestManager
+        ###
+        vc = VariableCache()
+        mm = ManifestManager(variable_cache=vc)
+
+        ###
+        ### Consume classes that extend ManifestBase and register with ManifestManager
+        ###
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
+
+        ###
+        ### Consume Manifests and link with class implementations registered in ManifestManager
+        ###
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_a_data)['part_1'])
+        with self.assertRaises(Exception) as context:
+            mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_b_data)['part_1'])
+        self.assertTrue('Direct dependency violation detected in class' in str(context.exception))
+
+    def test_direct_circular_reference_in_delete_raise_exception(self):
+        ###
+        ### Manifest Setup
+        ###
+
+        manifest_1_v01_a_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-1
+    dependencies:
+        delete:
+            - test1-2
+spec:
+    val: 1
+"""
+
+        manifest_1_v01_b_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-2
+    dependencies:
+        delete:
+            - test1-1
+spec:
+    val: 1
+"""
+
+        ###
+        ### Init VariableCache and ManifestManager
+        ###
+        vc = VariableCache()
+        mm = ManifestManager(variable_cache=vc)
+
+        ###
+        ### Consume classes that extend ManifestBase and register with ManifestManager
+        ###
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
+
+        ###
+        ### Consume Manifests and link with class implementations registered in ManifestManager
+        ###
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_a_data)['part_1'])
+        with self.assertRaises(Exception) as context:
+            mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_b_data)['part_1'])
+        self.assertTrue('Direct dependency violation detected in class' in str(context.exception))
+        
+
 
 class TestVersionedClassRegister(unittest.TestCase):    # pragma: no cover
 
