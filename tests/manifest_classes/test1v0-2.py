@@ -29,11 +29,12 @@ class MyManifest1(ManifestBase):
             )
         )
         self.log(
-            message='Applied implementation kind "{}" of version "{}" with manifest checksum "{}"', level='info'.format(
+            message='Applied implementation kind "{}" of version "{}" with manifest checksum "{}"'.format(
                 self.metadata['name'],
                 self.version,
                 self.checksum
-            )
+            ),
+            level='info'
         )
         variable_cache.store_variable(variable=Variable(name='{}:{}-val'.format(self.kind, self.metadata['name']), initial_value=self.spec['val']), overwrite_existing=True)
         variable_cache.store_variable(variable=Variable(name='{}:{}-applied'.format(self.kind, self.metadata['name']), initial_value=True), overwrite_existing=True)
