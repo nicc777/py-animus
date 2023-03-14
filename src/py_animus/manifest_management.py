@@ -16,9 +16,6 @@ import sys
 from py_animus import get_logger, get_utc_timestamp, is_debug_set_in_environment
 
 
-MAX_CALLS_TO_MANIFEST = int(os.getenv('MAX_CALLS_TO_MANIFEST', '10'))
-
-
 def get_modules_in_package(target_dir: str, logger=get_logger()):
     files = os.listdir(target_dir)
     sys.path.insert(0,target_dir)
@@ -782,7 +779,7 @@ class DependencyReferences:
 
 class ManifestManager:
 
-    def __init__(self, variable_cache: VariableCache, logger=get_logger()):
+    def __init__(self, variable_cache: VariableCache, logger=get_logger(), max_calls_to_manifest: int=int(os.getenv('MAX_CALLS_TO_MANIFEST', '10'))):
         self.versioned_class_register = VersionedClassRegister(logger=logger)
         self.manifest_instances = dict()
         self.manifest_data_by_manifest_name = dict()
@@ -790,6 +787,7 @@ class ManifestManager:
         self.logger = logger
         self.apply_drs = DependencyReferences()
         self.delete_drs = DependencyReferences()
+        self.max_calls_to_manifest = max_calls_to_manifest
 
     def register_manifest_class(self, manifest_base: ManifestBase):
         if isinstance(manifest_base, ManifestBase) is False:
@@ -816,7 +814,7 @@ class ManifestManager:
                 return
 
         # Check if execution count limit has been reached    
-        exec_limit = copy.deepcopy(MAX_CALLS_TO_MANIFEST)
+        exec_limit = copy.deepcopy(self.max_calls_to_manifest)
         if 'max_calls' in manifest_instance.metadata:
             exec_limit = copy.deepcopy(manifest_instance.metadata['max_calls'])
         if increment_exec_counter_in_manifest_manager is True:
@@ -849,7 +847,7 @@ class ManifestManager:
                 return
             
         # Check if execution count limit has been reached    
-        exec_limit = copy.deepcopy(MAX_CALLS_TO_MANIFEST)
+        exec_limit = copy.deepcopy(self.max_calls_to_manifest)
         if 'max_calls' in manifest_instance.metadata:
             exec_limit = copy.deepcopy(manifest_instance.metadata['max_calls'])
         if increment_exec_counter_in_manifest_manager is True:
