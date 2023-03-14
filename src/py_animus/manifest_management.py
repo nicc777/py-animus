@@ -329,6 +329,14 @@ class ManifestBase:
         self.apply_execute_count = 0
         self.delete_execute_count = 0
 
+    def increment_apply_counter(self):
+        self.apply_execute_count += 1
+        self.log(message='Incremented apply_execute_count - value now "{}"'.format(self.apply_execute_count), level='info')
+
+    def increment_delete_counter(self):
+        self.delete_execute_count += 1
+        self.log(message='Incremented delete_execute_count - value now "{}"'.format(self.delete_execute_count), level='info')
+
     def log(self, message: str, level: str='info'): # pragma: no cover
         """During implementation, calls to `self.log()` can be made to log messages using the configure logger.
 
@@ -461,14 +469,14 @@ class ManifestBase:
 
         if process_self_post_dependency_processing is True:
             if action == 'apply':
-                self.log(message='APPLY RUN #{} for "{}"'.format(self.apply_execute_count+1, self.metadata['name']), level='info')
+                self.log(message='APPLY RUN #{} for "{}"'.format(self.apply_execute_count, self.metadata['name']), level='info')
                 if increment_exec_counter is True:
-                    self.apply_execute_count += 1
+                    self.increment_apply_counter()
                 self.apply_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, increment_exec_counter=increment_exec_counter)
             if action == 'delete':
-                self.log(message='DELETE RUN #{} for "{}"'.format(self.delete_execute_count+1, self.metadata['name']), level='info')
+                self.log(message='DELETE RUN #{} for "{}"'.format(self.delete_execute_count, self.metadata['name']), level='info')
                 if increment_exec_counter is True:
-                    self.delete_execute_count += 1
+                    self.increment_delete_counter()
                 self.delete_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, increment_exec_counter=increment_exec_counter)
         else:
             self.log(message='SELF was NOT YET PROCESSED for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='debug')
@@ -822,13 +830,13 @@ class ManifestManager:
         if 'max_calls' in manifest_instance.metadata:
             exec_limit = copy.deepcopy(manifest_instance.metadata['max_calls'])
         if increment_exec_counter_in_manifest_manager is True:
-            manifest_instance.apply_execute_count += 1
+            manifest_instance.increment_apply_counter()
         if manifest_instance.apply_execute_count > exec_limit:
             raise Exception('ManifestManager.apply_manifest(): Maximum number of calls set for manifest named "{}" reached.'.format(manifest_instance.metadata['name']))
 
         if skip_dependency_processing is True:
             if increment_exec_counter_in_manifest_manager is True:
-                manifest_instance.apply_execute_count += 1
+                manifest_instance.increment_apply_counter()
             manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache, increment_exec_counter=not increment_exec_counter_in_manifest_manager)
             return
 
@@ -855,13 +863,13 @@ class ManifestManager:
         if 'max_calls' in manifest_instance.metadata:
             exec_limit = copy.deepcopy(manifest_instance.metadata['max_calls'])
         if increment_exec_counter_in_manifest_manager is True:
-            manifest_instance.delete_execute_count += 1
+            manifest_instance.increment_delete_counter()
         if manifest_instance.delete_execute_count > exec_limit:
             raise Exception('ManifestManager:delete_manifest(): Maximum number of calls set for manifest named "{}" reached.'.format(manifest_instance.metadata['name']))
         
         if skip_dependency_processing is True:
             if increment_exec_counter_in_manifest_manager is True:
-                manifest_instance.delete_execute_count += 1
+                manifest_instance.increment_delete_counter()
             manifest_instance.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache, increment_exec_counter=not increment_exec_counter_in_manifest_manager)
             return
         
