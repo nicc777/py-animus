@@ -827,7 +827,7 @@ class ManifestManager:
         if skip_dependency_processing is True:
             if increment_exec_counter_in_manifest_manager is True:
                 manifest_instance.apply_execute_count += 1
-            manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
+            manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache, increment_exec_counter=not increment_exec_counter_in_manifest_manager)
             return
 
         manifest_instance.process_dependencies(
@@ -860,7 +860,7 @@ class ManifestManager:
         if skip_dependency_processing is True:
             if increment_exec_counter_in_manifest_manager is True:
                 manifest_instance.delete_execute_count += 1
-            manifest_instance.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
+            manifest_instance.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache, increment_exec_counter=not increment_exec_counter_in_manifest_manager)
             return
         
         manifest_instance.process_dependencies(
