@@ -462,9 +462,13 @@ class ManifestBase:
         if process_self_post_dependency_processing is True:
             if action == 'apply':
                 self.log(message='APPLY RUN #{} for "{}"'.format(self.apply_execute_count+1, self.metadata['name']), level='info')
+                if increment_exec_counter is True:
+                    self.apply_execute_count += 1
                 self.apply_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, increment_exec_counter=increment_exec_counter)
             if action == 'delete':
                 self.log(message='DELETE RUN #{} for "{}"'.format(self.delete_execute_count+1, self.metadata['name']), level='info')
+                if increment_exec_counter is True:
+                    self.delete_execute_count += 1
                 self.delete_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, increment_exec_counter=increment_exec_counter)
         else:
             self.log(message='SELF was NOT YET PROCESSED for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='debug')
