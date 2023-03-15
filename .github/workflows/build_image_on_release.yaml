@@ -34,7 +34,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: |
-            images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
