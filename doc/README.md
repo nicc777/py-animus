@@ -64,7 +64,10 @@ _**Manifest General Rules**_
 * Any manifest listed under dependencies will be processed first before the current manifest is processed.
 * To safeguard against potential hidden circular references, each manifest processed as a dependency of another will have their executions counted and if the count exceeds a certain threshold, the `ManifestManager` will throw an exception. This behavior can be controlled in the following ways:
     * Set an environment variable `MAX_CALLS_TO_MANIFEST` with a number. The default value is 10, meaning that any manifest will have the `apply_manifest()` or `delete_manifest()` methods called a maximum of 10 times before an exception is thrown.
-    * Set the `metadata.executeOnlyOnceOnApply` or `metadata.executeOnlyOnceOnDelete` in the manifest to ensure the `apply_manifest()` or `delete_manifest()` methods is only ever called once, regardless of how many times the manifest is referenced. The test for `MAX_CALLS_TO_MANIFEST` will still be evaluated to detect potential circular references even though the actual call to the various methods will only ever occur once.
+    * Set the `metadata.executeOnlyOnceOnApply` or `metadata.executeOnlyOnceOnDelete` in the manifest to ensure the `apply_manifest()` or `delete_manifest()` methods is only ever called once, regardless of how many times the manifest is referenced. The test for `MAX_CALLS_TO_MANIFEST` will still be evaluated to detect potential circular references even though the actual call to the various methods will only ever occur once. 
+
+> **Warning**
+> The `metadata.executeOnlyOnceOnApply` or `metadata.executeOnlyOnceOnDelete` settings are only evaluated in the `ManifestManager` and if a `ManifestBase` implementation makes a call using the `manifest_lookup_function` function reference, these values will have no effect unless also considered in the `ManifestBase` implementation
 
 The application will expect some implementation of `ManifestBase` that is called `HelloWorld`. You can have a look at the file `examples/hello-world/src/hello-v1.py` for an example.
 

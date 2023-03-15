@@ -46,7 +46,7 @@ def _get_arg_parser(
 def apply_command(vc: VariableCache, mm: ManifestManager, logger):
     for name in tuple(mm.manifest_instances.keys()):
         logger.info('Applying manifest named "{}"'.format(name))
-        mm.apply_manifest(name=name, increment_exec_counter_in_manifest_manager=True)
+        mm.apply_manifest(name=name)
     for name in tuple(vc.values.keys()):
         logger.info('RESULT: {}={}'.format(name, vc.get_value(variable_name=name)))
 
@@ -54,7 +54,7 @@ def apply_command(vc: VariableCache, mm: ManifestManager, logger):
 def delete_command(vc: VariableCache, mm: ManifestManager, logger):
     for name in tuple(mm.manifest_instances.keys()):
         logger.info('Deleting manifest named "{}"'.format(name))
-        mm.delete_manifest(name=name, increment_exec_counter_in_manifest_manager=True)
+        mm.delete_manifest(name=name)
     for name in tuple(vc.values.keys()):
         logger.info('RESULT: {}={}'.format(name, vc.get_value(variable_name=name)))
 
