@@ -846,8 +846,7 @@ class ManifestManager:
             process_dependency_if_not_already_applied=True,
             manifest_lookup_function=self.get_manifest_instance_by_name,
             variable_cache=self.variable_cache,
-            process_self_post_dependency_processing=True,
-            increment_exec_counter=not increment_exec_counter_in_manifest_manager
+            process_self_post_dependency_processing=True
         )
 
     def delete_manifest(self, name: str, skip_dependency_processing: bool=False, increment_exec_counter_in_manifest_manager: bool=False):
@@ -885,8 +884,7 @@ class ManifestManager:
             process_dependency_if_not_already_applied=False,
             manifest_lookup_function=self.get_manifest_instance_by_name,
             variable_cache=self.variable_cache,
-            process_self_post_dependency_processing=True,
-            increment_exec_counter=not increment_exec_counter_in_manifest_manager
+            process_self_post_dependency_processing=True
         )
 
     def get_manifest_class_by_kind(self, kind: str, version: str=None):
