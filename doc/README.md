@@ -44,16 +44,18 @@ The file `examples/linked-manifests/manifest/linked-v1.yaml` ([link](../examples
 
 _**Manifest Specification**_
 
-| Field                           | Type    | Required | Description                                                                                                                                                              |
-|---------------------------------|:-------:|:--------:|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `kind`                          | String  | Yes      | Maps to the Class name that handles the processing of this manifest file.                                                                                                |
-| `version`                       | String  | Yes      | Some form of version is required. It helps with maintaining implementations of the same kind as systems evolve.                                                          |
-| `metadata.name`                 | String  | Yes      | A unique name. Any other manifest could have some reference to this manifest, and therefore the name must be unique at runtime across all ingested manifest files.       |
-| `metadata.skipApplyAll`         | Boolean | No       | When all manifests are applied, any manifest with this entry and a value of `true` will be skipped. Ideal for "child" manifests invoked by "parent" manifests as needed. |
-| `metadata.skipDeleteAll`        | Boolean | No       | When all manifests are deleted, any manifest with this entry and a value of `true` will be skipped. Ideal for "child" manifests invoked by "parent" manifests as needed. |
-| `metadata.dependencies.apply`   | List    | No       | Contains a list of names pointing to manifests with the name in their `metadata.name` fields that must be applied before applying this manifest.                         |
-| `metadata.dependencies.delete`  | List    | No       | Contains a list of names pointing to manifests with the name in their `metadata.name` fields that must be deleted before deleting this manifest.                         |
-| `spec.<dict>`                   | Dict    | Yes      | The intent is that the `spec` contains the data required for processing the manifest file by the implementation class for this version of the manifest.                  |
+| Field                              | Type    | Required | Description                                                                                                                                                                                                          |
+|------------------------------------|:-------:|:--------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `kind`                             | String  | Yes      | Maps to the Class name that handles the processing of this manifest file.                                                                                                                                            |
+| `version`                          | String  | Yes      | Some form of version is required. It helps with maintaining implementations of the same kind as systems evolve.                                                                                                      |
+| `metadata.name`                    | String  | Yes      | A unique name. Any other manifest could have some reference to this manifest, and therefore the name must be unique at runtime across all ingested manifest files.                                                   |
+| `metadata.skipApplyAll`            | Boolean | No       | When all manifests are applied, any manifest with this entry and a value of `true` will be skipped. Ideal for "child" manifests invoked by "parent" manifests as needed.                                             |
+| `metadata.skipDeleteAll`           | Boolean | No       | When all manifests are deleted, any manifest with this entry and a value of `true` will be skipped. Ideal for "child" manifests invoked by "parent" manifests as needed.                                             |
+| `metadata.dependencies.apply`      | List    | No       | Contains a list of names pointing to manifests with the name in their `metadata.name` fields that must be applied before applying this manifest.                                                                     |
+| `metadata.dependencies.delete`     | List    | No       | Contains a list of names pointing to manifests with the name in their `metadata.name` fields that must be deleted before deleting this manifest.                                                                     |
+| `metadata.executeOnlyOnceOnApply`  | Boolean | No       | If set to True, ensure that the `ManifestBase` implementation method `apply_manifest()` is called only once. Default is `false` meaning the method may be called multiple times depending on dependency references.  |
+| `metadata.executeOnlyOnceOnDelete` | Boolean | No       | If set to True, ensure that the `ManifestBase` implementation method `delete_manifest()` is called only once. Default is `false` meaning the method may be called multiple times depending on dependency references. |
+| `spec.<dict>`                      | Dict    | Yes      | The intent is that the `spec` contains the data required for processing the manifest file by the implementation class for this version of the manifest.                                                              |
 
 _**Manifest General Rules**_
 
