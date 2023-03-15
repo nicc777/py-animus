@@ -5,7 +5,8 @@ metadata:
   name: is-page-up
   skipApplyAll: true
   skipDeleteAll: true
-  max_calls: 2
+  executeOnlyOnceOnApply: true
+  executeOnlyOnceOnDelete: true
 spec:
   url: https://raw.githubusercontent.com/nicc777/py-animus/main/README.md
   acceptableResponseCodes:
@@ -24,7 +25,6 @@ metadata:
     - multi_page_download
     delete:
     - multi_page_download
-  max_calls: 1
 spec:
   url: https://raw.githubusercontent.com/nicc777/py-animus/main/README.md
   outputFile: /tmp/example-page-result/output.txt
@@ -36,7 +36,6 @@ metadata:
   dependencies:
     apply:
     - is-page-up
-  max_calls: 1
 spec:
   urls: 
   - https://raw.githubusercontent.com/nicc777/py-animus/main/README.md

@@ -1007,7 +1007,8 @@ spec:
             for name in tuple(mm.manifest_instances.keys()):
                 print('Applying manifest named "{}"'.format(name))
                 mm.apply_manifest(name=name, skip_dependency_processing=False, increment_exec_counter_in_manifest_manager=True)
-        self.assertTrue('Maximum number of calls' in str(context.exception))
+        self.assertTrue('Maximum executions reached when attempting to process manifest named' in str(context.exception))
+        mm.executions_per_manifest_instance = dict()
         
         ###
         ### Mimic the main() function delete all call
@@ -1016,7 +1017,7 @@ spec:
             for name in tuple(mm.manifest_instances.keys()):
                 print('Deleting manifest named "{}"'.format(name))
                 mm.delete_manifest(name=name, skip_dependency_processing=False, increment_exec_counter_in_manifest_manager=True)
-        self.assertTrue('Maximum number of calls' in str(context.exception))
+        self.assertTrue('Maximum executions reached when attempting to process manifest named' in str(context.exception))
 
 
 class TestVersionedClassRegister(unittest.TestCase):    # pragma: no cover

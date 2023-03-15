@@ -326,16 +326,6 @@ class ManifestBase:
         self.initialized = False
         self.post_parsing_method = post_parsing_method
         self.checksum = None
-        self.apply_execute_count = 0
-        self.delete_execute_count = 0
-
-    def increment_apply_counter(self):
-        self.apply_execute_count += 1
-        self.log(message='Incremented apply_execute_count - value now "{}"'.format(self.apply_execute_count), level='info')
-
-    def increment_delete_counter(self):
-        self.delete_execute_count += 1
-        self.log(message='Incremented delete_execute_count - value now "{}"'.format(self.delete_execute_count), level='info')
 
     def log(self, message: str, level: str='info'): # pragma: no cover
         """During implementation, calls to `self.log()` can be made to log messages using the configure logger.
@@ -411,8 +401,7 @@ class ManifestBase:
         process_dependency_if_not_already_applied: bool,
         manifest_lookup_function: object=dummy_manifest_lookup_function,
         variable_cache: VariableCache=VariableCache(),
-        process_self_post_dependency_processing: bool=True,
-        increment_exec_counter: bool=False
+        process_self_post_dependency_processing: bool=True
     ):
         """Called via the ManifestManager just before calling the `apply_manifest()` or `delete_manifest()`
 
@@ -444,8 +433,7 @@ class ManifestBase:
                             variable_cache=variable_cache,
                             process_self_post_dependency_processing=process_self_post_dependency_processing,
                             process_dependency_if_already_applied=process_dependency_if_already_applied,
-                            process_dependency_if_not_already_applied=process_dependency_if_not_already_applied,
-                            increment_exec_counter=increment_exec_counter
+                            process_dependency_if_not_already_applied=process_dependency_if_not_already_applied
                         )
                     else:
                         self.log(message='Dependency named "{}" will NOT be applied because process_dependency_if_already_applied is FALSE'.format(dependency_manifest_implementation.metadata['name']),level='debug')   
@@ -457,8 +445,7 @@ class ManifestBase:
                             variable_cache=variable_cache,
                             process_self_post_dependency_processing=process_self_post_dependency_processing,
                             process_dependency_if_already_applied=process_dependency_if_already_applied,
-                            process_dependency_if_not_already_applied=process_dependency_if_not_already_applied,
-                            increment_exec_counter=increment_exec_counter
+                            process_dependency_if_not_already_applied=process_dependency_if_not_already_applied
                         )
                     else:
                         self.log(message='Dependency named "{}" will be applied because process_dependency_if_not_already_applied is FALSE'.format(dependency_manifest_implementation.metadata['name']),level='debug')   
@@ -469,15 +456,9 @@ class ManifestBase:
 
         if process_self_post_dependency_processing is True:
             if action == 'apply':
-                self.log(message='APPLY RUN #{} for "{}"'.format(self.apply_execute_count, self.metadata['name']), level='info')
-                if increment_exec_counter is True:
-                    self.increment_apply_counter()
-                self.apply_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, increment_exec_counter=increment_exec_counter)
+                self.apply_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
             if action == 'delete':
-                self.log(message='DELETE RUN #{} for "{}"'.format(self.delete_execute_count, self.metadata['name']), level='info')
-                if increment_exec_counter is True:
-                    self.increment_delete_counter()
-                self.delete_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, increment_exec_counter=increment_exec_counter)
+                self.delete_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
         else:
             self.log(message='SELF was NOT YET PROCESSED for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='debug')
 
@@ -800,6 +781,7 @@ class ManifestManager:
         self.apply_drs = DependencyReferences()
         self.delete_drs = DependencyReferences()
         self.max_calls_to_manifest = max_calls_to_manifest
+        self.executions_per_manifest_instance = dict()
 
     def register_manifest_class(self, manifest_base: ManifestBase):
         if isinstance(manifest_base, ManifestBase) is False:
@@ -817,28 +799,46 @@ class ManifestManager:
                 return manifest_instance
         raise Exception('No manifest instance for "{}" found'.format(name))
     
+    def _record_manifest_instance_call(self, name: str):
+        if name in self.executions_per_manifest_instance:
+            self.executions_per_manifest_instance[name] += 1
+        else:
+            self.executions_per_manifest_instance[name] = 1
+
+    def _max_execution_count_reached(self, manifest_instance: ManifestBase)->bool:
+        if manifest_instance.metadata['name'] in self.executions_per_manifest_instance:
+            if self.executions_per_manifest_instance[manifest_instance.metadata['name']] >= self.max_calls_to_manifest:
+                return True
+        else:
+            self.executions_per_manifest_instance[manifest_instance.metadata['name']] = 0
+        return False
+    
+    def _can_execute_again(self, manifest_instance: ManifestBase)->bool:
+        return not self._max_execution_count_reached(manifest_instance=manifest_instance)
+
     def apply_manifest(self, name: str, skip_dependency_processing: bool=False, increment_exec_counter_in_manifest_manager: bool=False):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
-        self.logger.debug('ManifestManager.apply_manifest(): manifest_instance named "{}" loaded. Previous exec count: {}'.format(manifest_instance.metadata['name'], manifest_instance.apply_execute_count))
+        self._record_manifest_instance_call(name=manifest_instance.metadata['name'])
+        self.logger.debug('ManifestManager.apply_manifest(): manifest_instance named "{}" loaded. Previous exec count: {}'.format(manifest_instance.metadata['name'], self.executions_per_manifest_instance[manifest_instance.metadata['name']]))
+
         if 'skipApplyAll' in manifest_instance.metadata:
             if manifest_instance.metadata['skipApplyAll'] is True:
                 self.logger.warning('ManifestManager:apply_manifest(): Manifest named "{}" skipped because of skipApplyAll setting'.format(manifest_instance.metadata['name']))
                 return
-
-        # Check if execution count limit has been reached    
-        exec_limit = copy.deepcopy(self.max_calls_to_manifest)
-        if 'max_calls' in manifest_instance.metadata:
-            exec_limit = copy.deepcopy(manifest_instance.metadata['max_calls'])
-        if increment_exec_counter_in_manifest_manager is True:
-            manifest_instance.increment_apply_counter()
-        if manifest_instance.apply_execute_count > exec_limit:
-            raise Exception('ManifestManager.apply_manifest(): Maximum number of calls set for manifest named "{}" reached.'.format(manifest_instance.metadata['name']))
+            
+        if self._can_execute_again(manifest_instance=manifest_instance) is False:
+            raise Exception('ManifestManager.apply_manifest(): Maximum executions reached when attempting to process manifest named "{}"'.format(manifest_instance.metadata['name']))
 
         if skip_dependency_processing is True:
             if increment_exec_counter_in_manifest_manager is True:
                 manifest_instance.increment_apply_counter()
             manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache, increment_exec_counter=not increment_exec_counter_in_manifest_manager)
             return
+        
+        if 'executeOnlyOnceOnApply' in manifest_instance.metadata:
+            if manifest_instance.metadata['executeOnlyOnceOnApply'] is True and self.executions_per_manifest_instance[manifest_instance.metadata['name']] > 0:
+                self.logger.warning('ManifestManager:apply_manifest(): Manifest named "{}" skipped because executeOnlyOnceOnApply is TRUE and it was already executed before'.format(manifest_instance.metadata['name']))
+                return
 
         manifest_instance.process_dependencies(
             action='apply',
@@ -852,26 +852,32 @@ class ManifestManager:
 
     def delete_manifest(self, name: str, skip_dependency_processing: bool=False, increment_exec_counter_in_manifest_manager: bool=False):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
-        self.logger.debug('ManifestManager.delete_manifest(): manifest_instance named "{}" loaded. Previous exec count: {}'.format(manifest_instance.metadata['name'], manifest_instance.delete_execute_count))
+        self._record_manifest_instance_call(name=manifest_instance.metadata['name'])
+        self.logger.debug('ManifestManager.delete_manifest(): manifest_instance named "{}" loaded. Previous exec count: {}'.format(manifest_instance.metadata['name'], self.executions_per_manifest_instance[manifest_instance.metadata['name']]))
+
         if 'skipDeleteAll' in manifest_instance.metadata:
             if manifest_instance.metadata['skipApplyAll'] is True:
                 self.logger.warning('ManifestManager:delete_manifest(): Manifest named "{}" skipped because of skipApplyAll setting'.format(manifest_instance.metadata['name']))
                 return
             
-        # Check if execution count limit has been reached    
-        exec_limit = copy.deepcopy(self.max_calls_to_manifest)
-        if 'max_calls' in manifest_instance.metadata:
-            exec_limit = copy.deepcopy(manifest_instance.metadata['max_calls'])
-        if increment_exec_counter_in_manifest_manager is True:
-            manifest_instance.increment_delete_counter()
-        if manifest_instance.delete_execute_count > exec_limit:
-            raise Exception('ManifestManager:delete_manifest(): Maximum number of calls set for manifest named "{}" reached.'.format(manifest_instance.metadata['name']))
-        
+        if 'skipDeleteAll' in manifest_instance.metadata:
+            if manifest_instance.metadata['skipDeleteAll'] is True:
+                self.logger.warning('ManifestManager:delete_manifest(): Manifest named "{}" skipped because of skipDeleteAll setting'.format(manifest_instance.metadata['name']))
+                return
+            
+        if self._can_execute_again(manifest_instance=manifest_instance) is False:
+            raise Exception('ManifestManager.delete_manifest(): Maximum executions reached when attempting to process manifest named "{}"'.format(manifest_instance.metadata['name']))
+
         if skip_dependency_processing is True:
             if increment_exec_counter_in_manifest_manager is True:
                 manifest_instance.increment_delete_counter()
             manifest_instance.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache, increment_exec_counter=not increment_exec_counter_in_manifest_manager)
             return
+        
+        if 'executeOnlyOnceOnDelete' in manifest_instance.metadata:
+            if manifest_instance.metadata['executeOnlyOnceOnDelete'] is True and self.executions_per_manifest_instance[manifest_instance.metadata['name']] > 0:
+                self.logger.warning('ManifestManager:delete_manifest(): Manifest named "{}" skipped because executeOnlyOnceOnDelete is TRUE and it was already executed before'.format(manifest_instance.metadata['name']))
+                return
         
         manifest_instance.process_dependencies(
             action='delete',
