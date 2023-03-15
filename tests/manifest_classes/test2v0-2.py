@@ -54,11 +54,12 @@ class MyManifest2(ManifestBase):
         except:
             self.log(message='Looks like "{}" version "{}" was deleted already'.format(self.metadata['name'],self.version,), level='warning')
         self.log(
-            message='Deleted implementation kind "{}" of version "{}" with manifest checksum "{}"', level='info'.format(
+            message='Deleted implementation kind "{}" of version "{}" with manifest checksum "{}"'.format(
                 self.metadata['name'],
                 self.version,
                 self.checksum
-            )
+            ),
+            level='info'
         )
         variable_cache.store_variable(variable=Variable(name='{}:{}-val'.format(self.kind, self.metadata['name']), initial_value=None), overwrite_existing=True)
         variable_cache.store_variable(variable=Variable(name='{}:{}-applied'.format(self.kind, self.metadata['name']), initial_value=False), overwrite_existing=True)

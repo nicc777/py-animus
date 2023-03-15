@@ -853,11 +853,6 @@ class ManifestManager:
         self.logger.debug('ManifestManager.delete_manifest(): manifest_instance named "{}" loaded. Previous exec count: {}'.format(manifest_instance.metadata['name'], self.executions_per_manifest_instance[manifest_instance.metadata['name']]))
 
         if 'skipDeleteAll' in manifest_instance.metadata:
-            if manifest_instance.metadata['skipApplyAll'] is True:
-                self.logger.warning('ManifestManager:delete_manifest(): Manifest named "{}" skipped because of skipApplyAll setting'.format(manifest_instance.metadata['name']))
-                return
-            
-        if 'skipDeleteAll' in manifest_instance.metadata:
             if manifest_instance.metadata['skipDeleteAll'] is True:
                 self.logger.warning('ManifestManager:delete_manifest(): Manifest named "{}" skipped because of skipDeleteAll setting'.format(manifest_instance.metadata['name']))
                 return
