@@ -1006,7 +1006,7 @@ spec:
         with self.assertRaises(Exception) as context:
             for name in tuple(mm.manifest_instances.keys()):
                 print('Applying manifest named "{}"'.format(name))
-                mm.apply_manifest(name=name, skip_dependency_processing=False, increment_exec_counter_in_manifest_manager=True)
+                mm.apply_manifest(name=name, skip_dependency_processing=False)
         self.assertTrue('Maximum executions reached when attempting to process manifest named' in str(context.exception))
         mm.executions_per_manifest_instance = dict()
         
@@ -1016,7 +1016,88 @@ spec:
         with self.assertRaises(Exception) as context:
             for name in tuple(mm.manifest_instances.keys()):
                 print('Deleting manifest named "{}"'.format(name))
-                mm.delete_manifest(name=name, skip_dependency_processing=False, increment_exec_counter_in_manifest_manager=True)
+                mm.delete_manifest(name=name, skip_dependency_processing=False)
+        self.assertTrue('Maximum executions reached when attempting to process manifest named' in str(context.exception))
+
+    def test_with_skip_dependency_processing_indirect_circular_reference_in_apply_raise_exception(self):
+        ###
+        ### Manifest Setup
+        ###
+
+        manifest_1_v01_a_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-1
+spec:
+    val: 1
+"""
+
+        manifest_1_v01_b_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-2
+    dependencies:
+        apply:
+            - test1-1
+        delete:
+            - test1-1
+spec:
+    val: 1
+"""
+
+        manifest_1_v01_c_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-3
+    dependencies:
+        apply:
+            - test1-1
+        delete:
+            - test1-1
+spec:
+    val: 1
+"""
+
+        ###
+        ### Init VariableCache and ManifestManager
+        ###
+        vc = VariableCache()
+        mm = ManifestManager(variable_cache=vc, max_calls_to_manifest=1)    # Force an exception the moment any manifest is implemented more than once
+
+        ###
+        ### Consume classes that extend ManifestBase and register with ManifestManager
+        ###
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
+
+        ###
+        ### Consume Manifests and link with class implementations registered in ManifestManager
+        ###
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_a_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_b_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_c_data)['part_1'])
+
+        ###
+        ### Mimic the main() function apply all call
+        ###
+        with self.assertRaises(Exception) as context:
+            for name in tuple(mm.manifest_instances.keys()):
+                print('Applying manifest named "{}"'.format(name))
+                mm.apply_manifest(name=name, skip_dependency_processing=True)
+        self.assertTrue('Maximum executions reached when attempting to process manifest named' in str(context.exception))
+        mm.executions_per_manifest_instance = dict()
+        
+        ###
+        ### Mimic the main() function delete all call
+        ###
+        with self.assertRaises(Exception) as context:
+            for name in tuple(mm.manifest_instances.keys()):
+                print('Deleting manifest named "{}"'.format(name))
+                mm.delete_manifest(name=name, skip_dependency_processing=True)
         self.assertTrue('Maximum executions reached when attempting to process manifest named' in str(context.exception))
 
 

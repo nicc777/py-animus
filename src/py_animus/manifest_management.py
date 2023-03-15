@@ -816,7 +816,7 @@ class ManifestManager:
     def _can_execute_again(self, manifest_instance: ManifestBase)->bool:
         return not self._max_execution_count_reached(manifest_instance=manifest_instance)
 
-    def apply_manifest(self, name: str, skip_dependency_processing: bool=False, increment_exec_counter_in_manifest_manager: bool=False):
+    def apply_manifest(self, name: str, skip_dependency_processing: bool=False):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
         self._record_manifest_instance_call(name=manifest_instance.metadata['name'])
         self.logger.debug('ManifestManager.apply_manifest(): manifest_instance named "{}" loaded. Previous exec count: {}'.format(manifest_instance.metadata['name'], self.executions_per_manifest_instance[manifest_instance.metadata['name']]))
@@ -830,9 +830,7 @@ class ManifestManager:
             raise Exception('ManifestManager.apply_manifest(): Maximum executions reached when attempting to process manifest named "{}"'.format(manifest_instance.metadata['name']))
 
         if skip_dependency_processing is True:
-            if increment_exec_counter_in_manifest_manager is True:
-                manifest_instance.increment_apply_counter()
-            manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache, increment_exec_counter=not increment_exec_counter_in_manifest_manager)
+            manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
             return
         
         if 'executeOnlyOnceOnApply' in manifest_instance.metadata:
@@ -849,7 +847,7 @@ class ManifestManager:
             process_self_post_dependency_processing=True
         )
 
-    def delete_manifest(self, name: str, skip_dependency_processing: bool=False, increment_exec_counter_in_manifest_manager: bool=False):
+    def delete_manifest(self, name: str, skip_dependency_processing: bool=False):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
         self._record_manifest_instance_call(name=manifest_instance.metadata['name'])
         self.logger.debug('ManifestManager.delete_manifest(): manifest_instance named "{}" loaded. Previous exec count: {}'.format(manifest_instance.metadata['name'], self.executions_per_manifest_instance[manifest_instance.metadata['name']]))
@@ -868,9 +866,7 @@ class ManifestManager:
             raise Exception('ManifestManager.delete_manifest(): Maximum executions reached when attempting to process manifest named "{}"'.format(manifest_instance.metadata['name']))
 
         if skip_dependency_processing is True:
-            if increment_exec_counter_in_manifest_manager is True:
-                manifest_instance.increment_delete_counter()
-            manifest_instance.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache, increment_exec_counter=not increment_exec_counter_in_manifest_manager)
+            manifest_instance.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
             return
         
         if 'executeOnlyOnceOnDelete' in manifest_instance.metadata:
