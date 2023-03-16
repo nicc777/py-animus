@@ -56,8 +56,7 @@ If this sounds very familiar, then yes - it is basically how Kubernetes work. Th
 [Documentation](https://github.com/nicc777/py-animus/tree/main/doc)
 
 > **Warning**
-> I have labeled this software `BETA`, but keep in mind testing in the real world has been limited and there may be a number of enhancements or changes forthcoming. 
-
+> I no longer consider this to be `beta` software, but real life usage is still limited. Therefore note that there may still be bugs. Please log all bugs as an [issue](https://github.com/nicc777/py-animus/issues).
 
 # Quick Intro Usage
 
