@@ -80,13 +80,13 @@ pip install py-animus
 Pull the image:
 
 ```shell
-docker pull ghcr.io/nicc777/py-animus:release
+docker pull ghcr.io/nicc777/py-animus:latest
 ```
 
 Get quick help:
 
 ```shell
-docker run --rm -e "DEBUG=1" ghcr.io/nicc777/py-animus:release -h
+docker run --rm -e "DEBUG=1" ghcr.io/nicc777/py-animus:latest -h
 ```
 
 Use (as per the [hello world example](https://github.com/nicc777/py-animus/tree/main/doc)):
@@ -96,7 +96,7 @@ docker run --rm -e "DEBUG=1" \
   -v $PWD/examples/hello-world/src:/tmp/src \
   -v $PWD/examples/hello-world/manifest:/tmp/data \
   -v /tmp/results:/tmp/hello-world-result \
-  ghcr.io/nicc777/py-animus:release apply -m /tmp/data/hello-v1.yaml -s /tmp/src
+  ghcr.io/nicc777/py-animus:latest apply -m /tmp/data/hello-v1.yaml -s /tmp/src
 ```
 
 More complex example:
@@ -106,7 +106,7 @@ docker run --rm -e "DEBUG=1" \
   -v $PWD/examples/linked-manifests/src:/tmp/src \
   -v $PWD/examples/linked-manifests/manifest/round_1:/tmp/data \
   -v /tmp/results:/tmp/example-page-result \
-  ghcr.io/nicc777/py-animus:release apply -m /tmp/data/linked-v1.yaml -s /tmp/src
+  ghcr.io/nicc777/py-animus:latest apply -m /tmp/data/linked-v1.yaml -s /tmp/src
 ```
 
 To reverse out any of the applied commands, just use the command `delete` instead of `apply`
