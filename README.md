@@ -34,6 +34,8 @@ Advantages of this system or approach:
 * A basic command line tool is provided, as well as a containerized version of the command line tool. Just point to the class sources and the manifests and the system will process and implement state as defined and implemented.
 * Apart from the command line tool, it is also possible to have full control over the processing of manifests, as all classes can be extended as required. You can therefore roll your own unique version of the command line tools.
 
+![what is animus](images/animus.drawio.png)
+
 # The Manifest File
 
 Any Manifest file has the following top-level attribute names:
@@ -56,8 +58,7 @@ If this sounds very familiar, then yes - it is basically how Kubernetes work. Th
 [Documentation](https://github.com/nicc777/py-animus/tree/main/doc)
 
 > **Warning**
-> I have labeled this software `BETA`, but keep in mind testing in the real world has been limited and there may be a number of enhancements or changes forthcoming. 
-
+> I no longer consider this to be `beta` software, but real life usage is still limited. Therefore note that there may still be bugs. Please log all bugs as an [issue](https://github.com/nicc777/py-animus/issues).
 
 # Quick Intro Usage
 
@@ -79,13 +80,13 @@ pip install py-animus
 Pull the image:
 
 ```shell
-docker pull ghcr.io/nicc777/py-animus:release
+docker pull ghcr.io/nicc777/py-animus:latest
 ```
 
 Get quick help:
 
 ```shell
-docker run --rm -e "DEBUG=1" ghcr.io/nicc777/py-animus:release -h
+docker run --rm -e "DEBUG=1" ghcr.io/nicc777/py-animus:latest -h
 ```
 
 Use (as per the [hello world example](https://github.com/nicc777/py-animus/tree/main/doc)):
@@ -95,7 +96,16 @@ docker run --rm -e "DEBUG=1" \
   -v $PWD/examples/hello-world/src:/tmp/src \
   -v $PWD/examples/hello-world/manifest:/tmp/data \
   -v /tmp/results:/tmp/hello-world-result \
-  ghcr.io/nicc777/py-animus:release apply -m /tmp/data/hello-v1.yaml -s /tmp/src
+  ghcr.io/nicc777/py-animus:latest apply -m /tmp/data/hello-v1.yaml -s /tmp/src
+```
+
+The above command will create a file in `/tmp/results` with the content as defined in the manifest file:
+
+```shell
+$ cat /tmp/results/output.txt
+This is the contents of the file
+specified in the content property
+of the spec.
 ```
 
 More complex example:
@@ -105,8 +115,24 @@ docker run --rm -e "DEBUG=1" \
   -v $PWD/examples/linked-manifests/src:/tmp/src \
   -v $PWD/examples/linked-manifests/manifest/round_1:/tmp/data \
   -v /tmp/results:/tmp/example-page-result \
-  ghcr.io/nicc777/py-animus:release apply -m /tmp/data/linked-v1.yaml -s /tmp/src
+  ghcr.io/nicc777/py-animus:latest apply -m /tmp/data/linked-v1.yaml -s /tmp/src
 ```
 
 To reverse out any of the applied commands, just use the command `delete` instead of `apply`
 
+The file will no longer be available
+
+```shell
+$ cat /tmp/results/output.txt
+cat: /tmp/results/output.txt: No such file or directory
+```
+
+# Acknowledgements
+
+## Icons
+
+* <a href="https://www.flaticon.com/free-icons/yaml" title="yaml icons">Yaml icons created by shohanur.rahman13 - Flaticon</a>
+* Terraform icon obtained from [Terraform Press Kit](https://www.terraform.io/)
+* Bash icon from the [Official GNU Bash Logo Repository](https://github.com/odb/official-bash-logo)
+* Other icons from stencils in [draw-io](https://draw-io.net/)
+* Python Logo from [the Python Software Foundation](https://www.python.org/community/logos/)
