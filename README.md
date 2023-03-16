@@ -117,3 +117,4 @@ To reverse out any of the applied commands, just use the command `delete` instea
 * Terraform icon obtained from [Terraform Press Kit](https://www.terraform.io/)
 * Bash icon from the [Official GNU Bash Logo Repository](https://github.com/odb/official-bash-logo)
 * Other icons from stencils in [draw-io](https://draw-io.net/)
+* Python Logo from [the Python Software Foundation](https://www.python.org/community/logos/)
