@@ -211,6 +211,11 @@ class VariableCache:
             return default_value_if_not_found
         return copy.deepcopy(self.values[variable_name].get_value(value_if_expired=value_if_expired, raise_exception_on_expired=raise_exception_on_expired, reset_timer_on_value_read=reset_timer_on_value_read))
 
+    def delete_variable(self, variable_name: str):
+        if variable_name in self.values:
+            self.logger.debug('[variable_name={}] Deleted'.format(variable_name))
+            self.values.pop(variable_name)
+
     def to_dict(self):
         data = dict()
         for k,v in self.values.items():

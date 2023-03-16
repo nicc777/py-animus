@@ -145,6 +145,25 @@ class TestClassVariableCache(unittest.TestCase):    # pragma: no cover
         self.assertTrue('value' in data_result['test2'])
         self.assertTrue('expires' in data_result['test2'])
 
+    def test_method_delete_variable(self):
+        vc = VariableCache()
+        vc.store_variable(variable=Variable(name='test1', initial_value=123))
+        vc.store_variable(variable=Variable(name='test2', initial_value=456))
+        vc.store_variable(variable=Variable(name='test3', initial_value=789))
+        vc.delete_variable(variable_name='test2')
+        vc.delete_variable(variable_name='test4')   # No material effect
+        
+        vc_str = str(vc)
+        print('='*80)
+        print('# test_method_delete_variable JSON')
+        print(vc_str)
+        print('='*80)
+
+        self.assertEqual(len(vc.values), 2)
+        self.assertTrue('test1' in vc.values)
+        self.assertFalse('test2' in vc.values)
+        self.assertTrue('test3' in vc.values)
+
 
 def my_post_parsing_method(**params):
     print('Working with parameters: {}'.format(params))
