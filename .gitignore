@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 
 reports/
+doc/.$animus.bkp
+doc/.$animus.dtmp
