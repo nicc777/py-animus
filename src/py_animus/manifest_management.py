@@ -213,6 +213,7 @@ class VariableCache:
 
     def delete_variable(self, variable_name: str):
         if variable_name in self.values:
+            self.logger.debug('[variable_name={}] Deleted'.format(variable_name))
             self.values.pop(variable_name)
 
     def to_dict(self):
