@@ -99,6 +99,15 @@ docker run --rm -e "DEBUG=1" \
   ghcr.io/nicc777/py-animus:latest apply -m /tmp/data/hello-v1.yaml -s /tmp/src
 ```
 
+The above command will create a file in `/tmp/results` with the content as defined in the manifest file:
+
+```shell
+$ cat /tmp/results/output.txt
+This is the contents of the file
+specified in the content property
+of the spec.
+```
+
 More complex example:
 
 ```shell
@@ -110,6 +119,13 @@ docker run --rm -e "DEBUG=1" \
 ```
 
 To reverse out any of the applied commands, just use the command `delete` instead of `apply`
+
+The file will no longer be available
+
+```shell
+$ cat /tmp/results/output.txt
+cat: /tmp/results/output.txt: No such file or directory
+```
 
 # Acknowledgements
 
