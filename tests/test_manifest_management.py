@@ -151,6 +151,7 @@ class TestClassVariableCache(unittest.TestCase):    # pragma: no cover
         vc.store_variable(variable=Variable(name='test2', initial_value=456))
         vc.store_variable(variable=Variable(name='test3', initial_value=789))
         vc.delete_variable(variable_name='test2')
+        vc.delete_variable(variable_name='test4')   # No material effect
         
         vc_str = str(vc)
         print('='*80)
