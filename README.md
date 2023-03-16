@@ -109,3 +109,11 @@ docker run --rm -e "DEBUG=1" \
 
 To reverse out any of the applied commands, just use the command `delete` instead of `apply`
 
+# Acknowledgements
+
+## Icons
+
+* <a href="https://www.flaticon.com/free-icons/yaml" title="yaml icons">Yaml icons created by shohanur.rahman13 - Flaticon</a>
+* Terraform icon obtained from [Terraform Press Kit](https://www.terraform.io/)
+* Bash icon from the [Official GNU Bash Logo Repository](https://github.com/odb/official-bash-logo)
+* Other icons from stencils in [draw-io](https://draw-io.net/)
