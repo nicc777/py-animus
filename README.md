@@ -34,6 +34,8 @@ Advantages of this system or approach:
 * A basic command line tool is provided, as well as a containerized version of the command line tool. Just point to the class sources and the manifests and the system will process and implement state as defined and implemented.
 * Apart from the command line tool, it is also possible to have full control over the processing of manifests, as all classes can be extended as required. You can therefore roll your own unique version of the command line tools.
 
+![what is animus](images/animus.drawio.png)
+
 # The Manifest File
 
 Any Manifest file has the following top-level attribute names:
