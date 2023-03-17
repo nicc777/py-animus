@@ -90,6 +90,18 @@ class TestClassVariable(unittest.TestCase):    # pragma: no cover
             v.get_value()
         self.assertTrue('Expired' in str(context.exception))
 
+    def test_masking_of_string(self):
+        v = Variable(name='test', mask_in_logs=True)
+        v.set_value(value='i-am-sensitive', reset_ttl=False)
+        result = v.get_value(for_logging=True)
+        self.assertEqual(result, '**************')
+
+    def test_masking_of_int(self):
+        v = Variable(name='test', mask_in_logs=True)
+        v.set_value(value=123456789, reset_ttl=False)
+        result = v.get_value(for_logging=True)
+        self.assertEqual(result, '***')
+
 
 class TestClassVariableCache(unittest.TestCase):    # pragma: no cover
 
@@ -163,6 +175,22 @@ class TestClassVariableCache(unittest.TestCase):    # pragma: no cover
         self.assertTrue('test1' in vc.values)
         self.assertFalse('test2' in vc.values)
         self.assertTrue('test3' in vc.values)
+
+    def test_masking_of_string(self):
+        vc = VariableCache()
+        v = Variable(name='test', mask_in_logs=True)
+        v.set_value(value='i-am-sensitive', reset_ttl=False)
+        vc.store_variable(variable=v)
+        result = vc.get_value(variable_name='test', for_logging=True)
+        self.assertEqual(result, '**************')
+
+    def test_masking_of_int(self):
+        vc = VariableCache()
+        v = Variable(name='test', mask_in_logs=True)
+        v.set_value(value=123456789, reset_ttl=False)
+        vc.store_variable(variable=v)
+        result = vc.get_value(variable_name='test', for_logging=True)
+        self.assertEqual(result, '***')
 
 
 def my_post_parsing_method(**params):
