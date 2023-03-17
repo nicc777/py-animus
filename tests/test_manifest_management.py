@@ -96,6 +96,12 @@ class TestClassVariable(unittest.TestCase):    # pragma: no cover
         result = v.get_value(for_logging=True)
         self.assertEqual(result, '**************')
 
+    def test_masking_of_int(self):
+        v = Variable(name='test', mask_in_logs=True)
+        v.set_value(value=123456789, reset_ttl=False)
+        result = v.get_value(for_logging=True)
+        self.assertEqual(result, '***')
+
 
 class TestClassVariableCache(unittest.TestCase):    # pragma: no cover
 
@@ -177,6 +183,14 @@ class TestClassVariableCache(unittest.TestCase):    # pragma: no cover
         vc.store_variable(variable=v)
         result = vc.get_value(variable_name='test', for_logging=True)
         self.assertEqual(result, '**************')
+
+    def test_masking_of_int(self):
+        vc = VariableCache()
+        v = Variable(name='test', mask_in_logs=True)
+        v.set_value(value=123456789, reset_ttl=False)
+        vc.store_variable(variable=v)
+        result = vc.get_value(variable_name='test', for_logging=True)
+        self.assertEqual(result, '***')
 
 
 def my_post_parsing_method(**params):

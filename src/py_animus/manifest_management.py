@@ -124,12 +124,12 @@ class Variable:
         """
         final_value = None
         if self.value is not None:
-            final_value = '{}'.format(str(self.value))
+            final_value = copy.deepcopy(self.value)
         if self._is_expired() is True:
             if raise_exception_on_expired is True:
                 raise Exception('Expired')
             self._log_debug(message='Expired, but alternate value supplied. Returning alternate value.')
-            final_value = value_if_expired
+            final_value = copy.deepcopy(value_if_expired)
         elif reset_timer_on_value_read is True:
             self._log_debug(message='Resetting timers')
             self.init_timestamp = get_utc_timestamp(with_decimal=False)
