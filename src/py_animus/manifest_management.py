@@ -61,7 +61,7 @@ class Variable:
         logger: The logging.Logger class used for logging.
     """
 
-    def __init__(self, name: str, initial_value=None, ttl: int=-1, logger=get_logger()):
+    def __init__(self, name: str, initial_value=None, ttl: int=-1, logger=get_logger(), mask_in_logs: bool=False):
         """Initializes a new instance of a Variable to be stored in the VariableCache.
 
         Args:
@@ -76,6 +76,7 @@ class Variable:
         self.init_timestamp = get_utc_timestamp(with_decimal=False)
         self.debug = is_debug_set_in_environment()
         self.logger = logger
+        self.mask_in_logs = mask_in_logs
 
     def _log_debug(self, message):
         if self.debug is True:
@@ -105,7 +106,7 @@ class Variable:
         self._log_debug(message='NOT EXPIRED')
         return False
 
-    def get_value(self, value_if_expired=None, raise_exception_on_expired: bool=True, reset_timer_on_value_read: bool=False):
+    def get_value(self, value_if_expired=None, raise_exception_on_expired: bool=True, reset_timer_on_value_read: bool=False, for_logging: bool=False):
         """Get the value of the Variable.
 
         To get more granular logging, enable debug by setting an environment variable DEBUG to "1"
@@ -121,21 +122,38 @@ class Variable:
         Raises:
             Exception: When the value has expired
         """
+        final_value = None
+        if self.value is not None:
+            final_value = copy.deepcopy(self.value)
         if self._is_expired() is True:
             if raise_exception_on_expired is True:
                 raise Exception('Expired')
             self._log_debug(message='Expired, but alternate value supplied. Returning alternate value.')
-            return value_if_expired
-        if reset_timer_on_value_read is True:
+            final_value = copy.deepcopy(value_if_expired)
+        elif reset_timer_on_value_read is True:
             self._log_debug(message='Resetting timers')
             self.init_timestamp = get_utc_timestamp(with_decimal=False)
         self._log_debug(message='Returning value')
-        return self.value
+
+        if final_value is not None:
+            if self.mask_in_logs is True and for_logging is True and isinstance(final_value, str):
+                final_value = '*' * len(final_value)
+            elif self.mask_in_logs is True and for_logging is True:
+                final_value = '***'
+
+        return final_value
     
-    def to_dict(self):
+    def to_dict(self, for_logging: bool=False):
+        final_value = ''
+        if self.value is not None:
+            final_value = '{}'.format(str(self.value))
+            if self.mask_in_logs is True and for_logging is True and isinstance(final_value, str):
+                final_value = '*' * len(final_value)
+            elif self.mask_in_logs is True and for_logging is True:
+                final_value = '***'
         data = {
             'ttl': self.ttl,
-            'value': '{}'.format(str(self.value)),
+            'value': final_value,
             'expires': self.ttl + self.init_timestamp,
         }
         if self.ttl < 0:
@@ -179,7 +197,8 @@ class VariableCache:
             raise_exception_on_expired: bool=True, 
             reset_timer_on_value_read: bool=False,
             raise_exception_on_not_found: bool=True,
-            default_value_if_not_found=None
+            default_value_if_not_found=None,
+            for_logging: bool=False
         ):
         """Get the value of a stored Variable.
 
@@ -209,22 +228,22 @@ class VariableCache:
         elif variable_name not in self.values and raise_exception_on_not_found is False:
             self.logger.debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to False - Returning default_value_if_not_found'.format(variable_name))
             return default_value_if_not_found
-        return copy.deepcopy(self.values[variable_name].get_value(value_if_expired=value_if_expired, raise_exception_on_expired=raise_exception_on_expired, reset_timer_on_value_read=reset_timer_on_value_read))
+        return copy.deepcopy(self.values[variable_name].get_value(value_if_expired=value_if_expired, raise_exception_on_expired=raise_exception_on_expired, reset_timer_on_value_read=reset_timer_on_value_read, for_logging=for_logging))
 
     def delete_variable(self, variable_name: str):
         if variable_name in self.values:
             self.logger.debug('[variable_name={}] Deleted'.format(variable_name))
             self.values.pop(variable_name)
 
-    def to_dict(self):
+    def to_dict(self, for_logging: bool=False):
         data = dict()
         for k,v in self.values.items():
-            v_dict = v.to_dict()
+            v_dict = v.to_dict(for_logging=for_logging)
             data[k] = v_dict
         return data
 
     def __str__(self)->str:
-        return json.dumps(self.to_dict())
+        return json.dumps(self.to_dict(for_logging=True))
 
 
 class ManifestBase:
