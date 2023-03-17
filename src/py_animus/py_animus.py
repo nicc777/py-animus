@@ -48,7 +48,7 @@ def apply_command(vc: VariableCache, mm: ManifestManager, logger):
         logger.info('Applying manifest named "{}"'.format(name))
         mm.apply_manifest(name=name)
     for name in tuple(vc.values.keys()):
-        logger.info('RESULT: {}={}'.format(name, vc.get_value(variable_name=name)))
+        logger.info('RESULT: {}={}'.format(name, vc.get_value(variable_name=name, for_logging=True)))
 
 
 def delete_command(vc: VariableCache, mm: ManifestManager, logger):
@@ -56,7 +56,7 @@ def delete_command(vc: VariableCache, mm: ManifestManager, logger):
         logger.info('Deleting manifest named "{}"'.format(name))
         mm.delete_manifest(name=name)
     for name in tuple(vc.values.keys()):
-        logger.info('RESULT: {}={}'.format(name, vc.get_value(variable_name=name)))
+        logger.info('RESULT: {}={}'.format(name, vc.get_value(variable_name=name, for_logging=True)))
 
 
 def main(logger=get_logger(), command: str=sys.argv[1], cli_args: list=sys.argv[2:]):
@@ -76,7 +76,6 @@ def main(logger=get_logger(), command: str=sys.argv[1], cli_args: list=sys.argv[
     logger.debug('Command line arguments parsed...')
     logger.debug('   parsed_args: {}'.format(parsed_args))
     logger.debug('   unknown_args: {}'.format(unknown_args))
-    manifest_files = parsed_args.manifest_locations
     vc = VariableCache()
     mm = ManifestManager(variable_cache=vc)
     for src_file_list in parsed_args.src_locations:
