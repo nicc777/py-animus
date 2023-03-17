@@ -170,6 +170,14 @@ class TestClassVariableCache(unittest.TestCase):    # pragma: no cover
         self.assertFalse('test2' in vc.values)
         self.assertTrue('test3' in vc.values)
 
+    def test_masking_of_string(self):
+        vc = VariableCache()
+        v = Variable(name='test', mask_in_logs=True)
+        v.set_value(value='i-am-sensitive', reset_ttl=False)
+        vc.store_variable(variable=v)
+        result = vc.get_value(variable_name='test', for_logging=True)
+        self.assertEqual(result, '**************')
+
 
 def my_post_parsing_method(**params):
     print('Working with parameters: {}'.format(params))
