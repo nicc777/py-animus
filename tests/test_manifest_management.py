@@ -90,6 +90,12 @@ class TestClassVariable(unittest.TestCase):    # pragma: no cover
             v.get_value()
         self.assertTrue('Expired' in str(context.exception))
 
+    def test_masking_of_string(self):
+        v = Variable(name='test', mask_in_logs=True)
+        v.set_value(value='i-am-sensitive', reset_ttl=False)
+        result = v.get_value(for_logging=True)
+        self.assertEqual(result, '**************')
+
 
 class TestClassVariableCache(unittest.TestCase):    # pragma: no cover
 

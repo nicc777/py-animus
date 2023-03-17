@@ -141,7 +141,7 @@ class Variable:
             elif self.mask_in_logs is True and for_logging is True:
                 final_value = '***'
 
-        return self.value
+        return final_value
     
     def to_dict(self, for_logging: bool=False):
         final_value = ''
