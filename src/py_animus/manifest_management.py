@@ -847,13 +847,15 @@ class ManifestManager:
 
     def apply_manifest(self, name: str, skip_dependency_processing: bool=False):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
-        self._record_manifest_instance_call(name=manifest_instance.metadata['name'])
-        self.logger.debug('ManifestManager.apply_manifest(): manifest_instance named "{}" loaded. Previous exec count: {}'.format(manifest_instance.metadata['name'], self.executions_per_manifest_instance[manifest_instance.metadata['name']]))
+        self.logger.debug('ManifestManager.apply_manifest(): manifest_instance named "{}" loaded.'.format(manifest_instance.metadata['name']))
 
         if 'skipApplyAll' in manifest_instance.metadata:
             if manifest_instance.metadata['skipApplyAll'] is True:
                 self.logger.warning('ManifestManager:apply_manifest(): Manifest named "{}" skipped because of skipApplyAll setting'.format(manifest_instance.metadata['name']))
                 return
+            
+        self._record_manifest_instance_call(name=manifest_instance.metadata['name'])
+        self.logger.debug('ManifestManager.apply_manifest(): Previous exec count: {}'.format(self.executions_per_manifest_instance[manifest_instance.metadata['name']]))
             
         if self._can_execute_again(manifest_instance=manifest_instance) is False:
             raise Exception('ManifestManager.apply_manifest(): Maximum executions reached when attempting to process manifest named "{}"'.format(manifest_instance.metadata['name']))
@@ -878,13 +880,15 @@ class ManifestManager:
 
     def delete_manifest(self, name: str, skip_dependency_processing: bool=False):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
-        self._record_manifest_instance_call(name=manifest_instance.metadata['name'])
-        self.logger.debug('ManifestManager.delete_manifest(): manifest_instance named "{}" loaded. Previous exec count: {}'.format(manifest_instance.metadata['name'], self.executions_per_manifest_instance[manifest_instance.metadata['name']]))
+        self.logger.debug('ManifestManager.delete_manifest(): manifest_instance named "{}" loaded.'.format(manifest_instance.metadata['name']))
 
         if 'skipDeleteAll' in manifest_instance.metadata:
             if manifest_instance.metadata['skipDeleteAll'] is True:
                 self.logger.warning('ManifestManager:delete_manifest(): Manifest named "{}" skipped because of skipDeleteAll setting'.format(manifest_instance.metadata['name']))
                 return
+            
+        self._record_manifest_instance_call(name=manifest_instance.metadata['name'])
+        self.logger.debug('ManifestManager.delete_manifest(): Previous exec count: {}'.format(self.executions_per_manifest_instance[manifest_instance.metadata['name']]))
             
         if self._can_execute_again(manifest_instance=manifest_instance) is False:
             raise Exception('ManifestManager.delete_manifest(): Maximum executions reached when attempting to process manifest named "{}"'.format(manifest_instance.metadata['name']))
