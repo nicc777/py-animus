@@ -59,7 +59,7 @@ def delete_command(vc: VariableCache, mm: ManifestManager, logger):
         logger.info('RESULT: {}={}'.format(name, vc.get_value(variable_name=name, for_logging=True)))
 
 
-def main(logger=get_logger(), command: str=sys.argv[1], cli_args: list=sys.argv[2:]):
+def main(command: str, cli_args: list, logger=get_logger()):
     logger.info('ok')
     if command.lower().startswith('--h') or command.lower().startswith('-h'):
         cli_args=['-h', ]
@@ -103,6 +103,18 @@ def main(logger=get_logger(), command: str=sys.argv[1], cli_args: list=sys.argv[
         raise Exception('Unknown command. Command must be one of "apply" or "delete"')
 
 
+def run_main():
+    command = '-h'
+    cli_args = list()
+    if len(sys.argv) > 1:
+        if sys.argv[1] in ('apply', 'delete',) or sys.argv[1].startswith('-h') is True or sys.argv[1].startswith('--h') is True:
+            command = sys.argv[1]
+        if len(sys.argv) > 2:
+            cli_args = sys.argv[2:]
+        else:
+            command = '-h'
+    main(command=command, cli_args=cli_args, logger=get_logger())
+
 if __name__ == '__main__':
-    main()
+    run_main()
 
