@@ -729,6 +729,11 @@ class VersionedClassRegister:
             if clazz.kind not in result:
                 result[clazz.kind] = dict()
                 result[clazz.kind]['versions'] = list()
+                result[clazz.kind]['versions'].append(clazz.version)
+                for version in clazz.supported_versions:
+                    if version not in result[clazz.kind]['versions']:
+                        result[clazz.kind]['versions'].append(version)
+                result[clazz.kind]['versions'].sort()
             else:
                 if clazz.version not in result[clazz.kind]['versions']:
                     result[clazz.kind]['versions'].append(clazz.version)
