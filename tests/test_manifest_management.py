@@ -14,6 +14,7 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src")
 print('sys.path={}'.format(sys.path))
 
 import unittest
+from unittest import mock
 import time
 
 
@@ -984,7 +985,8 @@ spec:
         with self.assertRaises(Exception) as context:
             mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_b_data)['part_1'])
         self.assertTrue('Direct dependency violation detected in class' in str(context.exception))
-        
+
+    @mock.patch.dict(os.environ, {"DEBUG": "1"})        
     def test_indirect_circular_reference_in_apply_raise_exception(self):
         ###
         ### Manifest Setup
@@ -995,6 +997,11 @@ kind: MyManifest1
 version: v0.1
 metadata:
     name: test1-1
+    dependencies:
+        apply:
+            - test1-3
+        delete:
+            - test1-3
 spec:
     val: 1
 """
@@ -1020,9 +1027,9 @@ metadata:
     name: test1-3
     dependencies:
         apply:
-            - test1-1
+            - test1-2
         delete:
-            - test1-1
+            - test1-2
 spec:
     val: 1
 """
@@ -1031,7 +1038,7 @@ spec:
         ### Init VariableCache and ManifestManager
         ###
         vc = VariableCache()
-        mm = ManifestManager(variable_cache=vc, max_calls_to_manifest=1)    # Force an exception the moment any manifest is implemented more than once
+        mm = ManifestManager(variable_cache=vc, max_calls_to_manifest=2)    # Force an exception the moment any manifest is implemented more than once
 
         ###
         ### Consume classes that extend ManifestBase and register with ManifestManager
@@ -1050,11 +1057,14 @@ spec:
         ###
         ### Mimic the main() function apply all call
         ###
+        # for name in tuple(mm.manifest_instances.keys()):
+        #     print('Applying manifest named "{}"'.format(name))
+        #     mm.apply_manifest(name=name, skip_dependency_processing=False)
         with self.assertRaises(Exception) as context:
             for name in tuple(mm.manifest_instances.keys()):
                 print('Applying manifest named "{}"'.format(name))
-                mm.apply_manifest(name=name, skip_dependency_processing=False)
-        self.assertTrue('Maximum executions reached when attempting to process manifest named' in str(context.exception))
+                mm.apply_manifest(name=name)
+        self.assertTrue('Possible recursion detected' in str(context.exception))
         mm.executions_per_manifest_instance = dict()
         
         ###
@@ -1064,9 +1074,9 @@ spec:
             for name in tuple(mm.manifest_instances.keys()):
                 print('Deleting manifest named "{}"'.format(name))
                 mm.delete_manifest(name=name, skip_dependency_processing=False)
-        self.assertTrue('Maximum executions reached when attempting to process manifest named' in str(context.exception))
+        self.assertTrue('Possible recursion detected' in str(context.exception))
 
-    def test_with_skip_dependency_processing_indirect_circular_reference_in_apply_raise_exception(self):
+    def test_with_skip_dependency_processing_indirect_circular_reference_in_apply_not_raise_exception(self):
         ###
         ### Manifest Setup
         ###
@@ -1076,6 +1086,11 @@ kind: MyManifest1
 version: v0.1
 metadata:
     name: test1-1
+    dependencies:
+        apply:
+            - test1-3
+        delete:
+            - test1-3
 spec:
     val: 1
 """
@@ -1101,9 +1116,9 @@ metadata:
     name: test1-3
     dependencies:
         apply:
-            - test1-1
+            - test1-2
         delete:
-            - test1-1
+            - test1-2
 spec:
     val: 1
 """
@@ -1131,21 +1146,17 @@ spec:
         ###
         ### Mimic the main() function apply all call
         ###
-        with self.assertRaises(Exception) as context:
-            for name in tuple(mm.manifest_instances.keys()):
-                print('Applying manifest named "{}"'.format(name))
-                mm.apply_manifest(name=name, skip_dependency_processing=True)
-        self.assertTrue('Maximum executions reached when attempting to process manifest named' in str(context.exception))
+        for name in tuple(mm.manifest_instances.keys()):
+            print('Applying manifest named "{}"'.format(name))
+            mm.apply_manifest(name=name, skip_dependency_processing=True)
         mm.executions_per_manifest_instance = dict()
         
         ###
         ### Mimic the main() function delete all call
         ###
-        with self.assertRaises(Exception) as context:
-            for name in tuple(mm.manifest_instances.keys()):
-                print('Deleting manifest named "{}"'.format(name))
-                mm.delete_manifest(name=name, skip_dependency_processing=True)
-        self.assertTrue('Maximum executions reached when attempting to process manifest named' in str(context.exception))
+        for name in tuple(mm.manifest_instances.keys()):
+            print('Deleting manifest named "{}"'.format(name))
+            mm.delete_manifest(name=name, skip_dependency_processing=True)
 
 
 class TestVersionedClassRegister(unittest.TestCase):    # pragma: no cover
