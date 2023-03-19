@@ -937,6 +937,10 @@ class ManifestManager:
         if 'version' in manifest_data:
             version = manifest_data['version']
         class_instance_copy = copy.deepcopy(self.get_manifest_class_by_kind(kind=manifest_data['kind'], version=version))
+
+        if class_instance_copy.metadata['name'] not in self.executions_per_manifest_instance:
+            self.executions_per_manifest_instance[class_instance_copy.metadata['name']] = 0
+
         class_instance_copy.parse_manifest(manifest_data=manifest_data)
         idx = '{}:{}:{}'.format(
             class_instance_copy.metadata['name'],
