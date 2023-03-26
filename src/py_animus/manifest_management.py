@@ -361,15 +361,18 @@ class ManifestBase:
           message: A String with the message to log
           level: The log level, expressed as a string. One of `info`, `error`, `debug` or `warning`
         """
+        name = 'not-yet-known'
+        if 'name' in self.metadata:
+            name = self.metadata['name']
         if level.lower().startswith('d'):
             if self.debug:
-                self.logger.debug('[{}:{}] {}'.format(self.kind, self.version, message))
+                self.logger.debug('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
         elif level.lower().startswith('i'):
-            self.logger.info('[{}:{}] {}'.format(self.kind, self.version, message))
+            self.logger.info('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
         elif level.lower().startswith('w'):
-            self.logger.warning('[{}:{}] {}'.format(self.kind, self.version, message))
+            self.logger.warning('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
         elif level.lower().startswith('e'):
-            self.logger.error('[{}:{}] {}'.format(self.kind, self.version, message))
+            self.logger.error('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
 
     def parse_manifest(self, manifest_data: dict):
         """Called via the ManifestManager when manifests files are parsed and one is found to belong to a class of this implementation.
