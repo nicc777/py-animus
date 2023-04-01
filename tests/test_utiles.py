@@ -9,17 +9,13 @@
 import sys
 import os
 import json
-import shutil
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src")
 print('sys.path={}'.format(sys.path))
 
 import unittest
-from unittest import mock
-import time
 
 
 from py_animus.manifest_management import *
-from py_animus import get_logger, parse_raw_yaml_data
 from py_animus.utils import *
 
 running_path = os.getcwd()
