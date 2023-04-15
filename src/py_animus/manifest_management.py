@@ -841,7 +841,7 @@ class ManifestManager:
              self.register_manifest_class(manifest_base=returned_class(logger=self.logger))
         self.logger.info('Registered classes: {}'.format(str(self.versioned_class_register)))
 
-    def get_manifest_instance_by_name(self, name: str):
+    def get_manifest_instance_by_name(self, name: str)->ManifestBase:
         for key, manifest_instance in self.manifest_instances.items():
             if manifest_instance.metadata['name'] == name or '{}:{}:{}'.format(manifest_instance.metadata['name'],manifest_instance.version,manifest_instance.checksum) == name:
                 return manifest_instance
@@ -864,9 +864,18 @@ class ManifestManager:
     def _can_execute_again(self, manifest_instance: ManifestBase)->bool:
         return not self._max_execution_count_reached(manifest_instance=manifest_instance)
 
-    def apply_manifest(self, name: str, skip_dependency_processing: bool=False):
+    def apply_manifest(self, name: str, skip_dependency_processing: bool=False, target_environments: list=['default',]):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
         self.logger.debug('ManifestManager.apply_manifest(): manifest_instance named "{}" loaded.'.format(manifest_instance.metadata['name']))
+
+        do_apply_in_environment = False
+        for target_environment in target_environments:
+            if target_environment in manifest_instance.metadata['environments']:
+                self.logger.info('ManifestManager.apply_manifest(): manifest_instance named "{}" targeted for environment "{}"'.format(manifest_instance.metadata['name'], target_environment))    
+                do_apply_in_environment = True
+        if do_apply_in_environment is False:
+            self.logger.warning('ManifestManager.apply_manifest(): manifest_instance named "{}" loaded not selected for any target environment. Skipping.'.format(manifest_instance.metadata['name']))
+            return
 
         if 'skipApplyAll' in manifest_instance.metadata:
             if manifest_instance.metadata['skipApplyAll'] is True:
@@ -941,6 +950,8 @@ class ManifestManager:
         if 'version' in manifest_data:
             version = manifest_data['version']
         class_instance_copy = copy.deepcopy(self.get_manifest_class_by_kind(kind=manifest_data['kind'], version=version))
+        if 'environments' not in manifest_data['metadata']:
+            manifest_data['metadata']['environments'] = ['default',]
 
         class_instance_copy.parse_manifest(manifest_data=manifest_data)
         idx = '{}:{}:{}'.format(
