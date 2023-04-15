@@ -39,6 +39,17 @@ def _get_arg_parser(
         required=True,
         help='[REQUIRED] One or more Python files that implement the logic to handle the manifest files.'
     )
+    parser.add_argument(
+        '-e', '--env',
+        action='append',
+        nargs='*',
+        dest='environments',
+        metavar='ENVIRONMENT',
+        type=str, 
+        required=False,
+        default='default',
+        help='[OPTIONAL] One or more environments to target. Environment will be synchronized one at a time.'
+    )
     logger.info('Returning CLI Argument Parser')
     return parser
 
@@ -73,11 +84,14 @@ def main(command: str, cli_args: list, logger=get_logger()):
     if command not in ('apply', 'delete'):
         raise Exception('Command must be one of "apply" or "delete"')
     
+    environments = parsed_args.environments
+    
     logger.debug('Command line arguments parsed...')
     logger.debug('   parsed_args: {}'.format(parsed_args))
     logger.debug('   unknown_args: {}'.format(unknown_args))
+    logger.debug('   environments: {}'.format(environments))
     vc = VariableCache()
-    mm = ManifestManager(variable_cache=vc)
+    mm = ManifestManager(variable_cache=vc, environments=environments)
     for src_file_list in parsed_args.src_locations:
         for src_file in src_file_list:
             logger.debug('Ingesting source file {}'.format(src_file))

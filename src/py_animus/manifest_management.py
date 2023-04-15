@@ -819,7 +819,7 @@ class DependencyReferences:
 
 class ManifestManager:
 
-    def __init__(self, variable_cache: VariableCache, logger=get_logger(), max_calls_to_manifest: int=int(os.getenv('MAX_CALLS_TO_MANIFEST', '10'))):
+    def __init__(self, variable_cache: VariableCache, logger=get_logger(), max_calls_to_manifest: int=int(os.getenv('MAX_CALLS_TO_MANIFEST', '10')), environments: list=['default',]):
         self.versioned_class_register = VersionedClassRegister(logger=logger)
         self.manifest_instances = dict()
         self.manifest_data_by_manifest_name = dict()
@@ -829,6 +829,7 @@ class ManifestManager:
         self.delete_drs = DependencyReferences()
         self.max_calls_to_manifest = max_calls_to_manifest
         self.executions_per_manifest_instance = dict()
+        self.environments = environments
 
     def register_manifest_class(self, manifest_base: ManifestBase):
         if isinstance(manifest_base, ManifestBase) is False:
