@@ -14,7 +14,7 @@
 * [x] Add logic in `ManifestManager.get_manifest_instance_by_name()` to also support version consideration when looking up a `ManifestBase` implementation. Pass the YAML manifest version when applying or deleting a manifest. (depends on [Issue 7](https://github.com/nicc777/py-animus/issues/7))
 * [x] Detect circular referenced dependencies 
 * [x] Add a delete variable method to `VariableCache`
-* [x] Add support for adding `environment` to metadata. Use this value to apply only manifests that has the specified environment in their metadata field. If a manifest has a dependency not in the environment, the environment will be assumed in order to satisfy the dependency. (#61)
+* [x] Add support for adding `environment` to metadata. Use this value to apply only manifests that has the specified environment in their metadata field. If a manifest has a dependency not in the environment, the environment will be assumed in order to satisfy the dependency. ([Issue 61](https://github.com/nicc777/py-animus/issues/61))
 * [ ] Add support for a values file that contain the environment specific values for `spec` fields in manifests. Use `{{ .Values.<<name>> }}` in any field to reference a value from the values files. The values file will also have to support multiple environments.
 * [ ] Extend the variable replacement for environment values to also include `{{ .Values.<<name>> }}` to use values from the local environment
 
