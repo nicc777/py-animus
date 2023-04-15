@@ -1158,6 +1158,99 @@ spec:
             print('Deleting manifest named "{}"'.format(name))
             mm.delete_manifest(name=name, skip_dependency_processing=True)
 
+    def test_manifests_with_multiple_environments_and_only_one_environment_selected(self):
+        ###
+        ### Manifest Setup
+        ###
+
+        manifest_1_v01_a_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-1
+    environments:
+    - env1
+    - env2
+    - env3
+spec:
+    val: 1
+"""
+
+        # THIS ONE SHOULD NOT BE APPLIED... MISSING env3
+        manifest_1_v01_b_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-2
+    environments:
+    - env1
+    - env2
+spec:
+    val: 1
+"""
+
+        manifest_1_v01_c_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-3
+    environments:
+    - env2
+    - env3
+spec:
+    val: 1
+"""
+
+        ###
+        ### Init VariableCache and ManifestManager
+        ###
+        vc = VariableCache()
+        mm = ManifestManager(variable_cache=vc, max_calls_to_manifest=1, environments=['env3',])    # Force an exception the moment any manifest is implemented more than once
+
+        ###
+        ### Consume classes that extend ManifestBase and register with ManifestManager
+        ###
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
+
+        ###
+        ### Consume Manifests and link with class implementations registered in ManifestManager
+        ###
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_a_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_b_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_c_data)['part_1'])
+
+        ###
+        ### Mimic the main() function apply all call
+        ###
+        for name in tuple(mm.manifest_instances.keys()):
+            print('Applying manifest named "{}"'.format(name))
+            mm.apply_manifest(name=name, skip_dependency_processing=True, target_environments=mm.environments)
+        mm.executions_per_manifest_instance = dict()
+        
+        ###
+        ### Mimic the main() function delete all call
+        ###
+        for name in tuple(mm.manifest_instances.keys()):
+            print('Deleting manifest named "{}"'.format(name))
+            mm.delete_manifest(name=name, skip_dependency_processing=True, target_environments=mm.environments)
+
+        vc_dict = vc.to_dict()
+        print('   vc_dict={}'.format(json.dumps(vc_dict)))
+
+        ### Validate Target Environments
+        manifest_names = ('test1-1', 'test1-2', 'test1-2', )
+        target_environments = {
+            'applied': ('test1-1', 'test1-2', ),
+            'deleted': ('test1-1', 'test1-2', ),
+        }
+        for action in tuple(target_environments.keys()):
+            for manifest_name in manifest_names:
+                dict_key = 'MyManifest1:{}:{}'.format(manifest_name, action)
+                if manifest_name not in target_environments[action]:
+                    self.assertEqual(manifest_name, 'test1-2', 'Expected manifest named test1-2')
+
 
 class TestVersionedClassRegister(unittest.TestCase):    # pragma: no cover
 

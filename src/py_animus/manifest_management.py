@@ -906,9 +906,18 @@ class ManifestManager:
             process_self_post_dependency_processing=True
         )
 
-    def delete_manifest(self, name: str, skip_dependency_processing: bool=False):
+    def delete_manifest(self, name: str, skip_dependency_processing: bool=False, target_environments: list=['default',]):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
         self.logger.debug('ManifestManager.delete_manifest(): manifest_instance named "{}" loaded.'.format(manifest_instance.metadata['name']))
+
+        do_delete_in_environment = False
+        for target_environment in target_environments:
+            if target_environment in manifest_instance.metadata['environments']:
+                self.logger.info('ManifestManager.delete_manifest(): manifest_instance named "{}" targeted for environment "{}"'.format(manifest_instance.metadata['name'], target_environment))    
+                do_delete_in_environment = True
+        if do_delete_in_environment is False:
+            self.logger.warning('ManifestManager.delete_manifest(): manifest_instance named "{}" loaded not selected for any target environment. Skipping.'.format(manifest_instance.metadata['name']))
+            return
 
         if 'skipDeleteAll' in manifest_instance.metadata:
             if manifest_instance.metadata['skipDeleteAll'] is True:
