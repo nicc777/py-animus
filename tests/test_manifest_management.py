@@ -1239,17 +1239,24 @@ spec:
         vc_dict = vc.to_dict()
         print('   vc_dict={}'.format(json.dumps(vc_dict)))
 
-        ### Validate Target Environments
-        manifest_names = ('test1-1', 'test1-2', 'test1-2', )
+        ### Validate Target Environments - test1-2 should not be applied or deleted
+        manifest_names = ('test1-1', 'test1-2', 'test1-3', )
         target_environments = {
-            'applied': ('test1-1', 'test1-2', ),
-            'deleted': ('test1-1', 'test1-2', ),
+            'applied': ('test1-1', 'test1-3', ),
+            'deleted': ('test1-1', 'test1-3', ),
         }
         for action in tuple(target_environments.keys()):
             for manifest_name in manifest_names:
-                dict_key = 'MyManifest1:{}:{}'.format(manifest_name, action)
+                variable_name = 'MyManifest1:{}-{}'.format(manifest_name, action)
+                print('> Testing variable "{}" for action "{}"'.format(variable_name, action))
                 if manifest_name not in target_environments[action]:
+                    print('>   Manifest "{}" NOT targeted for action "{}"'.format(manifest_name, action))
                     self.assertEqual(manifest_name, 'test1-2', 'Expected manifest named test1-2')
+                else:
+                    print('>   Manifest "{}" targeted for action "{}"'.format(manifest_name, action))
+                    variable_value = vc.get_value(variable_name=variable_name, value_if_expired=None, default_value_if_not_found=None, raise_exception_on_expired=False, raise_exception_on_not_found=False)
+                    self.assertIsNotNone(variable_value, 'Not expecting a None for variable name "{}" for action "{}"'.format(variable_name, action))
+                    self.assertTrue(variable_value)
 
 
 class TestVersionedClassRegister(unittest.TestCase):    # pragma: no cover
