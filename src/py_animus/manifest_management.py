@@ -894,7 +894,7 @@ class ValuePlaceHolders:
         if input_str.find('{}{} .Values.'.format('{', '{')) >= 0:
             for matched_placeholder in re.findall('\{\{\s+\.Values\.([\w|\s|\-|\_|\.]+)\s+\}\}', input_str):
                 return_str = return_str.replace(
-                    '{}{} Values.{} {}{}'.format('{', '{', matched_placeholder, '}', '}'),
+                    '{}{} .Values.{} {}{}'.format('{', '{', matched_placeholder, '}', '}'),
                     self.get_value_placeholder(
                         placeholder_name=matched_placeholder,
                         create_in_not_exists=True

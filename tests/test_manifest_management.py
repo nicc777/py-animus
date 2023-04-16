@@ -1408,6 +1408,58 @@ class TestValuePlaceHolders(unittest.TestCase):    # pragma: no cover
         self.assertIsInstance(value, int)
         self.assertEqual(value, 123)
 
+    def test_string_parsing_simple_string_in_matches_str_out(self):
+        vps = ValuePlaceHolders(logger=get_logger())
+        vps.add_environment_value(placeholder_name='test1', environment_name='env1', value='val1')
+        vps.add_environment_value(placeholder_name='test1', environment_name='env2', value='val2')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env1', value='val3')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env2', value='val4')
+
+        final_str = vps.parse_and_replace_placeholders_in_string(
+            input_str='abc',
+            environment_name='env1'
+        )
+        self.assertEqual(final_str, 'abc')
+
+    def test_string_parsing_env_string_in_parsed_correctly_01(self):
+        vps = ValuePlaceHolders(logger=get_logger())
+        vps.add_environment_value(placeholder_name='test1', environment_name='env1', value='val1')
+        vps.add_environment_value(placeholder_name='test1', environment_name='env2', value='val2')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env1', value='val3')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env2', value='val4')
+
+        final_str = vps.parse_and_replace_placeholders_in_string(
+            input_str='{}{} .Values.test2 {}{}'.format('{','{','}','}'),
+            environment_name='env1'
+        )
+        self.assertEqual(final_str, 'val3')
+
+    def test_string_parsing_env_string_in_parsed_correctly_02(self):
+        vps = ValuePlaceHolders(logger=get_logger())
+        vps.add_environment_value(placeholder_name='test1', environment_name='env1', value='val1')
+        vps.add_environment_value(placeholder_name='test1', environment_name='env2', value='val2')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env1', value='val3')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env2', value='val4')
+
+        final_str = vps.parse_and_replace_placeholders_in_string(
+            input_str='abc{}{} .Values.test2 {}{}def'.format('{','{','}','}'),
+            environment_name='env1'
+        )
+        self.assertEqual(final_str, 'abcval3def')
+
+    def test_string_parsing_env_string_in_parsed_correctly_03(self):
+        vps = ValuePlaceHolders(logger=get_logger())
+        vps.add_environment_value(placeholder_name='test1', environment_name='env1', value='val1')
+        vps.add_environment_value(placeholder_name='test1', environment_name='env2', value='val2')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env1', value='val3')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env2', value='val4')
+
+        final_str = vps.parse_and_replace_placeholders_in_string(
+            input_str='1: {}{} .Values.test1 {}{} and 2: {}{} .Values.test2 {}{}'.format('{','{','}','}','{','{','}','}'),
+            environment_name='env1'
+        )
+        self.assertEqual(final_str, '1: val1 and 2: val3')
+
 
 class TestDependencyReferences(unittest.TestCase):    # pragma: no cover
 
