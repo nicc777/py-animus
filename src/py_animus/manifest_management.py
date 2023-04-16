@@ -1,5 +1,5 @@
 """
-    Copyright (c) 2023. All rights reserved. NS Coetzee <nicc777@gmail.com>
+    Copyright (c) 2023. All rights reserved. NS Coetzee <nicc777`@`gmail.com>
 
     This file is licensed under GPLv3 and a copy of the license should be included in the project (look for the file 
     called LICENSE), or alternatively view the license text at 
@@ -999,12 +999,13 @@ class ManifestManager:
 
         do_apply_in_environment = False
         for te in self.environments:
+            self.logger.debug('* EVAL: te="{}" == target_environment="{}"'.format(te, target_environment))
             if te == target_environment:
                 if te in manifest_instance.metadata['environments']:
                     self.logger.info('ManifestManager.apply_manifest(): manifest_instance named "{}" targeted for environment "{}"'.format(manifest_instance.metadata['name'], te))    
                     do_apply_in_environment = True
         if do_apply_in_environment is False:
-            self.logger.warning('ManifestManager.apply_manifest(): manifest_instance named "{}" loaded not selected for any target environment "{}". Skipping.'.format(manifest_instance.metadata['name'], target_environment))
+            self.logger.warning('ManifestManager.apply_manifest(): manifest_instance named "{}" loaded not selected for target environment "{}". Skipping.'.format(manifest_instance.metadata['name'], target_environment))
             return
 
         if 'skipApplyAll' in manifest_instance.metadata:
@@ -1037,18 +1038,19 @@ class ManifestManager:
             target_environment=target_environment
         )
 
-    def delete_manifest(self, name: str, skip_dependency_processing: bool=False, target_environments: list=['default',], target_environment: str='default'):
+    def delete_manifest(self, name: str, skip_dependency_processing: bool=False, target_environment: str='default'):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
         self.logger.debug('ManifestManager.delete_manifest(): manifest_instance named "{}" loaded.. Target environment set to "{}"'.format(manifest_instance.metadata['name'], target_environment))
 
         do_delete_in_environment = False
-        for te in target_environments:
+        for te in self.environments:
+            self.logger.debug('* EVAL: te="{}" == target_environment="{}"'.format(te, target_environment))
             if te == target_environment:
                 if te in manifest_instance.metadata['environments']:
                     self.logger.info('ManifestManager.delete_manifest(): manifest_instance named "{}" targeted for environment "{}"'.format(manifest_instance.metadata['name'], te))    
                     do_delete_in_environment = True
         if do_delete_in_environment is False:
-            self.logger.warning('ManifestManager.delete_manifest(): manifest_instance named "{}" loaded not selected for any target environment "{}". Skipping.'.format(manifest_instance.metadata['name'], target_environment))
+            self.logger.warning('ManifestManager.delete_manifest(): manifest_instance named "{}" loaded not selected for target environment "{}". Skipping.'.format(manifest_instance.metadata['name'], target_environment))
             return
 
         if 'skipDeleteAll' in manifest_instance.metadata:
