@@ -1303,6 +1303,58 @@ class TestVersionedClassRegister(unittest.TestCase):    # pragma: no cover
         self.assertEqual(c2.version, 'v3')
 
 
+class TestValuePlaceholder(unittest.TestCase):    # pragma: no cover
+
+    def setUp(self):
+        print('-'*80)
+
+    def test_init_with_defaults(self):
+        vp = ValuePlaceholder(placeholder_name='test1')
+        self.assertIsNotNone(vp)
+        self.assertIsInstance(vp, ValuePlaceholder)
+        self.assertEqual(vp.placeholder_name, 'test1')
+
+    def test_two_environments(self):
+        vp = ValuePlaceholder(placeholder_name='test1')
+        vp.add_environment_value(environment_name='e1', value='v1')
+        vp.add_environment_value(environment_name='e2', value='v2')
+        self.assertIsNotNone(vp.per_environment_values)
+        self.assertTrue('e1' in vp.per_environment_values)
+        self.assertTrue('e2' in vp.per_environment_values)
+        self.assertEqual(vp.per_environment_values['e1'], 'v1')
+        self.assertEqual(vp.per_environment_values['e2'], 'v2')
+
+        print('vp={}'.format(json.dumps(vp.to_dict())))
+
+    def test_get_value(self):
+        vp = ValuePlaceholder(placeholder_name='test1')
+        vp.add_environment_value(environment_name='e1', value='v1')
+        vp.add_environment_value(environment_name='e2', value='v2')
+        v1 = vp.get_environment_value(environment_name='e1')
+        v2 = vp.get_environment_value(environment_name='e2')
+        self.assertEqual(v1, 'v1')
+        self.assertEqual(v2, 'v2')
+
+    def test_to_dict(self):
+        """
+            Expecting {"name": "test1", "environments": [{"environmentName": "e1", "value": "v1"}, {"environmentName": "e2", "value": "v2"}]}
+        """
+        vp = ValuePlaceholder(placeholder_name='test1')
+        vp.add_environment_value(environment_name='e1', value='v1')
+        vp.add_environment_value(environment_name='e2', value='v2')
+        d = vp.to_dict()
+        self.assertIsNotNone(d)
+        self.assertIsInstance(d, dict)
+        self.assertTrue('name' in d)
+        self.assertTrue('environments' in d)
+        self.assertEqual(d['name'], 'test1')
+        self.assertIsInstance(d['environments'], list)
+        self.assertEqual(len(d['environments']), 2)
+        for envs in d['environments']:
+            self.assertTrue('environmentName' in envs)
+            self.assertTrue('value' in envs)
+
+
 class TestDependencyReferences(unittest.TestCase):    # pragma: no cover
 
     def setUp(self):
