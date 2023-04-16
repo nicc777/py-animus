@@ -1355,6 +1355,60 @@ class TestValuePlaceholder(unittest.TestCase):    # pragma: no cover
             self.assertTrue('value' in envs)
 
 
+class TestValuePlaceHolders(unittest.TestCase):    # pragma: no cover
+
+    def setUp(self):
+        print('-'*80)
+
+    def test_init_with_defaults(self):
+        vps = ValuePlaceHolders(logger=get_logger())
+        self.assertIsNotNone(vps)
+        self.assertIsInstance(vps, ValuePlaceHolders)
+
+    def test_init_set_two_place_holders_each_with_two_same_environments(self):
+        vps = ValuePlaceHolders(logger=get_logger())
+        vps.add_environment_value(placeholder_name='test1', environment_name='env1', value='val1')
+        vps.add_environment_value(placeholder_name='test1', environment_name='env2', value='val2')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env1', value='val3')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env2', value='val4')
+
+        d = vps.to_dict()
+        self.assertIsNotNone(d)
+        self.assertIsInstance(d, dict)
+        self.assertTrue(len(d) > 0)
+        print('d={}'.format(json.dumps(d)))
+
+        """
+            Expecting {"values": [{"name": "test1", "environments": [{"environmentName": "env1", "value": "val1"}, {"environmentName": "env2", "value": "val2"}]}, {"name": "test2", "environments": [{"environmentName": "env1", "value": "val3"}, {"environmentName": "env2", "value": "val4"}]}]}
+        """
+        self.assertTrue('values' in d)
+        self.assertIsInstance(d['values'], list)
+        for item in d['values']:
+            self.assertIsInstance(item, dict)
+            self.assertTrue('name' in item)
+            self.assertTrue('environments' in item)
+            self.assertIsInstance(item['environments'], list)
+            for item_env in item['environments']:
+                self.assertTrue('environmentName' in item_env)
+                self.assertTrue('value' in item_env)
+
+        v1 = vps.get_value_placeholder(placeholder_name='test1').get_environment_value(environment_name='env1')
+        v2 = vps.get_value_placeholder(placeholder_name='test1').get_environment_value(environment_name='env2')
+        v3 = vps.get_value_placeholder(placeholder_name='test2').get_environment_value(environment_name='env1')
+        v4 = vps.get_value_placeholder(placeholder_name='test2').get_environment_value(environment_name='env2')
+        self.assertEqual(v1, 'val1')
+        self.assertEqual(v2, 'val2')
+        self.assertEqual(v3, 'val3')
+        self.assertEqual(v4, 'val4')
+
+    def test_get_default_variable_value_for_missing_environment_value(self):
+        vps = ValuePlaceHolders(logger=get_logger())
+        vps.add_environment_value(placeholder_name='test1', environment_name='env1', value='val1')
+        value = vps.get_value_placeholder(placeholder_name='test1').get_environment_value(environment_name='env2', default_value_when_not_found=123, raise_exception_when_not_found=False)
+        self.assertIsInstance(value, int)
+        self.assertEqual(value, 123)
+
+
 class TestDependencyReferences(unittest.TestCase):    # pragma: no cover
 
     def setUp(self):

@@ -859,7 +859,7 @@ class ValuePlaceHolders:
 
     def get_value_placeholder(self, placeholder_name: str, create_in_not_exists: bool=True)->ValuePlaceholder:
         if self.value_placeholder_exists(placeholder_name=placeholder_name) is False and create_in_not_exists is True:
-            return self.create_new_value_placeholder(placeholder_name=self.create_new_value_placeholder(placeholder_name=placeholder_name))
+            return self.create_new_value_placeholder(placeholder_name=placeholder_name)
         elif self.value_placeholder_exists(placeholder_name=placeholder_name) is False and create_in_not_exists is False:
             raise Exception('ValuePlaceholder named "{}" not found'.format(placeholder_name))
         return copy.deepcopy(self.value_placeholder_names[placeholder_name])
@@ -867,7 +867,7 @@ class ValuePlaceHolders:
     def create_new_value_placeholder(self, placeholder_name: str)->ValuePlaceholder:
         vp = ValuePlaceholder(placeholder_name=placeholder_name)
         self.value_placeholder_names[placeholder_name] = copy.deepcopy(vp)
-        return vp
+        return copy.deepcopy(vp)
     
     def add_environment_value(self, placeholder_name: str, environment_name: str, value: object):
         vp = self.get_value_placeholder(placeholder_name=placeholder_name, create_in_not_exists=True)
@@ -877,8 +877,10 @@ class ValuePlaceHolders:
     def to_dict(self):
         data = dict()
         data['values'] = list()
-        for vp_name, vp_data in self.value_placeholder_names.items():
-            data['values'].append(vp_data.to_dict())
+        for vp_name in list(self.value_placeholder_names.keys()):
+            vp = self.get_value_placeholder(placeholder_name=vp_name)
+            data['values'].append(vp.to_dict())
+        return data
 
     def parse_and_replace_placeholders_in_string(
             self,
