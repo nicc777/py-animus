@@ -995,6 +995,9 @@ class ManifestManager:
 
     def apply_manifest(self, name: str, skip_dependency_processing: bool=False, target_environment: str='default'):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
+
+        # TODO Parse the values in the instance, but somehow restore the original values post processing, ready for the next environment to process. Perhaps in manifest_instance.process_dependencies()
+
         self.logger.debug('ManifestManager.apply_manifest(): manifest_instance named "{}" loaded. Target environment set to "{}"'.format(manifest_instance.metadata['name'], target_environment))
 
         do_apply_in_environment = False
@@ -1041,6 +1044,8 @@ class ManifestManager:
     def delete_manifest(self, name: str, skip_dependency_processing: bool=False, target_environment: str='default'):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
         self.logger.debug('ManifestManager.delete_manifest(): manifest_instance named "{}" loaded.. Target environment set to "{}"'.format(manifest_instance.metadata['name'], target_environment))
+
+        # TODO Parse the values in the instance, but somehow restore the original values post processing, ready for the next environment to process. Perhaps in manifest_instance.process_dependencies()
 
         do_delete_in_environment = False
         for te in self.environments:
