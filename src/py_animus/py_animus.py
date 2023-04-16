@@ -50,6 +50,17 @@ def _get_arg_parser(
         default='default',
         help='[OPTIONAL] One or more environments to target. Environment will be synchronized one at a time.'
     )
+    parser.add_argument(
+        '-f', '--file',
+        action='append',
+        nargs='*',
+        dest='values_files',
+        metavar='VALUES_FILE',
+        type=str, 
+        required=False,
+        default='/tmp/values/values.yaml',
+        help='[OPTIONAL] One or more values files to use for environment variable substitution.'
+    )
     logger.info('Returning CLI Argument Parser')
     return parser
 
@@ -85,13 +96,15 @@ def main(command: str, cli_args: list, logger=get_logger()):
         raise Exception('Command must be one of "apply" or "delete"')
     
     environments = parsed_args.environments
+    values_files = parsed_args.values_files
     
     logger.debug('Command line arguments parsed...')
-    logger.debug('   parsed_args: {}'.format(parsed_args))
-    logger.debug('   unknown_args: {}'.format(unknown_args))
-    logger.debug('   environments: {}'.format(environments))
+    logger.debug('   parsed_args  : {}'.format(parsed_args))
+    logger.debug('   unknown_args : {}'.format(unknown_args))
+    logger.debug('   environments : {}'.format(environments))
+    logger.debug('   values_files : {}'.format(values_files))
     vc = VariableCache()
-    mm = ManifestManager(variable_cache=vc, environments=environments)
+    mm = ManifestManager(variable_cache=vc, environments=environments, values_files=values_files)
     for src_file_list in parsed_args.src_locations:
         for src_file in src_file_list:
             logger.debug('Ingesting source file {}'.format(src_file))

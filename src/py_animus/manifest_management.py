@@ -13,7 +13,8 @@ import json
 import yaml
 import importlib, os, inspect
 import sys
-from py_animus import get_logger, get_utc_timestamp, is_debug_set_in_environment
+import re
+from py_animus import get_logger, get_utc_timestamp, is_debug_set_in_environment, parse_raw_yaml_data
 
 
 def get_modules_in_package(target_dir: str, logger=get_logger()):
@@ -817,9 +818,104 @@ class DependencyReferences:
         return False
 
 
+class ValuePlaceholder:
+
+    def __init__(self, placeholder_name: str):
+        self.placeholder_name = placeholder_name
+        self.per_environment_values = dict()
+
+    def add_environment_value(self, environment_name: str, value: object):
+        self.per_environment_values[environment_name] = value
+
+    def get_environment_value(self, environment_name: str, default_value_when_not_found: object=None, raise_exception_when_not_found: bool=True):
+        if environment_name not in self.per_environment_values:
+            if raise_exception_when_not_found is True:
+                raise Exception('No value for environment "{}" for value placeholder "{}" found'.format(environment_name, self.placeholder_name))
+            return default_value_when_not_found
+        return copy.deepcopy(self.per_environment_values[environment_name])
+    
+    def to_dict(self):
+        data = dict()
+        data['name'] = self.placeholder_name
+        data['environments'] = list()
+        for env_name, env_val in self.per_environment_values.items():
+            pev = dict()
+            pev['environmentName'] = env_name
+            pev['value'] = env_val
+            data['environments'].append(copy.deepcopy(pev))
+        return data
+
+
+class ValuePlaceHolders:
+
+    def __init__(self, logger=get_logger()):
+        self.value_placeholder_names = dict()
+        self.logger = logger
+
+    def value_placeholder_exists(self, placeholder_name: str)->bool:
+        if placeholder_name in self.value_placeholder_names:
+            return True
+        return False
+
+    def get_value_placeholder(self, placeholder_name: str, create_in_not_exists: bool=True)->ValuePlaceholder:
+        if self.value_placeholder_exists(placeholder_name=placeholder_name) is False and create_in_not_exists is True:
+            return self.create_new_value_placeholder(placeholder_name=self.create_new_value_placeholder(placeholder_name=placeholder_name))
+        elif self.value_placeholder_exists(placeholder_name=placeholder_name) is False and create_in_not_exists is False:
+            raise Exception('ValuePlaceholder named "{}" not found'.format(placeholder_name))
+        return copy.deepcopy(self.value_placeholder_names[placeholder_name])
+
+    def create_new_value_placeholder(self, placeholder_name: str)->ValuePlaceholder:
+        vp = ValuePlaceholder(placeholder_name=placeholder_name)
+        self.value_placeholder_names[placeholder_name] = copy.deepcopy(vp)
+        return vp
+    
+    def add_environment_value(self, placeholder_name: str, environment_name: str, value: object):
+        vp = self.get_value_placeholder(placeholder_name=placeholder_name, create_in_not_exists=True)
+        vp.add_environment_value(environment_name=environment_name, value=value)
+        self.value_placeholder_names[placeholder_name] = copy.deepcopy(vp)
+
+    def to_dict(self):
+        data = dict()
+        data['values'] = list()
+        for vp_name, vp_data in self.value_placeholder_names.items():
+            data['values'].append(vp_data.to_dict())
+
+    def parse_and_replace_placeholders_in_string(
+            self,
+            input_str: str,
+            environment_name: str,
+            default_value_when_not_found: object='',
+            raise_exception_when_not_found: bool=False
+        ):
+        self.logger.debug('Parsing for placeholders. input_str="{}'.format(input_str))
+        return_str = copy.deepcopy(input_str)
+        if input_str.find('{}{} .Values.'.format('{', '{')) >= 0:
+            for matched_placeholder in re.findall('\{\{\s+\.Values\.([\w|\s|\-|\_|\.]+)\s+\}\}', input_str):
+                return_str = return_str.replace(
+                    '{}{} Values.{} {}{}'.format('{', '{', matched_placeholder, '}', '}'),
+                    self.get_value_placeholder(
+                        placeholder_name=matched_placeholder,
+                        create_in_not_exists=True
+                    ).get_environment_value(
+                        environment_name=environment_name,
+                        default_value_when_not_found=default_value_when_not_found,
+                        raise_exception_when_not_found=raise_exception_when_not_found
+                    )
+                )
+        self.logger.debug('   return_str="{}'.format(return_str))
+        return return_str
+
+
 class ManifestManager:
 
-    def __init__(self, variable_cache: VariableCache, logger=get_logger(), max_calls_to_manifest: int=int(os.getenv('MAX_CALLS_TO_MANIFEST', '10')), environments: list=['default',]):
+    def __init__(
+            self,
+            variable_cache: VariableCache,
+            logger=get_logger(),
+            max_calls_to_manifest: int=int(os.getenv('MAX_CALLS_TO_MANIFEST', '10')),
+            environments: list=['default',],
+            values_files: list=['values.yaml',]
+        ):
         self.versioned_class_register = VersionedClassRegister(logger=logger)
         self.manifest_instances = dict()
         self.manifest_data_by_manifest_name = dict()
@@ -830,6 +926,30 @@ class ManifestManager:
         self.max_calls_to_manifest = max_calls_to_manifest
         self.executions_per_manifest_instance = dict()
         self.environments = environments
+        self.environment_values = ValuePlaceHolders(logger=logger)
+        self._load_values(files=values_files)
+
+    def _load_values_from_file(self, file: str):
+        try:
+            self.logger.info('Attempting to load values from file "{}"'.format(file))
+            with open(file, 'r') as f:
+                data = parse_raw_yaml_data(yaml_data=f.read(), logger=self.logger)
+            if 'values' in  data:
+                for value in data['values']:
+                    if 'name' in value and 'environments' in value:
+                        for env_name, env_val in value['environments'].items():
+                            self.environment_values.add_environment_value(placeholder_name=value['name'], environment_name=env_name, value=env_val)
+            self.logger.info('   Loaded values from file "{}"'.format(file))
+        except:
+            self.logger.error('Failed to load values from file "{}"'.format(file))
+
+    def _load_values(self, files: list):
+        try:
+            for file in files:
+                self._load_values_from_file(file=file)
+        except:
+            self.logger.error('Failed to load values from files. files: {}'.format(files))
+        self.logger.debug('LOADED environment_values: {}'.format(json.dumps(self.environment_values.to_dict())))
 
     def register_manifest_class(self, manifest_base: ManifestBase):
         if isinstance(manifest_base, ManifestBase) is False:
