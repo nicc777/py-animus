@@ -526,7 +526,8 @@ class ManifestBase:
         variable_cache: VariableCache=VariableCache(),
         process_self_post_dependency_processing: bool=True,
         dependency_processing_rounds: dict=dict(),
-        target_environment: str='default'
+        target_environment: str='default', 
+        value_placeholders: ValuePlaceHolders=ValuePlaceHolders()
     ):
         """Called via the ManifestManager just before calling the `apply_manifest()` or `delete_manifest()`
 
@@ -534,8 +535,14 @@ class ManifestBase:
 
         Args:
           action: String with the appropriate command by which the lookup in `metadata.dependencies.*` will be done
+          process_dependency_if_already_applied: bool, If set to True, will process dependencies again, even if it was previously processed (as determined by the implemented_manifest_differ_from_this_manifest() method)
+          process_dependency_if_not_already_applied: bool, If set to true, process dependencies
           manifest_lookup_function: A function passed in by the ManifestManager. Called with `manifest_lookup_function(name='...')`. Implemented in ManifestManager.get_manifest_instance_by_name()
           variable_cache: A reference to the current instance of the VariableCache
+          process_self_post_dependency_processing: bool=True, If set to True, run own apply/delete actions
+          dependency_processing_rounds: dict that tracks how many times processing happened in order to limit endless processing loops.
+          target_environment: string with the target environment
+          value_placeholders: ValuePlaceHolders instance that contains the per environment placeholder values that will be passed on during processing in order for final field values to be determined.
         """
         if 'dependencies' in self.metadata:
 
@@ -552,7 +559,7 @@ class ManifestBase:
                     self.log(message='Processing dependency named "{}" for manifest "{}" while processing action "{}"'.format(dependant_manifest_name, self.metadata['name'], action), level='debug')
                     
                     dependency_manifest_implementation = manifest_lookup_function(name=dependant_manifest_name)
-                    dependency_manifest_applied_previously = not dependency_manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, target_environment=target_environment)
+                    dependency_manifest_applied_previously = not dependency_manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, target_environment=target_environment, value_placeholders=value_placeholders)
                     self.log(
                         message='Dependency named "{}" previously applied: {}'.format(
                             dependency_manifest_implementation.metadata['name'],
@@ -570,7 +577,8 @@ class ManifestBase:
                             process_dependency_if_already_applied=process_dependency_if_already_applied,
                             process_dependency_if_not_already_applied=process_dependency_if_not_already_applied,
                             dependency_processing_rounds=dependency_processing_rounds,
-                            target_environment=target_environment
+                            target_environment=target_environment,
+                            value_placeholders=value_placeholders
                         )
                     else:
                         self.log(message='Dependency named "{}" will NOT be applied because process_dependency_if_already_applied is FALSE'.format(dependency_manifest_implementation.metadata['name']),level='debug')   
@@ -584,7 +592,8 @@ class ManifestBase:
                             process_dependency_if_already_applied=process_dependency_if_already_applied,
                             process_dependency_if_not_already_applied=process_dependency_if_not_already_applied,
                             dependency_processing_rounds=dependency_processing_rounds,
-                            target_environment=target_environment
+                            target_environment=target_environment,
+                            value_placeholders=value_placeholders
                         )
                     else:
                         self.log(message='Dependency named "{}" will be applied because process_dependency_if_not_already_applied is FALSE'.format(dependency_manifest_implementation.metadata['name']),level='debug')   
@@ -596,9 +605,9 @@ class ManifestBase:
 
         if process_self_post_dependency_processing is True:
             if action == 'apply':
-                self.apply_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, target_environment=target_environment)
+                self.apply_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, target_environment=target_environment, value_placeholders=value_placeholders)
             if action == 'delete':
-                self.delete_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, target_environment=target_environment)
+                self.delete_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, target_environment=target_environment, value_placeholders=value_placeholders)
         else:
             self.log(message='SELF was NOT YET PROCESSED for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='debug')
 
@@ -627,7 +636,7 @@ class ManifestBase:
         """
         return yaml.dump(self.to_dict())
 
-    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), target_environment: str='default')->bool:    # pragma: no cover
+    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders())->bool:    # pragma: no cover
         """A helper method to determine if the current manifest is different from a potentially previously implemented
         version
 
@@ -650,12 +659,25 @@ class ManifestBase:
         return False
         ```
 
+        **IMPORTANT** It is up to the implementation to parse the per target placeholder values. Consider the following example:
+
+        ```python
+        # Assuming we have a spec field called "name" (self.spec['name']), we can ensure the final value is set with:
+        final_name = value_placeholders.parse_and_replace_placeholders_in_string(
+            input_str=self.spec['name'],
+            environment_name=target_environment,
+            default_value_when_not_found='what_ever_is_appropriate'
+        )
+        ```
+
         Args:
           manifest_lookup_function: A function passed in by the ManifestManager. Called with `manifest_lookup_function(name='...')`. Implemented in ManifestManager.get_manifest_instance_by_name()
           variable_cache: A reference to the current instance of the VariableCache
+          target_environment: string with the name of the target environment (default="default") (New since version 1.0.9)
+          value_placeholders: ValuePlaceHolders instance containing all the per environment replacement values (New since version 1.0.9)
 
         Returns:
-            Boolean True if the previous implementation checksum is different from the current manifest checksum.
+            Boolean True if the previous implementation is different from the current implementation
 
         Raises:
             Exception: When the method was not implemented by th user
@@ -663,7 +685,7 @@ class ManifestBase:
         """
         raise Exception('To be implemented by user')
 
-    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default'):  # pragma: no cover
+    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders()):  # pragma: no cover
         """A  method to Implement the state as defined in a manifest.
 
         The ManifestManager will typically call this method to apply the manifest. The ManifestManager will NOT make a
@@ -695,10 +717,23 @@ class ManifestBase:
         // Consume output from parent_manifest as stored in the variable_cache as needed...
         ```
 
+        **IMPORTANT** It is up to the implementation to parse the per target placeholder values. Consider the following example:
+
+        ```python
+        # Assuming we have a spec field called "name" (self.spec['name']), we can ensure the final value is set with:
+        final_name = value_placeholders.parse_and_replace_placeholders_in_string(
+            input_str=self.spec['name'],
+            environment_name=target_environment,
+            default_value_when_not_found='what_ever_is_appropriate'
+        )
+        ```
+
         Args:
           manifest_lookup_function: A function passed in by the ManifestManager. Called with `manifest_lookup_function(name='...')`. Implemented in ManifestManager.get_manifest_instance_by_name()
           variable_cache: A reference to the current instance of the VariableCache
           increment_exec_counter: If set to true, the implementation should make the following call: `self.apply_execute_count += 1`
+          target_environment: string with the name of the target environment (default="default") (New since version 1.0.9)
+          value_placeholders: ValuePlaceHolders instance containing all the per environment replacement values (New since version 1.0.9)
 
         Returns:
             Any returned value will be ignored by the ManifestManager
@@ -709,7 +744,7 @@ class ManifestBase:
         """
         raise Exception('To be implemented by user')
     
-    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default'):  # pragma: no cover
+    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders()):  # pragma: no cover
         """A  method to DELETE the current state as defined in a manifest.
 
         The ManifestManager will typically call this method to delete the manifest. The ManifestManager will NOT make a
@@ -741,10 +776,23 @@ class ManifestBase:
         // Consume output from parent_manifest as stored in the variable_cache as needed...
         ```
 
+        **IMPORTANT** It is up to the implementation to parse the per target placeholder values. Consider the following example:
+
+        ```python
+        # Assuming we have a spec field called "name" (self.spec['name']), we can ensure the final value is set with:
+        final_name = value_placeholders.parse_and_replace_placeholders_in_string(
+            input_str=self.spec['name'],
+            environment_name=target_environment,
+            default_value_when_not_found='what_ever_is_appropriate'
+        )
+        ```
+
         Args:
           manifest_lookup_function: A function passed in by the ManifestManager. Called with `manifest_lookup_function(name='...')`. Implemented in ManifestManager.get_manifest_instance_by_name()
           variable_cache: A reference to the current instance of the VariableCache
           increment_exec_counter: If set to true, the implementation should make the following call: `self.delete_execute_count += 1`
+          target_environment: string with the name of the target environment (default="default") (New since version 1.0.9)
+          value_placeholders: ValuePlaceHolders instance containing all the per environment replacement values (New since version 1.0.9)
 
         Returns:
             Any returned value will be ignored by the ManifestManager
