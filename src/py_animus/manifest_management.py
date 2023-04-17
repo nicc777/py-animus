@@ -442,8 +442,8 @@ class ManifestBase:
         self.post_parsing_method = post_parsing_method
         self.checksum = None
         self.dependency_processing_counter = dict()
-        self.values_placeholders = ValuePlaceHolders()
         self.target_environments = ['default',]
+        self.original_manifest = dict()
 
     def log(self, message: str, level: str='info'): # pragma: no cover
         """During implementation, calls to `self.log()` can be made to log messages using the configure logger.
@@ -467,7 +467,7 @@ class ManifestBase:
         elif level.lower().startswith('e'):
             self.logger.error('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
 
-    def parse_manifest(self, manifest_data: dict, values_placeholders: ValuePlaceHolders=ValuePlaceHolders(), target_environments: list=['default',]):
+    def parse_manifest(self, manifest_data: dict, target_environments: list=['default',]):
         """Called via the ManifestManager when manifests files are parsed and one is found to belong to a class of this implementation.
 
         The user does not have to override this implementation.
@@ -475,8 +475,8 @@ class ManifestBase:
         Args:
           manifest_data: A Dictionary of data from teh parsed Manifest file
         """
-        self.values_placeholders = values_placeholders
         self.target_environments = target_environments
+        self.original_manifest = copy.deepcopy(manifest_data)
         converted_data = dict((k.lower(),v) for k,v in manifest_data.items()) # Convert keys to lowercase
         if 'kind' in converted_data:
             if converted_data['kind'] != self.kind:
@@ -995,9 +995,6 @@ class ManifestManager:
 
     def apply_manifest(self, name: str, skip_dependency_processing: bool=False, target_environment: str='default'):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
-
-        # TODO Parse the values in the instance, but somehow restore the original values post processing, ready for the next environment to process. Perhaps in manifest_instance.process_dependencies()
-
         self.logger.debug('ManifestManager.apply_manifest(): manifest_instance named "{}" loaded. Target environment set to "{}"'.format(manifest_instance.metadata['name'], target_environment))
 
         do_apply_in_environment = False
@@ -1044,8 +1041,6 @@ class ManifestManager:
     def delete_manifest(self, name: str, skip_dependency_processing: bool=False, target_environment: str='default'):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
         self.logger.debug('ManifestManager.delete_manifest(): manifest_instance named "{}" loaded.. Target environment set to "{}"'.format(manifest_instance.metadata['name'], target_environment))
-
-        # TODO Parse the values in the instance, but somehow restore the original values post processing, ready for the next environment to process. Perhaps in manifest_instance.process_dependencies()
 
         do_delete_in_environment = False
         for te in self.environments:
@@ -1102,7 +1097,7 @@ class ManifestManager:
         if 'environments' not in manifest_data['metadata']:
             manifest_data['metadata']['environments'] = ['default',]
 
-        class_instance_copy.parse_manifest(manifest_data=manifest_data, values_placeholders=self.environment_values, target_environments=self.environments)
+        class_instance_copy.parse_manifest(manifest_data=manifest_data, target_environments=self.environments)
         idx = '{}:{}:{}'.format(
             class_instance_copy.metadata['name'],
             class_instance_copy.version,
