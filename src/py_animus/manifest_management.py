@@ -487,6 +487,7 @@ class ManifestBase:
 
     def process_value_placeholders(self, value_placeholders: ValuePlaceHolders, environment_name: str):
         manifest_data_with_parsed_value_placeholder_values = self._process_dict_for_value_placeholders(d=copy.deepcopy(self.original_manifest), value_placeholders=value_placeholders, environment_name=environment_name)
+        # TODO implement a mini version of the parse_manifest() method since we already know all the validations have been done in terms of the basic structure.
 
     def parse_manifest(self, manifest_data: dict, target_environments: list=['default',]):
         """Called via the ManifestManager when manifests files are parsed and one is found to belong to a class of this implementation.
