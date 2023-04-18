@@ -467,6 +467,27 @@ class ManifestBase:
         elif level.lower().startswith('e'):
             self.logger.error('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
 
+    def _process_dict_for_value_placeholders(self, d: dict, value_placeholders: ValuePlaceHolders, environment_name: str)->dict:
+        final_d = dict()
+        for k,v in d.items():
+            if isinstance(v, dict):
+                final_d[k] = copy.deepcopy(self._process_dict_for_value_placeholders(d=v, value_placeholders=value_placeholders, environment_name=environment_name))
+            elif isinstance(v, str):
+                final_d[k] = copy.deepcopy(
+                    value_placeholders.parse_and_replace_placeholders_in_string(
+                        input_str=v,
+                        environment_name=environment_name,
+                        default_value_when_not_found=v,
+                        raise_exception_when_not_found=False
+                    )
+                )
+            else:
+                final_d[k] = copy.deepcopy(v)
+        return final_d
+
+    def process_value_placeholders(self, value_placeholders: ValuePlaceHolders, environment_name: str):
+        manifest_data_with_parsed_value_placeholder_values = self._process_dict_for_value_placeholders(d=copy.deepcopy(self.original_manifest), value_placeholders=value_placeholders, environment_name=environment_name)
+
     def parse_manifest(self, manifest_data: dict, target_environments: list=['default',]):
         """Called via the ManifestManager when manifests files are parsed and one is found to belong to a class of this implementation.
 
