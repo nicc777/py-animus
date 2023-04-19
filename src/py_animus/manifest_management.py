@@ -1088,6 +1088,7 @@ class ManifestManager:
                 return
 
         if skip_dependency_processing is True:
+            manifest_instance.process_value_placeholders(value_placeholders=self.environment_values, environment_name=target_environment)
             manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
             return
         
@@ -1133,6 +1134,7 @@ class ManifestManager:
                 return
 
         if skip_dependency_processing is True:
+            manifest_instance.process_value_placeholders(value_placeholders=self.environment_values, environment_name=target_environment)
             manifest_instance.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
             return
         

@@ -1560,7 +1560,7 @@ spec:
             if os.path.isdir(s='/tmp/test_manifest_classes'):
                 shutil.rmtree(path='/tmp/test_manifest_classes', ignore_errors=True)
 
-    @mock.patch.dict(os.environ, {"DEBUG": "1"})   
+    # @mock.patch.dict(os.environ, {"DEBUG": "1"})   
     def test_init_with_defaults(self):
         ###
         ### Init VariableCache and ManifestManager
