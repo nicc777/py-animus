@@ -1473,6 +1473,140 @@ class TestValuePlaceHolders(unittest.TestCase):    # pragma: no cover
         self.assertEqual(final_str, '1: val1 and 2: val3')
 
 
+class TestValuePlaceHoldersScenarios(unittest.TestCase):    # pragma: no cover
+
+    def setUp(self):
+        print('-'*80)
+        self.manifest_1_v01_a_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-1
+    environments:
+    - env1
+    - env2
+    - env3
+spec:
+    val: '{}{} .Values.test1 {}{}'
+""".format('{','{','}','}')
+
+        # THIS ONE SHOULD NOT BE APPLIED... MISSING env3
+        self.manifest_1_v01_b_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-2
+    environments:
+    - env1
+    - env2
+spec:
+    val: '{}{} .Values.test2 {}{}'
+""".format('{','{','}','}')
+
+        self.manifest_1_v01_c_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-3
+    environments:
+    - env2
+    - env3
+spec:
+    val: '{}{} .Values.test3 {}{}'
+""".format('{','{','}','}')
+        
+        self.vps = ValuePlaceHolders(logger=get_logger())
+        self.vps.add_environment_value(placeholder_name='test1', environment_name='env1', value='val1')
+        self.vps.add_environment_value(placeholder_name='test1', environment_name='env2', value='val2')
+        self.vps.add_environment_value(placeholder_name='test1', environment_name='env3', value='val3')
+        self.vps.add_environment_value(placeholder_name='test2', environment_name='env1', value='val4')
+        self.vps.add_environment_value(placeholder_name='test2', environment_name='env2', value='val5')
+        self.vps.add_environment_value(placeholder_name='test2', environment_name='env3', value='val6')
+        self.vps.add_environment_value(placeholder_name='test3', environment_name='env1', value='val7')
+        self.vps.add_environment_value(placeholder_name='test3', environment_name='env2', value='val8')
+        self.vps.add_environment_value(placeholder_name='test3', environment_name='env3', value='val9')
+
+        if os.path.exists('/tmp/test_manifest_classes'):
+            if os.path.isdir(s='/tmp/test_manifest_classes'):
+                shutil.rmtree(path='/tmp/test_manifest_classes', ignore_errors=True)
+        os.mkdir(path='/tmp/test_manifest_classes')
+        os.mkdir(path='/tmp/test_manifest_classes/test1')
+        os.mkdir(path='/tmp/test_manifest_classes/test2')
+
+        self.source_to_dest_files = {
+            # MyManifest1 versions
+            '{}/tests/manifest_classes/test1v0-1.py'.format(running_path): '/tmp/test_manifest_classes/test1/test1v0-1.py',
+            '{}/tests/manifest_classes/test1v0-2.py'.format(running_path): '/tmp/test_manifest_classes/test1/test1v0-2.py',
+            '{}/tests/manifest_classes/test1v0-3.py'.format(running_path): '/tmp/test_manifest_classes/test1/test1v0-3.py',
+
+            # MyManifest2 versions
+            '{}/tests/manifest_classes/test2v0-1.py'.format(running_path): '/tmp/test_manifest_classes/test2/test2v0-1.py',
+            '{}/tests/manifest_classes/test2v0-2.py'.format(running_path): '/tmp/test_manifest_classes/test2/test2v0-2.py',
+            '{}/tests/manifest_classes/test2v0-3.py'.format(running_path): '/tmp/test_manifest_classes/test2/test2v0-3.py',
+        }
+
+        for source_file, dest_file in self.source_to_dest_files.items():
+            with open(source_file, 'r') as f1r:
+                with open(dest_file, 'w') as f1w:
+                    f1w.write(f1r.read())
+                    print('Copied "{}" to "{}"'.format(source_file, dest_file))
+
+        
+        print('PREP COMPLETED')
+        print('~'*80)
+
+    def tearDown(self):
+        if os.path.exists('/tmp/test_manifest_classes'):
+            if os.path.isdir(s='/tmp/test_manifest_classes'):
+                shutil.rmtree(path='/tmp/test_manifest_classes', ignore_errors=True)
+
+    @mock.patch.dict(os.environ, {"DEBUG": "1"})   
+    def test_init_with_defaults(self):
+        ###
+        ### Init VariableCache and ManifestManager
+        ###
+        vc = VariableCache()
+        mm = ManifestManager(variable_cache=vc, max_calls_to_manifest=1, environments=['env3',])
+        mm.environment_values = self.vps
+
+        ###
+        ### Consume classes that extend ManifestBase and register with ManifestManager
+        ###
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
+
+        ###
+        ### Consume Manifests and link with class implementations registered in ManifestManager
+        ###
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=self.manifest_1_v01_a_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=self.manifest_1_v01_b_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=self.manifest_1_v01_c_data)['part_1'])
+
+        ###
+        ### Mimic the main() function apply all call
+        ###
+        print()
+        print('#################### APPLY ####################')
+        for target_environment in ('env3',):
+            print('   >>> Target Environment: {}'.format(target_environment))
+            for name in tuple(mm.manifest_instances.keys()):
+                print('---------- Applying manifest named "{}"'.format(name))
+                mm.apply_manifest(name=name, skip_dependency_processing=True, target_environment=target_environment)
+        mm.executions_per_manifest_instance = dict()
+
+        vc_data = vc.to_dict()
+        print()
+        print()
+        print('vc={}'.format(json.dumps(vc_data)))
+        print()
+        print()
+
+        self.assertEqual(vc_data['MyManifest1:test1-1-val']['value'], 'val3')
+        self.assertEqual(vc_data['MyManifest1:test1-3-val']['value'], 'val9')
+
+
+
 class TestDependencyReferences(unittest.TestCase):    # pragma: no cover
 
     def setUp(self):
