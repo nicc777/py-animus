@@ -2,6 +2,7 @@
 - [Placeholder Values](#placeholder-values)
 - [Guidelines and Best Practices](#guidelines-and-best-practices)
   - [Syntax for the Placeholder](#syntax-for-the-placeholder)
+  - [Environments](#environments)
 
 
 # Placeholder Values
@@ -65,4 +66,14 @@ Note the following rules:
     * Length is not strictly enforced, but keep it reasonable - it is after all for your own benefit.
     * Unicode may work - but your milage may vary. Stick to ASCII
 
-TODO
+## Environments
+
+If an environment is not specified on the command line, the default environment named `default` will be used.
+
+It is therefore good practice to always have a `default` environment value defined for every variable in the values file. 
+
+Another consideration comes from the principle of "_fail securely_" and in this context the default value should point to a non-production or non-critical environment value, like the `sandbox` environment in the example.
+
+Although not strictly required, define values for every environment used in all the manifests to ensure proper coverage and edge cases.
+
+When no variable for an environment is found, the placeholder value will be used literally - this is the current behavior, but may change in the future.
