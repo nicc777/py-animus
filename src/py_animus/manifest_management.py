@@ -487,7 +487,9 @@ class ManifestBase:
 
     def process_value_placeholders(self, value_placeholders: ValuePlaceHolders, environment_name: str):
         manifest_data_with_parsed_value_placeholder_values = self._process_dict_for_value_placeholders(d=copy.deepcopy(self.original_manifest), value_placeholders=value_placeholders, environment_name=environment_name)
-        # TODO implement a mini version of the parse_manifest() method since we already know all the validations have been done in terms of the basic structure.
+        self.log(message='manifest_data_with_parsed_value_placeholder_values={}'.format(manifest_data_with_parsed_value_placeholder_values), level='debug')
+        self.metadata = copy.deepcopy(manifest_data_with_parsed_value_placeholder_values['metadata'])
+        self.spec = copy.deepcopy(manifest_data_with_parsed_value_placeholder_values['spec'])
 
     def parse_manifest(self, manifest_data: dict, target_environments: list=['default',]):
         """Called via the ManifestManager when manifests files are parsed and one is found to belong to a class of this implementation.
@@ -627,8 +629,10 @@ class ManifestBase:
 
         if process_self_post_dependency_processing is True:
             if action == 'apply':
+                self.process_value_placeholders(value_placeholders=value_placeholders, environment_name=target_environment)
                 self.apply_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, target_environment=target_environment, value_placeholders=value_placeholders)
             if action == 'delete':
+                self.process_value_placeholders(value_placeholders=value_placeholders, environment_name=target_environment)
                 self.delete_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, target_environment=target_environment, value_placeholders=value_placeholders)
         else:
             self.log(message='SELF was NOT YET PROCESSED for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='debug')
