@@ -39,24 +39,50 @@ def _get_arg_parser(
         required=True,
         help='[REQUIRED] One or more Python files that implement the logic to handle the manifest files.'
     )
+    parser.add_argument(
+        '-e', '--env',
+        action='append',
+        nargs='*',
+        dest='environments',
+        metavar='ENVIRONMENT',
+        type=str, 
+        required=False,
+        default='default',
+        help='[OPTIONAL] One or more environments to target. Environment will be synchronized one at a time.'
+    )
+    parser.add_argument(
+        '-f', '--file',
+        action='append',
+        nargs='*',
+        dest='values_files',
+        metavar='VALUES_FILE',
+        type=str, 
+        required=False,
+        default='/tmp/values/values.yaml',
+        help='[OPTIONAL] One or more values files to use for environment variable substitution.'
+    )
     logger.info('Returning CLI Argument Parser')
     return parser
 
 
-def apply_command(vc: VariableCache, mm: ManifestManager, logger):
-    for name in tuple(mm.manifest_instances.keys()):
-        logger.info('Applying manifest named "{}"'.format(name))
-        mm.apply_manifest(name=name)
-    for name in tuple(vc.values.keys()):
-        logger.info('RESULT: {}={}'.format(name, vc.get_value(variable_name=name, for_logging=True)))
+def apply_command(vc: VariableCache, mm: ManifestManager, logger, target_environments: list=['default',]):
+    for target_environment in target_environments:
+        logger.info('TARGET ENVIRONMENT: {}'.format(target_environment))
+        for name in tuple(mm.manifest_instances.keys()):
+            logger.info('Applying manifest named "{}"'.format(name))
+            mm.apply_manifest(name=name, target_environment=target_environment)
+        for name in tuple(vc.values.keys()):
+            logger.info('RESULT: {}={}'.format(name, vc.get_value(variable_name=name, for_logging=True)))
 
 
-def delete_command(vc: VariableCache, mm: ManifestManager, logger):
-    for name in tuple(mm.manifest_instances.keys()):
-        logger.info('Deleting manifest named "{}"'.format(name))
-        mm.delete_manifest(name=name)
-    for name in tuple(vc.values.keys()):
-        logger.info('RESULT: {}={}'.format(name, vc.get_value(variable_name=name, for_logging=True)))
+def delete_command(vc: VariableCache, mm: ManifestManager, logger, target_environments: list=['default',]):
+    for target_environment in target_environments:
+        logger.info('TARGET ENVIRONMENT: {}'.format(target_environment))
+        for name in tuple(mm.manifest_instances.keys()):
+            logger.info('Deleting manifest named "{}"'.format(name))
+            mm.delete_manifest(name=name, target_environment=target_environment)
+        for name in tuple(vc.values.keys()):
+            logger.info('RESULT: {}={}'.format(name, vc.get_value(variable_name=name, for_logging=True)))
 
 
 def main(command: str, cli_args: list, logger=get_logger()):
@@ -73,11 +99,16 @@ def main(command: str, cli_args: list, logger=get_logger()):
     if command not in ('apply', 'delete'):
         raise Exception('Command must be one of "apply" or "delete"')
     
+    target_environments = parsed_args.environments
+    values_files = parsed_args.values_files
+    
     logger.debug('Command line arguments parsed...')
-    logger.debug('   parsed_args: {}'.format(parsed_args))
-    logger.debug('   unknown_args: {}'.format(unknown_args))
+    logger.debug('   parsed_args         : {}'.format(parsed_args))
+    logger.debug('   unknown_args        : {}'.format(unknown_args))
+    logger.debug('   target_environments : {}'.format(target_environments))
+    logger.debug('   values_files        : {}'.format(values_files))
     vc = VariableCache()
-    mm = ManifestManager(variable_cache=vc)
+    mm = ManifestManager(variable_cache=vc, environments=target_environments, values_files=values_files)
     for src_file_list in parsed_args.src_locations:
         for src_file in src_file_list:
             logger.debug('Ingesting source file {}'.format(src_file))
@@ -95,10 +126,11 @@ def main(command: str, cli_args: list, logger=get_logger()):
             except:
                 logger.error('Failed to read file "{}" due to exception'.format(manifest_file))
                 logger.error(traceback.format_exc())
+    
     if command == 'apply':
-        apply_command(vc, mm, logger)
+        apply_command(vc, mm, logger, target_environments=target_environments)
     elif command == 'delete':
-        delete_command(vc, mm, logger)
+        delete_command(vc, mm, logger, target_environments=target_environments)
     else:
         raise Exception('Unknown command. Command must be one of "apply" or "delete"')
 
