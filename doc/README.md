@@ -11,6 +11,7 @@
   - [The `Variable` base class and `VariableCache`](#the-variable-base-class-and-variablecache)
     - [How data is passed around](#how-data-is-passed-around)
     - [Basic Variable Workflow](#basic-variable-workflow)
+- [More feature specific documentation](#more-feature-specific-documentation)
 
 # py_animus Documentation
 
@@ -208,3 +209,12 @@ for variable_name in tuple(variable_cache.values.keys()):
 > **Warning**:
 > Important to remember is that calls to the `VariableCache` methods `store_variable()` and `get_value()` could raise exceptions (depending on optional parameters set), and the implementation of `ManifestBase` should be able to handle that appropriately as required.
 
+
+# More feature specific documentation
+
+The following documentation deep dives into the implementation of specific features:
+
+| Feature                                                                 | Feature Description                                                                                                                                                                                                                                                                                                                                            |
+|-------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [Support for Environment Scope](target_environments.md)                 | Allows to define the environment scopes for each manifest. For example, you may have "sandbox", "test" and "production" environments and certain manifests may only be scoped for certain of these  environment.                                                                                                                                               |
+| [The concept of Placeholder Values in Manifests](placeholder_values.md) | Adds support for using special placeholders in manifest files where a different value may be required depending on the target environment. The environment and value map is defined in a separate values files. This is very similar to how [Helm values](https://helm.sh/docs/chart_best_practices/values/) work, but more basic and with no logic statement. |

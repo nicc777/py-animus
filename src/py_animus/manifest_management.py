@@ -1,5 +1,5 @@
 """
-    Copyright (c) 2023. All rights reserved. NS Coetzee <nicc777@gmail.com>
+    Copyright (c) 2023. All rights reserved. NS Coetzee <nicc777`@`gmail.com>
 
     This file is licensed under GPLv3 and a copy of the license should be included in the project (look for the file 
     called LICENSE), or alternatively view the license text at 
@@ -13,7 +13,8 @@ import json
 import yaml
 import importlib, os, inspect
 import sys
-from py_animus import get_logger, get_utc_timestamp, is_debug_set_in_environment
+import re
+from py_animus import get_logger, get_utc_timestamp, is_debug_set_in_environment, parse_raw_yaml_data
 
 
 def get_modules_in_package(target_dir: str, logger=get_logger()):
@@ -34,6 +35,96 @@ def get_modules_in_package(target_dir: str, logger=get_logger()):
 
 def dummy_manifest_lookup_function(name: str):  # pragma: no cover
     return
+
+
+class ValuePlaceholder:
+
+    def __init__(self, placeholder_name: str):
+        self.placeholder_name = placeholder_name
+        self.per_environment_values = dict()
+
+    def add_environment_value(self, environment_name: str, value: object):
+        self.per_environment_values[environment_name] = value
+
+    def get_environment_value(self, environment_name: str, default_value_when_not_found: object=None, raise_exception_when_not_found: bool=True):
+        if environment_name not in self.per_environment_values:
+            if raise_exception_when_not_found is True:
+                raise Exception('No value for environment "{}" for value placeholder "{}" found'.format(environment_name, self.placeholder_name))
+            return default_value_when_not_found
+        return copy.deepcopy(self.per_environment_values[environment_name])
+    
+    def to_dict(self):
+        data = dict()
+        data['name'] = self.placeholder_name
+        data['environments'] = list()
+        for env_name, env_val in self.per_environment_values.items():
+            pev = dict()
+            pev['environmentName'] = env_name
+            pev['value'] = env_val
+            data['environments'].append(copy.deepcopy(pev))
+        return data
+
+
+class ValuePlaceHolders:
+
+    def __init__(self, logger=get_logger()):
+        self.value_placeholder_names = dict()
+        self.logger = logger
+
+    def value_placeholder_exists(self, placeholder_name: str)->bool:
+        if placeholder_name in self.value_placeholder_names:
+            return True
+        return False
+
+    def get_value_placeholder(self, placeholder_name: str, create_in_not_exists: bool=True)->ValuePlaceholder:
+        if self.value_placeholder_exists(placeholder_name=placeholder_name) is False and create_in_not_exists is True:
+            return self.create_new_value_placeholder(placeholder_name=placeholder_name)
+        elif self.value_placeholder_exists(placeholder_name=placeholder_name) is False and create_in_not_exists is False:
+            raise Exception('ValuePlaceholder named "{}" not found'.format(placeholder_name))
+        return copy.deepcopy(self.value_placeholder_names[placeholder_name])
+
+    def create_new_value_placeholder(self, placeholder_name: str)->ValuePlaceholder:
+        vp = ValuePlaceholder(placeholder_name=placeholder_name)
+        self.value_placeholder_names[placeholder_name] = copy.deepcopy(vp)
+        return copy.deepcopy(vp)
+    
+    def add_environment_value(self, placeholder_name: str, environment_name: str, value: object):
+        vp = self.get_value_placeholder(placeholder_name=placeholder_name, create_in_not_exists=True)
+        vp.add_environment_value(environment_name=environment_name, value=value)
+        self.value_placeholder_names[placeholder_name] = copy.deepcopy(vp)
+
+    def to_dict(self):
+        data = dict()
+        data['values'] = list()
+        for vp_name in list(self.value_placeholder_names.keys()):
+            vp = self.get_value_placeholder(placeholder_name=vp_name)
+            data['values'].append(vp.to_dict())
+        return data
+
+    def parse_and_replace_placeholders_in_string(
+            self,
+            input_str: str,
+            environment_name: str,
+            default_value_when_not_found: object='',
+            raise_exception_when_not_found: bool=False
+        ):
+        self.logger.debug('Parsing for placeholders. input_str="{}'.format(input_str))
+        return_str = copy.deepcopy(input_str)
+        if input_str.find('{}{} .Values.'.format('{', '{')) >= 0:
+            for matched_placeholder in re.findall('\{\{\s+\.Values\.([\w|\s|\-|\_|\.]+)\s+\}\}', input_str):
+                return_str = return_str.replace(
+                    '{}{} .Values.{} {}{}'.format('{', '{', matched_placeholder, '}', '}'),
+                    self.get_value_placeholder(
+                        placeholder_name=matched_placeholder,
+                        create_in_not_exists=True
+                    ).get_environment_value(
+                        environment_name=environment_name,
+                        default_value_when_not_found=default_value_when_not_found,
+                        raise_exception_when_not_found=raise_exception_when_not_found
+                    )
+                )
+        self.logger.debug('   return_str="{}'.format(return_str))
+        return return_str
 
 
 class Variable:
@@ -351,6 +442,8 @@ class ManifestBase:
         self.post_parsing_method = post_parsing_method
         self.checksum = None
         self.dependency_processing_counter = dict()
+        self.target_environments = ['default',]
+        self.original_manifest = dict()
 
     def log(self, message: str, level: str='info'): # pragma: no cover
         """During implementation, calls to `self.log()` can be made to log messages using the configure logger.
@@ -374,7 +467,31 @@ class ManifestBase:
         elif level.lower().startswith('e'):
             self.logger.error('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
 
-    def parse_manifest(self, manifest_data: dict):
+    def _process_dict_for_value_placeholders(self, d: dict, value_placeholders: ValuePlaceHolders, environment_name: str)->dict:
+        final_d = dict()
+        for k,v in d.items():
+            if isinstance(v, dict):
+                final_d[k] = copy.deepcopy(self._process_dict_for_value_placeholders(d=v, value_placeholders=value_placeholders, environment_name=environment_name))
+            elif isinstance(v, str):
+                final_d[k] = copy.deepcopy(
+                    value_placeholders.parse_and_replace_placeholders_in_string(
+                        input_str=v,
+                        environment_name=environment_name,
+                        default_value_when_not_found=v,
+                        raise_exception_when_not_found=False
+                    )
+                )
+            else:
+                final_d[k] = copy.deepcopy(v)
+        return final_d
+
+    def process_value_placeholders(self, value_placeholders: ValuePlaceHolders, environment_name: str):
+        manifest_data_with_parsed_value_placeholder_values = self._process_dict_for_value_placeholders(d=copy.deepcopy(self.original_manifest), value_placeholders=value_placeholders, environment_name=environment_name)
+        self.log(message='manifest_data_with_parsed_value_placeholder_values={}'.format(manifest_data_with_parsed_value_placeholder_values), level='debug')
+        self.metadata = copy.deepcopy(manifest_data_with_parsed_value_placeholder_values['metadata'])
+        self.spec = copy.deepcopy(manifest_data_with_parsed_value_placeholder_values['spec'])
+
+    def parse_manifest(self, manifest_data: dict, target_environments: list=['default',]):
         """Called via the ManifestManager when manifests files are parsed and one is found to belong to a class of this implementation.
 
         The user does not have to override this implementation.
@@ -382,6 +499,8 @@ class ManifestBase:
         Args:
           manifest_data: A Dictionary of data from teh parsed Manifest file
         """
+        self.target_environments = target_environments
+        self.original_manifest = copy.deepcopy(manifest_data)
         converted_data = dict((k.lower(),v) for k,v in manifest_data.items()) # Convert keys to lowercase
         if 'kind' in converted_data:
             if converted_data['kind'] != self.kind:
@@ -430,7 +549,9 @@ class ManifestBase:
         manifest_lookup_function: object=dummy_manifest_lookup_function,
         variable_cache: VariableCache=VariableCache(),
         process_self_post_dependency_processing: bool=True,
-        dependency_processing_rounds: dict=dict()
+        dependency_processing_rounds: dict=dict(),
+        target_environment: str='default', 
+        value_placeholders: ValuePlaceHolders=ValuePlaceHolders()
     ):
         """Called via the ManifestManager just before calling the `apply_manifest()` or `delete_manifest()`
 
@@ -438,9 +559,17 @@ class ManifestBase:
 
         Args:
           action: String with the appropriate command by which the lookup in `metadata.dependencies.*` will be done
+          process_dependency_if_already_applied: bool, If set to True, will process dependencies again, even if it was previously processed (as determined by the implemented_manifest_differ_from_this_manifest() method)
+          process_dependency_if_not_already_applied: bool, If set to true, process dependencies
           manifest_lookup_function: A function passed in by the ManifestManager. Called with `manifest_lookup_function(name='...')`. Implemented in ManifestManager.get_manifest_instance_by_name()
           variable_cache: A reference to the current instance of the VariableCache
+          process_self_post_dependency_processing: bool=True, If set to True, run own apply/delete actions
+          dependency_processing_rounds: dict that tracks how many times processing happened in order to limit endless processing loops.
+          target_environment: string with the target environment
+          value_placeholders: ValuePlaceHolders instance that contains the per environment placeholder values that will be passed on during processing in order for final field values to be determined.
         """
+        if target_environment not in self.metadata['environments']:
+            return
         if 'dependencies' in self.metadata:
 
             if self.metadata['name'] not in dependency_processing_rounds:
@@ -456,7 +585,7 @@ class ManifestBase:
                     self.log(message='Processing dependency named "{}" for manifest "{}" while processing action "{}"'.format(dependant_manifest_name, self.metadata['name'], action), level='debug')
                     
                     dependency_manifest_implementation = manifest_lookup_function(name=dependant_manifest_name)
-                    dependency_manifest_applied_previously = not dependency_manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
+                    dependency_manifest_applied_previously = not dependency_manifest_implementation.implemented_manifest_differ_from_this_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, target_environment=target_environment, value_placeholders=value_placeholders)
                     self.log(
                         message='Dependency named "{}" previously applied: {}'.format(
                             dependency_manifest_implementation.metadata['name'],
@@ -473,7 +602,9 @@ class ManifestBase:
                             process_self_post_dependency_processing=process_self_post_dependency_processing,
                             process_dependency_if_already_applied=process_dependency_if_already_applied,
                             process_dependency_if_not_already_applied=process_dependency_if_not_already_applied,
-                            dependency_processing_rounds=dependency_processing_rounds
+                            dependency_processing_rounds=dependency_processing_rounds,
+                            target_environment=target_environment,
+                            value_placeholders=value_placeholders
                         )
                     else:
                         self.log(message='Dependency named "{}" will NOT be applied because process_dependency_if_already_applied is FALSE'.format(dependency_manifest_implementation.metadata['name']),level='debug')   
@@ -486,7 +617,9 @@ class ManifestBase:
                             process_self_post_dependency_processing=process_self_post_dependency_processing,
                             process_dependency_if_already_applied=process_dependency_if_already_applied,
                             process_dependency_if_not_already_applied=process_dependency_if_not_already_applied,
-                            dependency_processing_rounds=dependency_processing_rounds
+                            dependency_processing_rounds=dependency_processing_rounds,
+                            target_environment=target_environment,
+                            value_placeholders=value_placeholders
                         )
                     else:
                         self.log(message='Dependency named "{}" will be applied because process_dependency_if_not_already_applied is FALSE'.format(dependency_manifest_implementation.metadata['name']),level='debug')   
@@ -498,9 +631,11 @@ class ManifestBase:
 
         if process_self_post_dependency_processing is True:
             if action == 'apply':
-                self.apply_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
+                self.process_value_placeholders(value_placeholders=value_placeholders, environment_name=target_environment)
+                self.apply_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, target_environment=target_environment, value_placeholders=value_placeholders)
             if action == 'delete':
-                self.delete_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache)
+                self.process_value_placeholders(value_placeholders=value_placeholders, environment_name=target_environment)
+                self.delete_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, target_environment=target_environment, value_placeholders=value_placeholders)
         else:
             self.log(message='SELF was NOT YET PROCESSED for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='debug')
 
@@ -529,7 +664,7 @@ class ManifestBase:
         """
         return yaml.dump(self.to_dict())
 
-    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache())->bool:    # pragma: no cover
+    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders())->bool:    # pragma: no cover
         """A helper method to determine if the current manifest is different from a potentially previously implemented
         version
 
@@ -552,12 +687,25 @@ class ManifestBase:
         return False
         ```
 
+        **IMPORTANT** It is up to the implementation to parse the per target placeholder values. Consider the following example:
+
+        ```python
+        # Assuming we have a spec field called "name" (self.spec['name']), we can ensure the final value is set with:
+        final_name = value_placeholders.parse_and_replace_placeholders_in_string(
+            input_str=self.spec['name'],
+            environment_name=target_environment,
+            default_value_when_not_found='what_ever_is_appropriate'
+        )
+        ```
+
         Args:
           manifest_lookup_function: A function passed in by the ManifestManager. Called with `manifest_lookup_function(name='...')`. Implemented in ManifestManager.get_manifest_instance_by_name()
           variable_cache: A reference to the current instance of the VariableCache
+          target_environment: string with the name of the target environment (default="default") (New since version 1.0.9)
+          value_placeholders: ValuePlaceHolders instance containing all the per environment replacement values (New since version 1.0.9)
 
         Returns:
-            Boolean True if the previous implementation checksum is different from the current manifest checksum.
+            Boolean True if the previous implementation is different from the current implementation
 
         Raises:
             Exception: When the method was not implemented by th user
@@ -565,7 +713,7 @@ class ManifestBase:
         """
         raise Exception('To be implemented by user')
 
-    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False):  # pragma: no cover
+    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders()):  # pragma: no cover
         """A  method to Implement the state as defined in a manifest.
 
         The ManifestManager will typically call this method to apply the manifest. The ManifestManager will NOT make a
@@ -597,10 +745,23 @@ class ManifestBase:
         // Consume output from parent_manifest as stored in the variable_cache as needed...
         ```
 
+        **IMPORTANT** It is up to the implementation to parse the per target placeholder values. Consider the following example:
+
+        ```python
+        # Assuming we have a spec field called "name" (self.spec['name']), we can ensure the final value is set with:
+        final_name = value_placeholders.parse_and_replace_placeholders_in_string(
+            input_str=self.spec['name'],
+            environment_name=target_environment,
+            default_value_when_not_found='what_ever_is_appropriate'
+        )
+        ```
+
         Args:
           manifest_lookup_function: A function passed in by the ManifestManager. Called with `manifest_lookup_function(name='...')`. Implemented in ManifestManager.get_manifest_instance_by_name()
           variable_cache: A reference to the current instance of the VariableCache
           increment_exec_counter: If set to true, the implementation should make the following call: `self.apply_execute_count += 1`
+          target_environment: string with the name of the target environment (default="default") (New since version 1.0.9)
+          value_placeholders: ValuePlaceHolders instance containing all the per environment replacement values (New since version 1.0.9)
 
         Returns:
             Any returned value will be ignored by the ManifestManager
@@ -611,7 +772,7 @@ class ManifestBase:
         """
         raise Exception('To be implemented by user')
     
-    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False):  # pragma: no cover
+    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders()):  # pragma: no cover
         """A  method to DELETE the current state as defined in a manifest.
 
         The ManifestManager will typically call this method to delete the manifest. The ManifestManager will NOT make a
@@ -643,10 +804,23 @@ class ManifestBase:
         // Consume output from parent_manifest as stored in the variable_cache as needed...
         ```
 
+        **IMPORTANT** It is up to the implementation to parse the per target placeholder values. Consider the following example:
+
+        ```python
+        # Assuming we have a spec field called "name" (self.spec['name']), we can ensure the final value is set with:
+        final_name = value_placeholders.parse_and_replace_placeholders_in_string(
+            input_str=self.spec['name'],
+            environment_name=target_environment,
+            default_value_when_not_found='what_ever_is_appropriate'
+        )
+        ```
+
         Args:
           manifest_lookup_function: A function passed in by the ManifestManager. Called with `manifest_lookup_function(name='...')`. Implemented in ManifestManager.get_manifest_instance_by_name()
           variable_cache: A reference to the current instance of the VariableCache
           increment_exec_counter: If set to true, the implementation should make the following call: `self.delete_execute_count += 1`
+          target_environment: string with the name of the target environment (default="default") (New since version 1.0.9)
+          value_placeholders: ValuePlaceHolders instance containing all the per environment replacement values (New since version 1.0.9)
 
         Returns:
             Any returned value will be ignored by the ManifestManager
@@ -819,7 +993,14 @@ class DependencyReferences:
 
 class ManifestManager:
 
-    def __init__(self, variable_cache: VariableCache, logger=get_logger(), max_calls_to_manifest: int=int(os.getenv('MAX_CALLS_TO_MANIFEST', '10'))):
+    def __init__(
+            self,
+            variable_cache: VariableCache,
+            logger=get_logger(),
+            max_calls_to_manifest: int=int(os.getenv('MAX_CALLS_TO_MANIFEST', '10')),
+            environments: list=['default',],
+            values_files: list=['values.yaml',]
+        ):
         self.versioned_class_register = VersionedClassRegister(logger=logger)
         self.manifest_instances = dict()
         self.manifest_data_by_manifest_name = dict()
@@ -829,6 +1010,31 @@ class ManifestManager:
         self.delete_drs = DependencyReferences()
         self.max_calls_to_manifest = max_calls_to_manifest
         self.executions_per_manifest_instance = dict()
+        self.environments = environments
+        self.environment_values = ValuePlaceHolders(logger=logger)
+        self._load_values(files=values_files)
+
+    def _load_values_from_file(self, file: str):
+        try:
+            self.logger.info('Attempting to load values from file "{}"'.format(file))
+            with open(file, 'r') as f:
+                data = parse_raw_yaml_data(yaml_data=f.read(), logger=self.logger)
+            if 'values' in  data:
+                for value in data['values']:
+                    if 'name' in value and 'environments' in value:
+                        for env_name, env_val in value['environments'].items():
+                            self.environment_values.add_environment_value(placeholder_name=value['name'], environment_name=env_name, value=env_val)
+            self.logger.info('   Loaded values from file "{}"'.format(file))
+        except:
+            self.logger.error('Failed to load values from file "{}"'.format(file))
+
+    def _load_values(self, files: list):
+        try:
+            for file in files:
+                self._load_values_from_file(file=file)
+        except:
+            self.logger.error('Failed to load values from files. files: {}'.format(files))
+        self.logger.debug('LOADED environment_values: {}'.format(json.dumps(self.environment_values.to_dict())))
 
     def register_manifest_class(self, manifest_base: ManifestBase):
         if isinstance(manifest_base, ManifestBase) is False:
@@ -840,7 +1046,7 @@ class ManifestManager:
              self.register_manifest_class(manifest_base=returned_class(logger=self.logger))
         self.logger.info('Registered classes: {}'.format(str(self.versioned_class_register)))
 
-    def get_manifest_instance_by_name(self, name: str):
+    def get_manifest_instance_by_name(self, name: str)->ManifestBase:
         for key, manifest_instance in self.manifest_instances.items():
             if manifest_instance.metadata['name'] == name or '{}:{}:{}'.format(manifest_instance.metadata['name'],manifest_instance.version,manifest_instance.checksum) == name:
                 return manifest_instance
@@ -863,9 +1069,22 @@ class ManifestManager:
     def _can_execute_again(self, manifest_instance: ManifestBase)->bool:
         return not self._max_execution_count_reached(manifest_instance=manifest_instance)
 
-    def apply_manifest(self, name: str, skip_dependency_processing: bool=False):
+    def apply_manifest(self, name: str, skip_dependency_processing: bool=False, target_environment: str='default'):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
-        self.logger.debug('ManifestManager.apply_manifest(): manifest_instance named "{}" loaded.'.format(manifest_instance.metadata['name']))
+        if target_environment not in manifest_instance.metadata['environments']:
+            return
+        self.logger.debug('ManifestManager.apply_manifest(): manifest_instance named "{}" loaded. Target environment set to "{}"'.format(manifest_instance.metadata['name'], target_environment))
+
+        do_apply_in_environment = False
+        for te in self.environments:
+            self.logger.debug('* EVAL: te="{}" == target_environment="{}"'.format(te, target_environment))
+            if te == target_environment:
+                if te in manifest_instance.metadata['environments']:
+                    self.logger.info('ManifestManager.apply_manifest(): manifest_instance named "{}" targeted for environment "{}"'.format(manifest_instance.metadata['name'], te))    
+                    do_apply_in_environment = True
+        if do_apply_in_environment is False:
+            self.logger.warning('ManifestManager.apply_manifest(): manifest_instance named "{}" loaded not selected for target environment "{}". Skipping.'.format(manifest_instance.metadata['name'], target_environment))
+            return
 
         if 'skipApplyAll' in manifest_instance.metadata:
             if manifest_instance.metadata['skipApplyAll'] is True:
@@ -873,7 +1092,8 @@ class ManifestManager:
                 return
 
         if skip_dependency_processing is True:
-            manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
+            manifest_instance.process_value_placeholders(value_placeholders=self.environment_values, environment_name=target_environment)
+            manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache, target_environment=target_environment, value_placeholders=self.environment_values)
             return
         
         if 'executeOnlyOnceOnApply' in manifest_instance.metadata:
@@ -893,12 +1113,26 @@ class ManifestManager:
             process_dependency_if_not_already_applied=True,
             manifest_lookup_function=self.get_manifest_instance_by_name,
             variable_cache=self.variable_cache,
-            process_self_post_dependency_processing=True
+            process_self_post_dependency_processing=True,
+            target_environment=target_environment
         )
 
-    def delete_manifest(self, name: str, skip_dependency_processing: bool=False):
+    def delete_manifest(self, name: str, skip_dependency_processing: bool=False, target_environment: str='default'):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
-        self.logger.debug('ManifestManager.delete_manifest(): manifest_instance named "{}" loaded.'.format(manifest_instance.metadata['name']))
+        if target_environment not in manifest_instance.metadata['environments']:
+            return
+        self.logger.debug('ManifestManager.delete_manifest(): manifest_instance named "{}" loaded.. Target environment set to "{}"'.format(manifest_instance.metadata['name'], target_environment))
+
+        do_delete_in_environment = False
+        for te in self.environments:
+            self.logger.debug('* EVAL: te="{}" == target_environment="{}"'.format(te, target_environment))
+            if te == target_environment:
+                if te in manifest_instance.metadata['environments']:
+                    self.logger.info('ManifestManager.delete_manifest(): manifest_instance named "{}" targeted for environment "{}"'.format(manifest_instance.metadata['name'], te))    
+                    do_delete_in_environment = True
+        if do_delete_in_environment is False:
+            self.logger.warning('ManifestManager.delete_manifest(): manifest_instance named "{}" loaded not selected for target environment "{}". Skipping.'.format(manifest_instance.metadata['name'], target_environment))
+            return
 
         if 'skipDeleteAll' in manifest_instance.metadata:
             if manifest_instance.metadata['skipDeleteAll'] is True:
@@ -906,7 +1140,8 @@ class ManifestManager:
                 return
 
         if skip_dependency_processing is True:
-            manifest_instance.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache)
+            manifest_instance.process_value_placeholders(value_placeholders=self.environment_values, environment_name=target_environment)
+            manifest_instance.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache, target_environment=target_environment, value_placeholders=self.environment_values)
             return
         
         if 'executeOnlyOnceOnDelete' in manifest_instance.metadata:
@@ -926,7 +1161,8 @@ class ManifestManager:
             process_dependency_if_not_already_applied=False,
             manifest_lookup_function=self.get_manifest_instance_by_name,
             variable_cache=self.variable_cache,
-            process_self_post_dependency_processing=True
+            process_self_post_dependency_processing=True,
+            target_environment=target_environment
         )
 
     def get_manifest_class_by_kind(self, kind: str, version: str=None):
@@ -940,8 +1176,10 @@ class ManifestManager:
         if 'version' in manifest_data:
             version = manifest_data['version']
         class_instance_copy = copy.deepcopy(self.get_manifest_class_by_kind(kind=manifest_data['kind'], version=version))
+        if 'environments' not in manifest_data['metadata']:
+            manifest_data['metadata']['environments'] = ['default',]
 
-        class_instance_copy.parse_manifest(manifest_data=manifest_data)
+        class_instance_copy.parse_manifest(manifest_data=manifest_data, target_environments=self.environments)
         idx = '{}:{}:{}'.format(
             class_instance_copy.metadata['name'],
             class_instance_copy.version,

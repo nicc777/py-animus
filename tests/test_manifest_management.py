@@ -203,17 +203,17 @@ class MyManifest1(ManifestBase):
     def __init__(self, logger=get_logger(), post_parsing_method: object = my_post_parsing_method, version: str='v0.1', supported_versions: tuple=('v0.1',)):
         super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
 
-    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function)->bool:
+    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, target_environment: str='default')->bool:
         return True # We are always different
 
-    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False):
+    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default'):
         variable_cache.store_variable(variable=Variable(name='{}:{}'.format(self.kind, self.metadata['name']), initial_value='Some Result Worth Saving'))
         variable_cache.store_variable(variable=Variable(name='{}:{}-val'.format(self.kind, self.metadata['name']), initial_value=self.spec['val']), overwrite_existing=True)
         variable_cache.store_variable(variable=Variable(name='{}:{}-applied'.format(self.kind, self.metadata['name']), initial_value=True), overwrite_existing=True)
         variable_cache.store_variable(variable=Variable(name='{}:{}-deleted'.format(self.kind, self.metadata['name']), initial_value=False), overwrite_existing=True)
         return  # Assume some implementation
     
-    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False):
+    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default'):
         variable_cache.store_variable(variable=Variable(name='{}:{}'.format(self.kind, self.metadata['name']), initial_value='Some Result Worth Saving'))
         variable_cache.store_variable(variable=Variable(name='{}:{}-val'.format(self.kind, self.metadata['name']), initial_value=None), overwrite_existing=True)
         variable_cache.store_variable(variable=Variable(name='{}:{}-applied'.format(self.kind, self.metadata['name']), initial_value=False), overwrite_existing=True)
@@ -247,10 +247,10 @@ class MyManifest2(ManifestBase):
     def __init__(self, logger=get_logger(), post_parsing_method: object = my_post_parsing_method, version: str='v0.2', supported_versions: tuple=('v0.2',)):
         super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
 
-    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function)->bool:
+    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders())->bool:
         return True # We are always different
 
-    def apply_manifest(self, manifest_lookup_function: object=manifest_lookup_that_always_returns_MyManifest1, variable_cache: VariableCache=VariableCache()):
+    def apply_manifest(self, manifest_lookup_function: object=manifest_lookup_that_always_returns_MyManifest1, variable_cache: VariableCache=VariableCache(), target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders()):
         if 'parent' in self.spec:
             m1 = manifest_lookup_function(name=self.spec['parent'])
             m1.apply_manifest(variable_cache=variable_cache)
@@ -260,7 +260,7 @@ class MyManifest2(ManifestBase):
         variable_cache.store_variable(variable=Variable(name='{}:{}-deleted'.format(self.kind, self.metadata['name']), initial_value=False), overwrite_existing=True)
         return  # Assume some implementation
     
-    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False):
+    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders()):
         variable_cache.store_variable(variable=Variable(name='{}:{}'.format(self.kind, self.metadata['name']), initial_value='Some Result Worth Saving'))
         variable_cache.store_variable(variable=Variable(name='{}:{}-val'.format(self.kind, self.metadata['name']), initial_value=None), overwrite_existing=True)
         variable_cache.store_variable(variable=Variable(name='{}:{}-applied'.format(self.kind, self.metadata['name']), initial_value=False), overwrite_existing=True)
@@ -1158,6 +1158,118 @@ spec:
             print('Deleting manifest named "{}"'.format(name))
             mm.delete_manifest(name=name, skip_dependency_processing=True)
 
+    @mock.patch.dict(os.environ, {"DEBUG": "1"})        
+    def test_manifests_with_multiple_environments_and_only_one_environment_selected(self):
+        ###
+        ### Manifest Setup
+        ###
+
+        manifest_1_v01_a_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-1
+    environments:
+    - env1
+    - env2
+    - env3
+spec:
+    val: 1
+"""
+
+        # THIS ONE SHOULD NOT BE APPLIED... MISSING env3
+        manifest_1_v01_b_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-2
+    environments:
+    - env1
+    - env2
+spec:
+    val: 1
+"""
+
+        manifest_1_v01_c_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-3
+    environments:
+    - env2
+    - env3
+spec:
+    val: 1
+"""
+
+        ###
+        ### Init VariableCache and ManifestManager
+        ###
+        vc = VariableCache()
+        mm = ManifestManager(variable_cache=vc, max_calls_to_manifest=1, environments=['env3',])
+
+        ###
+        ### Consume classes that extend ManifestBase and register with ManifestManager
+        ###
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
+
+        ###
+        ### Consume Manifests and link with class implementations registered in ManifestManager
+        ###
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_a_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_b_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_c_data)['part_1'])
+
+        ###
+        ### Mimic the main() function apply all call
+        ###
+        print()
+        print('#################### APPLY ####################')
+        for target_environment in ('env3',):
+            print('   >>> Target Environment: {}'.format(target_environment))
+            for name in tuple(mm.manifest_instances.keys()):
+                print('---------- Applying manifest named "{}"'.format(name))
+                mm.apply_manifest(name=name, skip_dependency_processing=True, target_environment=target_environment)
+        mm.executions_per_manifest_instance = dict()
+        
+        ###
+        ### Mimic the main() function delete all call
+        ###
+        print()
+        print('#################### DELETE ####################')
+        for target_environment in ('env3',):
+            print('   >>> Target Environment: {}'.format(target_environment))
+            for name in tuple(mm.manifest_instances.keys()):
+                print('---------- Deleting manifest named "{}"'.format(name))
+                mm.delete_manifest(name=name, skip_dependency_processing=True, target_environment=target_environment)
+
+        vc_dict = vc.to_dict()
+
+        print()
+        print('#################### RESULTS ####################')
+        print('   vc_dict={}'.format(json.dumps(vc_dict)))
+
+        ### Validate Target Environments - test1-2 should not be applied or deleted
+        manifest_names = ('test1-1', 'test1-2', 'test1-3', )
+        target_environments = {
+            'applied': ('test1-1', 'test1-3', ),
+            'deleted': ('test1-1', 'test1-3', ),
+        }
+        for action in tuple(target_environments.keys()):
+            for manifest_name in manifest_names:
+                variable_name = 'MyManifest1:{}-{}'.format(manifest_name, action)
+                print('> Testing variable "{}" for action "{}"'.format(variable_name, action))
+                if manifest_name not in target_environments[action]:
+                    print('>   Manifest "{}" NOT targeted for action "{}"'.format(manifest_name, action))
+                    self.assertEqual(manifest_name, 'test1-2', 'Expected manifest named test1-2')
+                else:
+                    print('>   Manifest "{}" targeted for action "{}"'.format(manifest_name, action))
+                    variable_value = vc.get_value(variable_name=variable_name, value_if_expired=None, default_value_if_not_found=None, raise_exception_on_expired=False, raise_exception_on_not_found=False)
+                    self.assertIsNotNone(variable_value, 'Not expecting a None for variable name "{}" for action "{}"'.format(variable_name, action))
+                    self.assertTrue(variable_value)
+
 
 class TestVersionedClassRegister(unittest.TestCase):    # pragma: no cover
 
@@ -1201,6 +1313,298 @@ class TestVersionedClassRegister(unittest.TestCase):    # pragma: no cover
         self.assertNotEqual(c1, v1)
         self.assertNotEqual(c3, v1)
         self.assertEqual(c2.version, 'v3')
+
+
+class TestValuePlaceholder(unittest.TestCase):    # pragma: no cover
+
+    def setUp(self):
+        print('-'*80)
+
+    def test_init_with_defaults(self):
+        vp = ValuePlaceholder(placeholder_name='test1')
+        self.assertIsNotNone(vp)
+        self.assertIsInstance(vp, ValuePlaceholder)
+        self.assertEqual(vp.placeholder_name, 'test1')
+
+    def test_two_environments(self):
+        vp = ValuePlaceholder(placeholder_name='test1')
+        vp.add_environment_value(environment_name='e1', value='v1')
+        vp.add_environment_value(environment_name='e2', value='v2')
+        self.assertIsNotNone(vp.per_environment_values)
+        self.assertTrue('e1' in vp.per_environment_values)
+        self.assertTrue('e2' in vp.per_environment_values)
+        self.assertEqual(vp.per_environment_values['e1'], 'v1')
+        self.assertEqual(vp.per_environment_values['e2'], 'v2')
+
+        print('vp={}'.format(json.dumps(vp.to_dict())))
+
+    def test_get_value(self):
+        vp = ValuePlaceholder(placeholder_name='test1')
+        vp.add_environment_value(environment_name='e1', value='v1')
+        vp.add_environment_value(environment_name='e2', value='v2')
+        v1 = vp.get_environment_value(environment_name='e1')
+        v2 = vp.get_environment_value(environment_name='e2')
+        self.assertEqual(v1, 'v1')
+        self.assertEqual(v2, 'v2')
+
+    def test_to_dict(self):
+        """
+            Expecting {"name": "test1", "environments": [{"environmentName": "e1", "value": "v1"}, {"environmentName": "e2", "value": "v2"}]}
+        """
+        vp = ValuePlaceholder(placeholder_name='test1')
+        vp.add_environment_value(environment_name='e1', value='v1')
+        vp.add_environment_value(environment_name='e2', value='v2')
+        d = vp.to_dict()
+        self.assertIsNotNone(d)
+        self.assertIsInstance(d, dict)
+        self.assertTrue('name' in d)
+        self.assertTrue('environments' in d)
+        self.assertEqual(d['name'], 'test1')
+        self.assertIsInstance(d['environments'], list)
+        self.assertEqual(len(d['environments']), 2)
+        for envs in d['environments']:
+            self.assertTrue('environmentName' in envs)
+            self.assertTrue('value' in envs)
+
+
+class TestValuePlaceHolders(unittest.TestCase):    # pragma: no cover
+
+    def setUp(self):
+        print('-'*80)
+
+    def test_init_with_defaults(self):
+        vps = ValuePlaceHolders(logger=get_logger())
+        self.assertIsNotNone(vps)
+        self.assertIsInstance(vps, ValuePlaceHolders)
+
+    def test_init_set_two_place_holders_each_with_two_same_environments(self):
+        vps = ValuePlaceHolders(logger=get_logger())
+        vps.add_environment_value(placeholder_name='test1', environment_name='env1', value='val1')
+        vps.add_environment_value(placeholder_name='test1', environment_name='env2', value='val2')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env1', value='val3')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env2', value='val4')
+
+        d = vps.to_dict()
+        self.assertIsNotNone(d)
+        self.assertIsInstance(d, dict)
+        self.assertTrue(len(d) > 0)
+        print('d={}'.format(json.dumps(d)))
+
+        """
+            Expecting {"values": [{"name": "test1", "environments": [{"environmentName": "env1", "value": "val1"}, {"environmentName": "env2", "value": "val2"}]}, {"name": "test2", "environments": [{"environmentName": "env1", "value": "val3"}, {"environmentName": "env2", "value": "val4"}]}]}
+        """
+        self.assertTrue('values' in d)
+        self.assertIsInstance(d['values'], list)
+        for item in d['values']:
+            self.assertIsInstance(item, dict)
+            self.assertTrue('name' in item)
+            self.assertTrue('environments' in item)
+            self.assertIsInstance(item['environments'], list)
+            for item_env in item['environments']:
+                self.assertTrue('environmentName' in item_env)
+                self.assertTrue('value' in item_env)
+
+        v1 = vps.get_value_placeholder(placeholder_name='test1').get_environment_value(environment_name='env1')
+        v2 = vps.get_value_placeholder(placeholder_name='test1').get_environment_value(environment_name='env2')
+        v3 = vps.get_value_placeholder(placeholder_name='test2').get_environment_value(environment_name='env1')
+        v4 = vps.get_value_placeholder(placeholder_name='test2').get_environment_value(environment_name='env2')
+        self.assertEqual(v1, 'val1')
+        self.assertEqual(v2, 'val2')
+        self.assertEqual(v3, 'val3')
+        self.assertEqual(v4, 'val4')
+
+    def test_get_default_variable_value_for_missing_environment_value(self):
+        vps = ValuePlaceHolders(logger=get_logger())
+        vps.add_environment_value(placeholder_name='test1', environment_name='env1', value='val1')
+        value = vps.get_value_placeholder(placeholder_name='test1').get_environment_value(environment_name='env2', default_value_when_not_found=123, raise_exception_when_not_found=False)
+        self.assertIsInstance(value, int)
+        self.assertEqual(value, 123)
+
+    def test_string_parsing_simple_string_in_matches_str_out(self):
+        vps = ValuePlaceHolders(logger=get_logger())
+        vps.add_environment_value(placeholder_name='test1', environment_name='env1', value='val1')
+        vps.add_environment_value(placeholder_name='test1', environment_name='env2', value='val2')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env1', value='val3')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env2', value='val4')
+
+        final_str = vps.parse_and_replace_placeholders_in_string(
+            input_str='abc',
+            environment_name='env1'
+        )
+        self.assertEqual(final_str, 'abc')
+
+    def test_string_parsing_env_string_in_parsed_correctly_01(self):
+        vps = ValuePlaceHolders(logger=get_logger())
+        vps.add_environment_value(placeholder_name='test1', environment_name='env1', value='val1')
+        vps.add_environment_value(placeholder_name='test1', environment_name='env2', value='val2')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env1', value='val3')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env2', value='val4')
+
+        final_str = vps.parse_and_replace_placeholders_in_string(
+            input_str='{}{} .Values.test2 {}{}'.format('{','{','}','}'),
+            environment_name='env1'
+        )
+        self.assertEqual(final_str, 'val3')
+
+    def test_string_parsing_env_string_in_parsed_correctly_02(self):
+        vps = ValuePlaceHolders(logger=get_logger())
+        vps.add_environment_value(placeholder_name='test1', environment_name='env1', value='val1')
+        vps.add_environment_value(placeholder_name='test1', environment_name='env2', value='val2')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env1', value='val3')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env2', value='val4')
+
+        final_str = vps.parse_and_replace_placeholders_in_string(
+            input_str='abc{}{} .Values.test2 {}{}def'.format('{','{','}','}'),
+            environment_name='env1'
+        )
+        self.assertEqual(final_str, 'abcval3def')
+
+    def test_string_parsing_env_string_in_parsed_correctly_03(self):
+        vps = ValuePlaceHolders(logger=get_logger())
+        vps.add_environment_value(placeholder_name='test1', environment_name='env1', value='val1')
+        vps.add_environment_value(placeholder_name='test1', environment_name='env2', value='val2')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env1', value='val3')
+        vps.add_environment_value(placeholder_name='test2', environment_name='env2', value='val4')
+
+        final_str = vps.parse_and_replace_placeholders_in_string(
+            input_str='1: {}{} .Values.test1 {}{} and 2: {}{} .Values.test2 {}{}'.format('{','{','}','}','{','{','}','}'),
+            environment_name='env1'
+        )
+        self.assertEqual(final_str, '1: val1 and 2: val3')
+
+
+class TestValuePlaceHoldersScenarios(unittest.TestCase):    # pragma: no cover
+
+    def setUp(self):
+        print('-'*80)
+        self.manifest_1_v01_a_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-1
+    environments:
+    - env1
+    - env2
+    - env3
+spec:
+    val: '{}{} .Values.test1 {}{}'
+""".format('{','{','}','}')
+
+        # THIS ONE SHOULD NOT BE APPLIED... MISSING env3
+        self.manifest_1_v01_b_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-2
+    environments:
+    - env1
+    - env2
+spec:
+    val: '{}{} .Values.test2 {}{}'
+""".format('{','{','}','}')
+
+        self.manifest_1_v01_c_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1-3
+    environments:
+    - env2
+    - env3
+spec:
+    val: '{}{} .Values.test3 {}{}'
+""".format('{','{','}','}')
+        
+        self.vps = ValuePlaceHolders(logger=get_logger())
+        self.vps.add_environment_value(placeholder_name='test1', environment_name='env1', value='val1')
+        self.vps.add_environment_value(placeholder_name='test1', environment_name='env2', value='val2')
+        self.vps.add_environment_value(placeholder_name='test1', environment_name='env3', value='val3')
+        self.vps.add_environment_value(placeholder_name='test2', environment_name='env1', value='val4')
+        self.vps.add_environment_value(placeholder_name='test2', environment_name='env2', value='val5')
+        self.vps.add_environment_value(placeholder_name='test2', environment_name='env3', value='val6')
+        self.vps.add_environment_value(placeholder_name='test3', environment_name='env1', value='val7')
+        self.vps.add_environment_value(placeholder_name='test3', environment_name='env2', value='val8')
+        self.vps.add_environment_value(placeholder_name='test3', environment_name='env3', value='val9')
+
+        if os.path.exists('/tmp/test_manifest_classes'):
+            if os.path.isdir(s='/tmp/test_manifest_classes'):
+                shutil.rmtree(path='/tmp/test_manifest_classes', ignore_errors=True)
+        os.mkdir(path='/tmp/test_manifest_classes')
+        os.mkdir(path='/tmp/test_manifest_classes/test1')
+        os.mkdir(path='/tmp/test_manifest_classes/test2')
+
+        self.source_to_dest_files = {
+            # MyManifest1 versions
+            '{}/tests/manifest_classes/test1v0-1.py'.format(running_path): '/tmp/test_manifest_classes/test1/test1v0-1.py',
+            '{}/tests/manifest_classes/test1v0-2.py'.format(running_path): '/tmp/test_manifest_classes/test1/test1v0-2.py',
+            '{}/tests/manifest_classes/test1v0-3.py'.format(running_path): '/tmp/test_manifest_classes/test1/test1v0-3.py',
+
+            # MyManifest2 versions
+            '{}/tests/manifest_classes/test2v0-1.py'.format(running_path): '/tmp/test_manifest_classes/test2/test2v0-1.py',
+            '{}/tests/manifest_classes/test2v0-2.py'.format(running_path): '/tmp/test_manifest_classes/test2/test2v0-2.py',
+            '{}/tests/manifest_classes/test2v0-3.py'.format(running_path): '/tmp/test_manifest_classes/test2/test2v0-3.py',
+        }
+
+        for source_file, dest_file in self.source_to_dest_files.items():
+            with open(source_file, 'r') as f1r:
+                with open(dest_file, 'w') as f1w:
+                    f1w.write(f1r.read())
+                    print('Copied "{}" to "{}"'.format(source_file, dest_file))
+
+        
+        print('PREP COMPLETED')
+        print('~'*80)
+
+    def tearDown(self):
+        if os.path.exists('/tmp/test_manifest_classes'):
+            if os.path.isdir(s='/tmp/test_manifest_classes'):
+                shutil.rmtree(path='/tmp/test_manifest_classes', ignore_errors=True)
+
+    # @mock.patch.dict(os.environ, {"DEBUG": "1"})   
+    def test_init_with_defaults(self):
+        ###
+        ### Init VariableCache and ManifestManager
+        ###
+        vc = VariableCache()
+        mm = ManifestManager(variable_cache=vc, max_calls_to_manifest=1, environments=['env3',])
+        mm.environment_values = self.vps
+
+        ###
+        ### Consume classes that extend ManifestBase and register with ManifestManager
+        ###
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test1')
+        mm.load_manifest_class_definition_from_file(plugin_file_path='/tmp/test_manifest_classes/test2')
+        self.assertEqual(len(mm.versioned_class_register.classes), 6)
+
+        ###
+        ### Consume Manifests and link with class implementations registered in ManifestManager
+        ###
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=self.manifest_1_v01_a_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=self.manifest_1_v01_b_data)['part_1'])
+        mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=self.manifest_1_v01_c_data)['part_1'])
+
+        ###
+        ### Mimic the main() function apply all call
+        ###
+        print()
+        print('#################### APPLY ####################')
+        for target_environment in ('env3',):
+            print('   >>> Target Environment: {}'.format(target_environment))
+            for name in tuple(mm.manifest_instances.keys()):
+                print('---------- Applying manifest named "{}"'.format(name))
+                mm.apply_manifest(name=name, skip_dependency_processing=True, target_environment=target_environment)
+        mm.executions_per_manifest_instance = dict()
+
+        vc_data = vc.to_dict()
+        print()
+        print()
+        print('vc={}'.format(json.dumps(vc_data)))
+        print()
+        print()
+
+        self.assertEqual(vc_data['MyManifest1:test1-1-val']['value'], 'val3')
+        self.assertEqual(vc_data['MyManifest1:test1-3-val']['value'], 'val9')
+
 
 
 class TestDependencyReferences(unittest.TestCase):    # pragma: no cover
