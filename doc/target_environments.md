@@ -42,4 +42,4 @@ If no environment is specified, the default named environment `default` will be 
 
 <!-- Using the "manifest_lookup_function" instance for example -->
 
-TODO
+For extension implementations that call `manifest_lookup_function()`, the environment may be ignored, based on the extension implementation.
