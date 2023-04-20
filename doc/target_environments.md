@@ -42,4 +42,9 @@ If no environment is specified, the default named environment `default` will be 
 
 <!-- Using the "manifest_lookup_function" instance for example -->
 
-For extension implementations that call `manifest_lookup_function()`, the environment may be ignored, based on the extension implementation.
+For extension implementations that call `manifest_lookup_function()`, the environment may be ignored, based on the extension implementation. In most use cases the `implemented_manifest_differ_from_this_manifest()`, `apply_manifest()` and `delete_manifest()` methods will receive the target environment name and therefore could practice would be to add these lines in these methods:
+
+```python
+if target_environment not in self.metadata['environments']:
+    return
+```
