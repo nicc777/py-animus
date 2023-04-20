@@ -568,6 +568,8 @@ class ManifestBase:
           target_environment: string with the target environment
           value_placeholders: ValuePlaceHolders instance that contains the per environment placeholder values that will be passed on during processing in order for final field values to be determined.
         """
+        if target_environment not in self.metadata['environments']:
+            return
         if 'dependencies' in self.metadata:
 
             if self.metadata['name'] not in dependency_processing_rounds:
@@ -1069,6 +1071,8 @@ class ManifestManager:
 
     def apply_manifest(self, name: str, skip_dependency_processing: bool=False, target_environment: str='default'):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
+        if target_environment not in manifest_instance.metadata['environments']:
+            return
         self.logger.debug('ManifestManager.apply_manifest(): manifest_instance named "{}" loaded. Target environment set to "{}"'.format(manifest_instance.metadata['name'], target_environment))
 
         do_apply_in_environment = False
@@ -1115,6 +1119,8 @@ class ManifestManager:
 
     def delete_manifest(self, name: str, skip_dependency_processing: bool=False, target_environment: str='default'):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
+        if target_environment not in manifest_instance.metadata['environments']:
+            return
         self.logger.debug('ManifestManager.delete_manifest(): manifest_instance named "{}" loaded.. Target environment set to "{}"'.format(manifest_instance.metadata['name'], target_environment))
 
         do_delete_in_environment = False
