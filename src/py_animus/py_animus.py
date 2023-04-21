@@ -103,6 +103,8 @@ def main(command: str, cli_args: list, logger=get_logger()):
     values_files = parsed_args.values_files
     if isinstance(values_files, str) is True:
         values_files = [ values_files, ]
+    if isinstance(target_environments, str) is True:
+        target_environments = [ target_environments, ]
     
     logger.debug('Command line arguments parsed...')
     logger.debug('   parsed_args         : {}'.format(parsed_args))
@@ -135,6 +137,7 @@ def main(command: str, cli_args: list, logger=get_logger()):
         delete_command(vc, mm, logger, target_environments=target_environments)
     else:
         raise Exception('Unknown command. Command must be one of "apply" or "delete"')
+    return (vc, mm)
 
 
 def run_main():
