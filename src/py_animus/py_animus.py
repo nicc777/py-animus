@@ -101,6 +101,8 @@ def main(command: str, cli_args: list, logger=get_logger()):
     
     target_environments = parsed_args.environments
     values_files = parsed_args.values_files
+    if isinstance(values_files, str) is True:
+        values_files = [ values_files, ]
     
     logger.debug('Command line arguments parsed...')
     logger.debug('   parsed_args         : {}'.format(parsed_args))
