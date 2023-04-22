@@ -114,22 +114,37 @@ spec:
             if os.path.isdir(s='/tmp/test_manifest_classes'):
                 shutil.rmtree(path='/tmp/test_manifest_classes', ignore_errors=True)
 
+    @mock.patch.dict(os.environ, {"DEBUG": "1"})   
     def test_main_with_defaults(self):
-        vc, mm = main(
-            command='apply',
-            cli_args=[
-                '-m', '/tmp/test_manifests/test1-1.yaml',
-                '-m', '/tmp/test_manifests/test1-2.yaml',
-                '-m', '/tmp/test_manifests/test1-3.yaml',
-                '-s', '/tmp/test_manifest_classes/test1',
-                '-s', '/tmp/test_manifest_classes/test2',
-            ]
-        )
+        cli_args=[
+            'prog',
+            'apply',
+            '-m', '/tmp/test_manifests/test1-1.yaml',
+            '-m', '/tmp/test_manifests/test1-2.yaml',
+            '-m', '/tmp/test_manifests/test1-3.yaml',
+            '-s', '/tmp/test_manifest_classes/test1/',
+            '-s', '/tmp/test_manifest_classes/test2/',
+            '-e', 'env3',
+        ]
+        vc = None
+        mm = None
+        with mock.patch.object(sys, 'argv', cli_args):
+            vc, mm = run_main()
+    
         self.assertIsNotNone(vc)
         self.assertIsInstance(vc, VariableCache)
         self.assertIsNotNone(mm)
         self.assertIsInstance(mm, ManifestManager)
 
+        vc_data = vc.to_dict()
+        print()
+        print()
+        print('vc={}'.format(json.dumps(vc_data)))
+        print()
+        print()
+
+        # self.assertEqual(vc_data['MyManifest1:test1-1-val']['value'], 'val3')
+        # self.assertEqual(vc_data['MyManifest1:test1-3-val']['value'], 'val9')
 
 
 if __name__ == '__main__':

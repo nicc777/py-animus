@@ -47,7 +47,7 @@ def _get_arg_parser(
         metavar='ENVIRONMENT',
         type=str, 
         required=False,
-        default='default',
+        default=[],
         help='[OPTIONAL] One or more environments to target. Environment will be synchronized one at a time.'
     )
     parser.add_argument(
@@ -58,7 +58,7 @@ def _get_arg_parser(
         metavar='VALUES_FILE',
         type=str, 
         required=False,
-        default='/tmp/values/values.yaml',
+        default=['/tmp/values/values.yaml', ],
         help='[OPTIONAL] One or more values files to use for environment variable substitution.'
     )
     logger.info('Returning CLI Argument Parser')
@@ -140,9 +140,10 @@ def main(command: str, cli_args: list, logger=get_logger()):
     return (vc, mm)
 
 
-def run_main():
+def run_main(logger=get_logger()):
     command = '-h'
     cli_args = list()
+    logger.info('sys.argv={}'.format(sys.argv))
     if len(sys.argv) > 1:
         if sys.argv[1] in ('apply', 'delete',) or sys.argv[1].startswith('-h') is True or sys.argv[1].startswith('--h') is True:
             command = sys.argv[1]
@@ -150,7 +151,7 @@ def run_main():
             cli_args = sys.argv[2:]
         else:
             command = '-h'
-    main(command=command, cli_args=cli_args, logger=get_logger())
+    return main(command=command, cli_args=cli_args, logger=get_logger())
 
 if __name__ == '__main__':
     run_main()
