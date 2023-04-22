@@ -540,6 +540,15 @@ class ManifestBase:
             except:
                 self.log(message='post_parsing_method failed with EXCEPTION: {}'.format(traceback.format_exc()), level='error')
         self.checksum = hashlib.sha256(json.dumps(converted_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest() # Credit to https://stackoverflow.com/users/2082964/chris-maes for his hint on https://stackoverflow.com/questions/6923780/python-checksum-of-a-dict
+        self.log(
+            message='\n\nPOST PARSING. Manifest kind "{}" named "{}":\n   metadata: {}\n   spec: {}\n\n'.format(
+                self.kind,
+                self.metadata['name'],
+                json.dumps(self.metadata),
+                json.dumps(self.spec)
+            ),
+            level='debug'
+        )
 
     def process_dependencies(
         self,
@@ -1071,6 +1080,7 @@ class ManifestManager:
 
     def apply_manifest(self, name: str, skip_dependency_processing: bool=False, target_environment: str='default'):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
+        self.logger.info('Checking if environment "{}" ({}) is in manifest_instance target environments "{}" ({})'.format(target_environment, type(target_environment), manifest_instance.metadata['environments'], type(manifest_instance.target_environments)))
         if target_environment not in manifest_instance.metadata['environments']:
             return
         self.logger.debug('ManifestManager.apply_manifest(): manifest_instance named "{}" loaded. Target environment set to "{}"'.format(manifest_instance.metadata['name'], target_environment))

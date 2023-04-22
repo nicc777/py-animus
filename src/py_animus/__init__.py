@@ -80,6 +80,7 @@ def get_logger(
 def parse_raw_yaml_data(yaml_data: str, logger=get_logger())->dict:
     configuration = dict()
     current_part = 0
+    logger.debug('parse_raw_yaml_data(): RAW DATA: {}'.format(yaml_data))
     try:
         for data in yaml.load_all(yaml_data, Loader=Loader):
             current_part += 1

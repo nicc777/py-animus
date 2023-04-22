@@ -47,7 +47,6 @@ def _get_arg_parser(
         metavar='ENVIRONMENT',
         type=str, 
         required=False,
-        default=[],
         help='[OPTIONAL] One or more environments to target. Environment will be synchronized one at a time.'
     )
     parser.add_argument(
@@ -99,7 +98,19 @@ def main(command: str, cli_args: list, logger=get_logger()):
     if command not in ('apply', 'delete'):
         raise Exception('Command must be one of "apply" or "delete"')
     
-    target_environments = parsed_args.environments
+    target_environments = ['default',]
+    logger.debug('parsed_args.environments: {}'.format(parsed_args.environments))
+    if parsed_args.environments:
+        target_environments = list()
+        if isinstance(parsed_args.environments, list):
+            for item in parsed_args.environments:
+                if isinstance(item, list):
+                    for e_item in item:
+                        target_environments.append(e_item)
+                elif isinstance(item, str):
+                    target_environments = target_environments.append(item)
+        elif isinstance(parsed_args.environments, str):
+            target_environments.append(parsed_args.environments)
     values_files = parsed_args.values_files
     if isinstance(values_files, str) is True:
         values_files = [ values_files, ]
