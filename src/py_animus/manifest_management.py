@@ -1022,28 +1022,37 @@ class ManifestManager:
         self.environments = environments
         self.environment_values = ValuePlaceHolders(logger=logger)
         self._load_values(files=values_files)
+        self.logger.debug('LOADED environment_values: {}'.format(json.dumps(self.environment_values.to_dict())))
 
     def _load_values_from_file(self, file: str):
         try:
             self.logger.info('Attempting to load values from file "{}"'.format(file))
             with open(file, 'r') as f:
-                data = parse_raw_yaml_data(yaml_data=f.read(), logger=self.logger)
-            if 'values' in  data:
-                for value in data['values']:
-                    if 'name' in value and 'environments' in value:
-                        for env_name, env_val in value['environments'].items():
-                            self.environment_values.add_environment_value(placeholder_name=value['name'], environment_name=env_name, value=env_val)
+                configuration_data = parse_raw_yaml_data(yaml_data=f.read(), logger=self.logger)
+            self.logger.debug('_load_values_from_file(): configuration_data={}'.format(configuration_data))
+            for part, data in configuration_data.items():
+                if 'values' in  data:
+                    for value in data['values']:
+                        if 'environments' in value:
+                            environments = value['environments']
+                            for environment_data in environments:
+                                if 'environmentName' in environment_data and 'value' in environment_data:
+                                    self.environment_values.add_environment_value(placeholder_name=value['name'], environment_name=environment_data['environmentName'], value=environment_data['value'])
             self.logger.info('   Loaded values from file "{}"'.format(file))
         except:
             self.logger.error('Failed to load values from file "{}"'.format(file))
+            self.logger.error('EXCEPTION: {}'.format(traceback.format_exc()))
 
     def _load_values(self, files: list):
         try:
             for file in files:
-                self._load_values_from_file(file=file)
+                if isinstance(file, str):
+                    self._load_values_from_file(file=file)
+                elif isinstance(file, list):
+                    self._load_values(file)
         except:
             self.logger.error('Failed to load values from files. files: {}'.format(files))
-        self.logger.debug('LOADED environment_values: {}'.format(json.dumps(self.environment_values.to_dict())))
+            self.logger.error('EXCEPTION: {}'.format(traceback.format_exc()))
 
     def register_manifest_class(self, manifest_base: ManifestBase):
         if isinstance(manifest_base, ManifestBase) is False:
