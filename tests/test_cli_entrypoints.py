@@ -198,6 +198,7 @@ values:
 
         self.assertEqual(vc_data['MyManifest1:test1-1-val']['value'], 'val3')
         self.assertEqual(vc_data['MyManifest1:test1-3-val']['value'], 'val9')
+        self.assertFalse('MyManifest1:test1-2' in vc_data)
 
 
 if __name__ == '__main__':
