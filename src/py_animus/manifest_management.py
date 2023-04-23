@@ -540,6 +540,15 @@ class ManifestBase:
             except:
                 self.log(message='post_parsing_method failed with EXCEPTION: {}'.format(traceback.format_exc()), level='error')
         self.checksum = hashlib.sha256(json.dumps(converted_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest() # Credit to https://stackoverflow.com/users/2082964/chris-maes for his hint on https://stackoverflow.com/questions/6923780/python-checksum-of-a-dict
+        self.log(
+            message='\n\nPOST PARSING. Manifest kind "{}" named "{}":\n   metadata: {}\n   spec: {}\n\n'.format(
+                self.kind,
+                self.metadata['name'],
+                json.dumps(self.metadata),
+                json.dumps(self.spec)
+            ),
+            level='debug'
+        )
 
     def process_dependencies(
         self,
@@ -1013,28 +1022,37 @@ class ManifestManager:
         self.environments = environments
         self.environment_values = ValuePlaceHolders(logger=logger)
         self._load_values(files=values_files)
+        self.logger.debug('LOADED environment_values: {}'.format(json.dumps(self.environment_values.to_dict())))
 
     def _load_values_from_file(self, file: str):
         try:
             self.logger.info('Attempting to load values from file "{}"'.format(file))
             with open(file, 'r') as f:
-                data = parse_raw_yaml_data(yaml_data=f.read(), logger=self.logger)
-            if 'values' in  data:
-                for value in data['values']:
-                    if 'name' in value and 'environments' in value:
-                        for env_name, env_val in value['environments'].items():
-                            self.environment_values.add_environment_value(placeholder_name=value['name'], environment_name=env_name, value=env_val)
+                configuration_data = parse_raw_yaml_data(yaml_data=f.read(), logger=self.logger)
+            self.logger.debug('_load_values_from_file(): configuration_data={}'.format(configuration_data))
+            for part, data in configuration_data.items():
+                if 'values' in  data:
+                    for value in data['values']:
+                        if 'environments' in value:
+                            environments = value['environments']
+                            for environment_data in environments:
+                                if 'environmentName' in environment_data and 'value' in environment_data:
+                                    self.environment_values.add_environment_value(placeholder_name=value['name'], environment_name=environment_data['environmentName'], value=environment_data['value'])
             self.logger.info('   Loaded values from file "{}"'.format(file))
         except:
             self.logger.error('Failed to load values from file "{}"'.format(file))
+            self.logger.error('EXCEPTION: {}'.format(traceback.format_exc()))
 
     def _load_values(self, files: list):
         try:
             for file in files:
-                self._load_values_from_file(file=file)
+                if isinstance(file, str):
+                    self._load_values_from_file(file=file)
+                elif isinstance(file, list):
+                    self._load_values(file)
         except:
             self.logger.error('Failed to load values from files. files: {}'.format(files))
-        self.logger.debug('LOADED environment_values: {}'.format(json.dumps(self.environment_values.to_dict())))
+            self.logger.error('EXCEPTION: {}'.format(traceback.format_exc()))
 
     def register_manifest_class(self, manifest_base: ManifestBase):
         if isinstance(manifest_base, ManifestBase) is False:
@@ -1071,6 +1089,7 @@ class ManifestManager:
 
     def apply_manifest(self, name: str, skip_dependency_processing: bool=False, target_environment: str='default'):
         manifest_instance = self.get_manifest_instance_by_name(name=name)
+        self.logger.info('Checking if environment "{}" ({}) is in manifest_instance target environments "{}" ({})'.format(target_environment, type(target_environment), manifest_instance.metadata['environments'], type(manifest_instance.target_environments)))
         if target_environment not in manifest_instance.metadata['environments']:
             return
         self.logger.debug('ManifestManager.apply_manifest(): manifest_instance named "{}" loaded. Target environment set to "{}"'.format(manifest_instance.metadata['name'], target_environment))
@@ -1114,7 +1133,8 @@ class ManifestManager:
             manifest_lookup_function=self.get_manifest_instance_by_name,
             variable_cache=self.variable_cache,
             process_self_post_dependency_processing=True,
-            target_environment=target_environment
+            target_environment=target_environment,
+            value_placeholders=self.environment_values
         )
 
     def delete_manifest(self, name: str, skip_dependency_processing: bool=False, target_environment: str='default'):
@@ -1162,7 +1182,8 @@ class ManifestManager:
             manifest_lookup_function=self.get_manifest_instance_by_name,
             variable_cache=self.variable_cache,
             process_self_post_dependency_processing=True,
-            target_environment=target_environment
+            target_environment=target_environment,
+            value_placeholders=self.environment_values
         )
 
     def get_manifest_class_by_kind(self, kind: str, version: str=None):

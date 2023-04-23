@@ -47,7 +47,6 @@ def _get_arg_parser(
         metavar='ENVIRONMENT',
         type=str, 
         required=False,
-        default='default',
         help='[OPTIONAL] One or more environments to target. Environment will be synchronized one at a time.'
     )
     parser.add_argument(
@@ -58,7 +57,7 @@ def _get_arg_parser(
         metavar='VALUES_FILE',
         type=str, 
         required=False,
-        default='/tmp/values/values.yaml',
+        default=['/tmp/values/values.yaml', ],
         help='[OPTIONAL] One or more values files to use for environment variable substitution.'
     )
     logger.info('Returning CLI Argument Parser')
@@ -99,8 +98,24 @@ def main(command: str, cli_args: list, logger=get_logger()):
     if command not in ('apply', 'delete'):
         raise Exception('Command must be one of "apply" or "delete"')
     
-    target_environments = parsed_args.environments
+    target_environments = ['default',]
+    logger.debug('parsed_args.environments: {}'.format(parsed_args.environments))
+    if parsed_args.environments:
+        target_environments = list()
+        if isinstance(parsed_args.environments, list):
+            for item in parsed_args.environments:
+                if isinstance(item, list):
+                    for e_item in item:
+                        target_environments.append(e_item)
+                elif isinstance(item, str):
+                    target_environments = target_environments.append(item)
+        elif isinstance(parsed_args.environments, str):
+            target_environments.append(parsed_args.environments)
     values_files = parsed_args.values_files
+    if isinstance(values_files, str) is True:
+        values_files = [ values_files, ]
+    if isinstance(target_environments, str) is True:
+        target_environments = [ target_environments, ]
     
     logger.debug('Command line arguments parsed...')
     logger.debug('   parsed_args         : {}'.format(parsed_args))
@@ -133,11 +148,13 @@ def main(command: str, cli_args: list, logger=get_logger()):
         delete_command(vc, mm, logger, target_environments=target_environments)
     else:
         raise Exception('Unknown command. Command must be one of "apply" or "delete"')
+    return (vc, mm)
 
 
-def run_main():
+def run_main(logger=get_logger()):
     command = '-h'
     cli_args = list()
+    logger.info('sys.argv={}'.format(sys.argv))
     if len(sys.argv) > 1:
         if sys.argv[1] in ('apply', 'delete',) or sys.argv[1].startswith('-h') is True or sys.argv[1].startswith('--h') is True:
             command = sys.argv[1]
@@ -145,7 +162,7 @@ def run_main():
             cli_args = sys.argv[2:]
         else:
             command = '-h'
-    main(command=command, cli_args=cli_args, logger=get_logger())
+    return main(command=command, cli_args=cli_args, logger=get_logger())
 
 if __name__ == '__main__':
     run_main()
