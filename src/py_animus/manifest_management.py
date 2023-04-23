@@ -1133,7 +1133,8 @@ class ManifestManager:
             manifest_lookup_function=self.get_manifest_instance_by_name,
             variable_cache=self.variable_cache,
             process_self_post_dependency_processing=True,
-            target_environment=target_environment
+            target_environment=target_environment,
+            value_placeholders=self.environment_values
         )
 
     def delete_manifest(self, name: str, skip_dependency_processing: bool=False, target_environment: str='default'):
@@ -1181,7 +1182,8 @@ class ManifestManager:
             manifest_lookup_function=self.get_manifest_instance_by_name,
             variable_cache=self.variable_cache,
             process_self_post_dependency_processing=True,
-            target_environment=target_environment
+            target_environment=target_environment,
+            value_placeholders=self.environment_values
         )
 
     def get_manifest_class_by_kind(self, kind: str, version: str=None):
