@@ -15,6 +15,7 @@ import importlib, os, inspect
 import sys
 import re
 from py_animus import get_logger, get_utc_timestamp, is_debug_set_in_environment, parse_raw_yaml_data
+import chardet
 
 
 def get_modules_in_package(target_dir: str, logger=get_logger()):
@@ -467,8 +468,39 @@ class ManifestBase:
         elif level.lower().startswith('e'):
             self.logger.error('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
 
-    def _process_and_replace_variable_placeholders_in_string(self, input_str: str, variable_cache: VariableCache=VariableCache())->str:
+    def _decode_str_based_on_encoding(self, input_str)->str:
+        try:
+            encoding = chardet.detect(input_str)['encoding']
+            return copy.deepcopy(input_str.decode(encoding))
+        except:
+            pass
         return input_str
+
+    def _process_and_replace_variable_placeholders_in_string(self, input_str: str, variable_cache: VariableCache=VariableCache())->str:
+        return_str = copy.deepcopy(input_str)
+        if input_str.find('{}{} .Variable.'.format('{', '{')) >= 0:
+            for matched_placeholder in re.findall('\{\{\s+\.Variable\.([\w|\s|\-|\_|\.]+)\s+\}\}', input_str):
+                return_str = return_str.replace(
+                    '{}{} .Values.{} {}{}'.format('{', '{', matched_placeholder, '}', '}'),
+                    variable_cache.get_value(
+                        variable_name=matched_placeholder,
+                        value_if_expired='',
+                        default_value_if_not_found='',
+                        raise_exception_on_expired=False,
+                        raise_exception_on_not_found=False,
+                        for_logging=False
+                    )
+                )
+        if return_str is None:
+            return_str = ''
+        elif isinstance(return_str, dict) or isinstance(return_str, list):
+            return_str = copy.deepcopy(json.dumps(return_str))
+
+        return_str = copy.deepcopy(self._decode_str_based_on_encoding(input_str=return_str))
+        if not isinstance(return_str, str):
+            return_str = copy.deepcopy(str(return_str))
+
+        return return_str
 
     def _process_dict_for_value_placeholders(self, d: dict, value_placeholders: ValuePlaceHolders, environment_name: str, variable_cache: VariableCache=VariableCache())->dict:
         final_d = dict()
