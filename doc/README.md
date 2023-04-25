@@ -56,6 +56,7 @@ _**Manifest Specification**_
 | `metadata.dependencies.delete`     | List    | No       | Contains a list of names pointing to manifests with the name in their `metadata.name` fields that must be deleted before deleting this manifest.                                                                     |
 | `metadata.executeOnlyOnceOnApply`  | Boolean | No       | If set to True, ensure that the `ManifestBase` implementation method `apply_manifest()` is called only once. Default is `false` meaning the method may be called multiple times depending on dependency references.  |
 | `metadata.executeOnlyOnceOnDelete` | Boolean | No       | If set to True, ensure that the `ManifestBase` implementation method `delete_manifest()` is called only once. Default is `false` meaning the method may be called multiple times depending on dependency references. |
+| `metadata.environments`            | List    | No       | Default is one environment called `default`. List the environment names for which this manifest applies.                                                                                                             |
 | `spec.<dict>`                      | Dict    | Yes      | The intent is that the `spec` contains the data required for processing the manifest file by the implementation class for this version of the manifest.                                                              |
 
 _**Manifest General Rules**_
