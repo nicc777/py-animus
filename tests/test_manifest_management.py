@@ -203,17 +203,19 @@ class MyManifest1(ManifestBase):
     def __init__(self, logger=get_logger(), post_parsing_method: object = my_post_parsing_method, version: str='v0.1', supported_versions: tuple=('v0.1',)):
         super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
 
-    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, target_environment: str='default')->bool:
+    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders())->bool:
         return True # We are always different
 
-    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default'):
+    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders()):
+        self.log(message='MANIFEST: {}'.format(json.dumps(self.to_dict())), level='info')
         variable_cache.store_variable(variable=Variable(name='{}:{}'.format(self.kind, self.metadata['name']), initial_value='Some Result Worth Saving'))
         variable_cache.store_variable(variable=Variable(name='{}:{}-val'.format(self.kind, self.metadata['name']), initial_value=self.spec['val']), overwrite_existing=True)
         variable_cache.store_variable(variable=Variable(name='{}:{}-applied'.format(self.kind, self.metadata['name']), initial_value=True), overwrite_existing=True)
         variable_cache.store_variable(variable=Variable(name='{}:{}-deleted'.format(self.kind, self.metadata['name']), initial_value=False), overwrite_existing=True)
         return  # Assume some implementation
     
-    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default'):
+    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders()):
+        self.log(message='MANIFEST: {}'.format(json.dumps(self.to_dict())), level='info')
         variable_cache.store_variable(variable=Variable(name='{}:{}'.format(self.kind, self.metadata['name']), initial_value='Some Result Worth Saving'))
         variable_cache.store_variable(variable=Variable(name='{}:{}-val'.format(self.kind, self.metadata['name']), initial_value=None), overwrite_existing=True)
         variable_cache.store_variable(variable=Variable(name='{}:{}-applied'.format(self.kind, self.metadata['name']), initial_value=False), overwrite_existing=True)
@@ -413,6 +415,75 @@ class TestMyManifest2(unittest.TestCase):    # pragma: no cover
         self.assertEqual(vc.get_value(variable_name='MyManifest1:test1'), 'Some Result Worth Saving')
         self.assertEqual(vc.get_value(variable_name='MyManifest2:test2'), 'Another value worth storing')
 
+
+class TestManifestBaseVariableAndValueSubstitution(unittest.TestCase):    # pragma: no cover
+
+    def setUp(self):
+        self.vc = VariableCache()
+        self.vc.store_variable(variable=Variable(name='some:name-123', initial_value='val1'))
+        self.vc.store_variable(variable=Variable(name='some-other:name:456', initial_value='val2', mask_in_logs=True))
+        self.vps = ValuePlaceHolders(logger=get_logger())
+        self.vps.add_environment_value(placeholder_name='test3', environment_name='default', value='val3')
+        self.vps.add_environment_value(placeholder_name='test4', environment_name='default', value='val4')
+
+    @mock.patch.dict(os.environ, {"DEBUG": "1"})   
+    def test_basic_substitution(self):
+        manifest_data =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+  name: test1
+spec:
+    val: 1
+    more:
+    - 'First Value'
+    - '{}{} .Variable.some:name-123 {}{}'
+    - '{}{} .Variable.some-other:name:456 {}{}'
+    - '{}{} .Values.test3 {}{}'
+    - '{}{} .Values.test4 {}{}'
+    - 'Last Value'
+""".format(
+            '{','{','}','}',
+            '{','{','}','}',
+            '{','{','}','}',
+            '{','{','}','}'
+        )
+        m = MyManifest1(post_parsing_method=my_post_parsing_method)
+        m.metadata['environments'] = ['default']
+        m.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_data)['part_1'])
+        m.process_dependencies(
+            action='apply',
+            process_dependency_if_already_applied=False,
+            process_dependency_if_not_already_applied=False,
+            manifest_lookup_function=manifest_lookup_that_always_returns_MyManifest1,
+            variable_cache=self.vc,
+            process_self_post_dependency_processing=True,
+            value_placeholders=self.vps,
+            target_environment='default'
+        )
+
+        spec = copy.deepcopy(m.spec)
+        self.assertIsNotNone(spec)
+        self.assertIsInstance(spec, dict)
+        self.assertTrue('more' in spec)
+        more = copy.deepcopy(spec['more'])
+        self.assertIsNotNone(more)
+        self.assertIsInstance(more, list)
+        expected_values = (
+            'First Value',
+            'val1',
+            'val2',
+            'val3',
+            'val4',
+            'Last Value',
+        )
+        print()
+        print()
+        print('spec={}'.format(json.dumps(spec)))
+        print()
+        print()
+        for expected_value in expected_values:
+            self.assertTrue(expected_value in more, 'Expected "{}" to be in list'.format(expected_value))
 
 class TestManifestManager(unittest.TestCase):    # pragma: no cover
 

@@ -478,7 +478,7 @@ class ManifestBase:
 
     def _process_and_replace_variable_placeholders_in_string(self, input_str: str, variable_cache: VariableCache=VariableCache())->str:
         return_str = copy.deepcopy(input_str)
-        if input_str.find('{}{} .Variable.'.format('{', '{')) >= 0:
+        if input_str.find('{}{} .Variables.'.format('{', '{')) >= 0:
             for matched_placeholder in re.findall('\{\{\s+\.Variable\.([\w|\s|\-|\_|\.]+)\s+\}\}', input_str):
                 return_str = return_str.replace(
                     '{}{} .Values.{} {}{}'.format('{', '{', matched_placeholder, '}', '}'),
@@ -527,7 +527,7 @@ class ManifestBase:
         return final_d
 
     def process_value_placeholders(self, value_placeholders: ValuePlaceHolders, environment_name: str, variable_cache: VariableCache=VariableCache()):
-        manifest_data_with_parsed_value_placeholder_values = self._process_dict_for_value_placeholders(d=copy.deepcopy(self.original_manifest), value_placeholders=value_placeholders, environment_name=environment_name)
+        manifest_data_with_parsed_value_placeholder_values = self._process_dict_for_value_placeholders(d=copy.deepcopy(self.original_manifest), value_placeholders=value_placeholders, environment_name=environment_name, variable_cache=variable_cache)
         self.log(message='manifest_data_with_parsed_value_placeholder_values={}'.format(manifest_data_with_parsed_value_placeholder_values), level='debug')
         self.metadata = copy.deepcopy(manifest_data_with_parsed_value_placeholder_values['metadata'])
         self.spec = copy.deepcopy(manifest_data_with_parsed_value_placeholder_values['spec'])
@@ -618,8 +618,9 @@ class ManifestBase:
           target_environment: string with the target environment
           value_placeholders: ValuePlaceHolders instance that contains the per environment placeholder values that will be passed on during processing in order for final field values to be determined.
         """
-        if target_environment not in self.metadata['environments']:
-            return
+        if 'environments' in self.metadata:
+            if target_environment not in self.metadata['environments']:
+                return
         if 'dependencies' in self.metadata:
 
             if self.metadata['name'] not in dependency_processing_rounds:
@@ -1152,7 +1153,7 @@ class ManifestManager:
                 return
 
         if skip_dependency_processing is True:
-            manifest_instance.process_value_placeholders(value_placeholders=self.environment_values, environment_name=target_environment)
+            manifest_instance.process_value_placeholders(value_placeholders=self.environment_values, environment_name=target_environment, variable_cache=self.variable_cache)
             manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache, target_environment=target_environment, value_placeholders=self.environment_values)
             return
         
@@ -1201,7 +1202,7 @@ class ManifestManager:
                 return
 
         if skip_dependency_processing is True:
-            manifest_instance.process_value_placeholders(value_placeholders=self.environment_values, environment_name=target_environment)
+            manifest_instance.process_value_placeholders(value_placeholders=self.environment_values, environment_name=target_environment, variable_cache=self.variable_cache)
             manifest_instance.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache, target_environment=target_environment, value_placeholders=self.environment_values)
             return
         
