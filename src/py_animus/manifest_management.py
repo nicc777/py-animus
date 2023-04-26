@@ -15,6 +15,7 @@ import importlib, os, inspect
 import sys
 import re
 from py_animus import get_logger, get_utc_timestamp, is_debug_set_in_environment, parse_raw_yaml_data
+import chardet
 
 
 def get_modules_in_package(target_dir: str, logger=get_logger()):
@@ -111,7 +112,7 @@ class ValuePlaceHolders:
         self.logger.debug('Parsing for placeholders. input_str="{}'.format(input_str))
         return_str = copy.deepcopy(input_str)
         if input_str.find('{}{} .Values.'.format('{', '{')) >= 0:
-            for matched_placeholder in re.findall('\{\{\s+\.Values\.([\w|\s|\-|\_|\.]+)\s+\}\}', input_str):
+            for matched_placeholder in re.findall('\{\{\s+\.Values\.([\w|\s|\-|\_|\.|\:]+)\s+\}\}', input_str):
                 return_str = return_str.replace(
                     '{}{} .Values.{} {}{}'.format('{', '{', matched_placeholder, '}', '}'),
                     self.get_value_placeholder(
@@ -467,13 +468,47 @@ class ManifestBase:
         elif level.lower().startswith('e'):
             self.logger.error('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
 
-    def _process_dict_for_value_placeholders(self, d: dict, value_placeholders: ValuePlaceHolders, environment_name: str)->dict:
+    def _decode_str_based_on_encoding(self, input_str)->str:
+        try:
+            encoding = chardet.detect(input_str)['encoding']
+            return copy.deepcopy(input_str.decode(encoding))
+        except:
+            pass
+        return input_str
+
+    def _process_and_replace_variable_placeholders_in_string(self, input_str: str, variable_cache: VariableCache=VariableCache())->str:
+        return_str = copy.deepcopy(input_str)
+        if input_str.find('{}{} .Variables.'.format('{', '{')) >= 0:
+            for matched_placeholder in re.findall('\{\{\s+\.Variables\.([\w|\s|\-|\_|\.|\:]+)\s+\}\}', input_str):
+                return_str = return_str.replace(
+                    '{}{} .Variables.{} {}{}'.format('{', '{', matched_placeholder, '}', '}'),
+                    variable_cache.get_value(
+                        variable_name=matched_placeholder,
+                        value_if_expired='',
+                        default_value_if_not_found='',
+                        raise_exception_on_expired=False,
+                        raise_exception_on_not_found=False,
+                        for_logging=False
+                    )
+                )
+        if return_str is None:
+            return_str = ''
+        elif isinstance(return_str, dict) or isinstance(return_str, list):
+            return_str = copy.deepcopy(json.dumps(return_str))
+
+        return_str = copy.deepcopy(self._decode_str_based_on_encoding(input_str=return_str))
+        if not isinstance(return_str, str):
+            return_str = copy.deepcopy(str(return_str))
+
+        return return_str
+
+    def _process_dict_for_value_placeholders(self, d: dict, value_placeholders: ValuePlaceHolders, environment_name: str, variable_cache: VariableCache=VariableCache())->dict:
         final_d = dict()
         for k,v in d.items():
             if isinstance(v, dict):
-                final_d[k] = copy.deepcopy(self._process_dict_for_value_placeholders(d=v, value_placeholders=value_placeholders, environment_name=environment_name))
+                final_d[k] = copy.deepcopy(self._process_dict_for_value_placeholders(d=v, value_placeholders=value_placeholders, environment_name=environment_name, variable_cache=variable_cache))
             elif isinstance(v, str):
-                final_d[k] = copy.deepcopy(
+                interim_str = copy.deepcopy(
                     value_placeholders.parse_and_replace_placeholders_in_string(
                         input_str=v,
                         environment_name=environment_name,
@@ -481,12 +516,31 @@ class ManifestBase:
                         raise_exception_when_not_found=False
                     )
                 )
+                final_d[k] = copy.deepcopy(
+                    self._process_and_replace_variable_placeholders_in_string(
+                        input_str=interim_str,
+                        variable_cache=variable_cache
+                    )
+                )
+            elif isinstance(v, list):
+                temp_d = dict()
+                parsed_list = list()
+                counter = 0
+                for item in v:
+                    temp_d['part_{}'.format(counter)] = item
+                    counter += 1
+                parsed_temp_d = copy.deepcopy(self._process_dict_for_value_placeholders(d=temp_d, value_placeholders=value_placeholders, environment_name=environment_name, variable_cache=variable_cache))
+                for temp_k, temp_v in parsed_temp_d.items():
+                    parsed_list.append(temp_v)
+                final_d[k] = copy.deepcopy(parsed_list)
+            elif isinstance(v, int):
+                final_d[k] = copy.deepcopy(v)
             else:
                 final_d[k] = copy.deepcopy(v)
         return final_d
 
-    def process_value_placeholders(self, value_placeholders: ValuePlaceHolders, environment_name: str):
-        manifest_data_with_parsed_value_placeholder_values = self._process_dict_for_value_placeholders(d=copy.deepcopy(self.original_manifest), value_placeholders=value_placeholders, environment_name=environment_name)
+    def process_value_placeholders(self, value_placeholders: ValuePlaceHolders, environment_name: str, variable_cache: VariableCache=VariableCache()):
+        manifest_data_with_parsed_value_placeholder_values = self._process_dict_for_value_placeholders(d=copy.deepcopy(self.original_manifest), value_placeholders=value_placeholders, environment_name=environment_name, variable_cache=variable_cache)
         self.log(message='manifest_data_with_parsed_value_placeholder_values={}'.format(manifest_data_with_parsed_value_placeholder_values), level='debug')
         self.metadata = copy.deepcopy(manifest_data_with_parsed_value_placeholder_values['metadata'])
         self.spec = copy.deepcopy(manifest_data_with_parsed_value_placeholder_values['spec'])
@@ -577,8 +631,9 @@ class ManifestBase:
           target_environment: string with the target environment
           value_placeholders: ValuePlaceHolders instance that contains the per environment placeholder values that will be passed on during processing in order for final field values to be determined.
         """
-        if target_environment not in self.metadata['environments']:
-            return
+        if 'environments' in self.metadata:
+            if target_environment not in self.metadata['environments']:
+                return
         if 'dependencies' in self.metadata:
 
             if self.metadata['name'] not in dependency_processing_rounds:
@@ -640,10 +695,10 @@ class ManifestBase:
 
         if process_self_post_dependency_processing is True:
             if action == 'apply':
-                self.process_value_placeholders(value_placeholders=value_placeholders, environment_name=target_environment)
+                self.process_value_placeholders(value_placeholders=value_placeholders, environment_name=target_environment, variable_cache=variable_cache)
                 self.apply_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, target_environment=target_environment, value_placeholders=value_placeholders)
             if action == 'delete':
-                self.process_value_placeholders(value_placeholders=value_placeholders, environment_name=target_environment)
+                self.process_value_placeholders(value_placeholders=value_placeholders, environment_name=target_environment, variable_cache=variable_cache)
                 self.delete_manifest(manifest_lookup_function=manifest_lookup_function, variable_cache=variable_cache, target_environment=target_environment, value_placeholders=value_placeholders)
         else:
             self.log(message='SELF was NOT YET PROCESSED for manifest "{}" while processing action "{}"'.format(self.metadata['name'], action), level='debug')
@@ -1111,7 +1166,7 @@ class ManifestManager:
                 return
 
         if skip_dependency_processing is True:
-            manifest_instance.process_value_placeholders(value_placeholders=self.environment_values, environment_name=target_environment)
+            manifest_instance.process_value_placeholders(value_placeholders=self.environment_values, environment_name=target_environment, variable_cache=self.variable_cache)
             manifest_instance.apply_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache, target_environment=target_environment, value_placeholders=self.environment_values)
             return
         
@@ -1160,7 +1215,7 @@ class ManifestManager:
                 return
 
         if skip_dependency_processing is True:
-            manifest_instance.process_value_placeholders(value_placeholders=self.environment_values, environment_name=target_environment)
+            manifest_instance.process_value_placeholders(value_placeholders=self.environment_values, environment_name=target_environment, variable_cache=self.variable_cache)
             manifest_instance.delete_manifest(manifest_lookup_function=self.get_manifest_instance_by_name, variable_cache=self.variable_cache, target_environment=target_environment, value_placeholders=self.environment_values)
             return
         
