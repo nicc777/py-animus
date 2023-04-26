@@ -479,7 +479,7 @@ class ManifestBase:
     def _process_and_replace_variable_placeholders_in_string(self, input_str: str, variable_cache: VariableCache=VariableCache())->str:
         return_str = copy.deepcopy(input_str)
         if input_str.find('{}{} .Variables.'.format('{', '{')) >= 0:
-            for matched_placeholder in re.findall('\{\{\s+\.Variable\.([\w|\s|\-|\_|\.]+)\s+\}\}', input_str):
+            for matched_placeholder in re.findall('\{\{\s+\.Variables\.([\w|\s|\-|\_|\.]+)\s+\}\}', input_str):
                 return_str = return_str.replace(
                     '{}{} .Values.{} {}{}'.format('{', '{', matched_placeholder, '}', '}'),
                     variable_cache.get_value(
@@ -506,7 +506,7 @@ class ManifestBase:
         final_d = dict()
         for k,v in d.items():
             if isinstance(v, dict):
-                final_d[k] = copy.deepcopy(self._process_dict_for_value_placeholders(d=v, value_placeholders=value_placeholders, environment_name=environment_name))
+                final_d[k] = copy.deepcopy(self._process_dict_for_value_placeholders(d=v, value_placeholders=value_placeholders, environment_name=environment_name, variable_cache=variable_cache))
             elif isinstance(v, str):
                 interim_str = copy.deepcopy(
                     value_placeholders.parse_and_replace_placeholders_in_string(
@@ -522,6 +522,17 @@ class ManifestBase:
                         variable_cache=variable_cache
                     )
                 )
+            elif isinstance(v, list):
+                temp_d = dict()
+                parsed_list = list()
+                counter = 0
+                for item in v:
+                    temp_d['part_{}'.format(counter)] = item
+                    counter += 1
+                parsed_temp_d = copy.deepcopy(self._process_dict_for_value_placeholders(d=temp_d, value_placeholders=value_placeholders, environment_name=environment_name, variable_cache=variable_cache))
+                for temp_k, temp_v in parsed_temp_d.items():
+                    parsed_list.append(temp_v)
+                final_d[k] = copy.deepcopy(parsed_list)
             else:
                 final_d[k] = copy.deepcopy(v)
         return final_d
