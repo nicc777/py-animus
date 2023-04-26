@@ -481,7 +481,7 @@ class ManifestBase:
         if input_str.find('{}{} .Variables.'.format('{', '{')) >= 0:
             for matched_placeholder in re.findall('\{\{\s+\.Variables\.([\w|\s|\-|\_|\.|\:]+)\s+\}\}', input_str):
                 return_str = return_str.replace(
-                    '{}{} .Values.{} {}{}'.format('{', '{', matched_placeholder, '}', '}'),
+                    '{}{} .Variables.{} {}{}'.format('{', '{', matched_placeholder, '}', '}'),
                     variable_cache.get_value(
                         variable_name=matched_placeholder,
                         value_if_expired='',
