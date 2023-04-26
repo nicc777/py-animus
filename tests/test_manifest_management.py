@@ -437,8 +437,8 @@ spec:
     val: 1
     more:
     - 'First Value'
-    - '{}{} .Variable.some:name-123 {}{}'
-    - '{}{} .Variable.some-other:name:456 {}{}'
+    - '{}{} .Variables.some:name-123 {}{}'
+    - '{}{} .Variables.some-other:name:456 {}{}'
     - '{}{} .Values.test3 {}{}'
     - '{}{} .Values.test4 {}{}'
     - 'Last Value'
