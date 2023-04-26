@@ -112,7 +112,7 @@ class ValuePlaceHolders:
         self.logger.debug('Parsing for placeholders. input_str="{}'.format(input_str))
         return_str = copy.deepcopy(input_str)
         if input_str.find('{}{} .Values.'.format('{', '{')) >= 0:
-            for matched_placeholder in re.findall('\{\{\s+\.Values\.([\w|\s|\-|\_|\.]+)\s+\}\}', input_str):
+            for matched_placeholder in re.findall('\{\{\s+\.Values\.([\w|\s|\-|\_|\.|\:]+)\s+\}\}', input_str):
                 return_str = return_str.replace(
                     '{}{} .Values.{} {}{}'.format('{', '{', matched_placeholder, '}', '}'),
                     self.get_value_placeholder(
@@ -479,7 +479,7 @@ class ManifestBase:
     def _process_and_replace_variable_placeholders_in_string(self, input_str: str, variable_cache: VariableCache=VariableCache())->str:
         return_str = copy.deepcopy(input_str)
         if input_str.find('{}{} .Variables.'.format('{', '{')) >= 0:
-            for matched_placeholder in re.findall('\{\{\s+\.Variables\.([\w|\s|\-|\_|\.]+)\s+\}\}', input_str):
+            for matched_placeholder in re.findall('\{\{\s+\.Variables\.([\w|\s|\-|\_|\.|\:]+)\s+\}\}', input_str):
                 return_str = return_str.replace(
                     '{}{} .Values.{} {}{}'.format('{', '{', matched_placeholder, '}', '}'),
                     variable_cache.get_value(
@@ -533,6 +533,8 @@ class ManifestBase:
                 for temp_k, temp_v in parsed_temp_d.items():
                     parsed_list.append(temp_v)
                 final_d[k] = copy.deepcopy(parsed_list)
+            elif isinstance(v, int):
+                final_d[k] = copy.deepcopy(v)
             else:
                 final_d[k] = copy.deepcopy(v)
         return final_d
