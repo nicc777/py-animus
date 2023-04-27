@@ -485,6 +485,110 @@ spec:
         for expected_value in expected_values:
             self.assertTrue(expected_value in more, 'Expected "{}" to be in list'.format(expected_value))
 
+
+class MyServiceX(ManifestBase):
+
+    def __init__(self, logger=get_logger(), post_parsing_method: object = my_post_parsing_method, version: str='v1', supported_versions: tuple=('v1',)):
+        super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
+
+    def _var_name(self, target_environment: str='default'):
+        return '{}:{}:{}'.format(
+            self.__class__.__name__,
+            self.metadata['name'],
+            target_environment
+        )
+
+    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders())->bool:
+        return True
+    
+    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders()):
+        variable_cache.store_variable(
+            variable=Variable(
+                name='{}:VAL_X'.format(self._var_name(target_environment=target_environment)), 
+                initial_value='Hello'
+            )
+        )
+
+
+class MyServiceY(ManifestBase):
+
+    def __init__(self, logger=get_logger(), post_parsing_method: object = my_post_parsing_method, version: str='v1', supported_versions: tuple=('v1',)):
+        super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
+
+    def _var_name(self, target_environment: str='default'):
+        return '{}:{}:{}'.format(
+            self.__class__.__name__,
+            self.metadata['name'],
+            target_environment
+        )
+    
+    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders())->bool:
+        return True
+
+    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders()):
+        variable_cache.store_variable(
+            variable=Variable(
+                name='{}:VAL_Y'.format(self._var_name(target_environment=target_environment)), 
+                initial_value='{}'.format(self.spec['greetingText'])
+            )
+        )
+
+
+class TestManifestBaseVariableSubstitutionDemo(unittest.TestCase):    # pragma: no cover
+
+    def setUp(self):
+        self.manifest_data_service_x = """---
+kind: MyServiceX
+version: v1
+metadata:
+  name: service-x
+spec:
+  greeting: 'Hello'
+        """
+        self.manifest_data_service_y = """---
+kind: MyServiceY
+version: v1
+metadata:
+  name: service-y
+  dependencies:
+    apply: 
+    - service-x
+spec:
+  greetingText: 'I say: {}{} .Variables.MyServiceX:service-x:default:VAL_X {}{} world!'
+        """.format(
+            '{','{','}','}'
+        )
+        self.vc = VariableCache()
+        self.vps = ValuePlaceHolders(logger=get_logger())
+
+    @mock.patch.dict(os.environ, {"DEBUG": "1"})
+    def test_demo_variable_substitution(self):
+        service_x_impl = MyServiceX(post_parsing_method=my_post_parsing_method)
+        service_x_impl.metadata['environments'] = ['default']
+        
+        service_y_impl = MyServiceY(post_parsing_method=my_post_parsing_method)
+        service_y_impl.metadata['environments'] = ['default']
+
+        mm = ManifestManager(variable_cache=self.vc, logger=get_logger())
+        mm.versioned_class_register.add_class(clazz=service_x_impl)
+        mm.versioned_class_register.add_class(clazz=service_y_impl)
+
+        parsed_data = parse_raw_yaml_data(yaml_data=self.manifest_data_service_x)
+        for part_id, data_as_dict in parsed_data.items():
+            if 'version' in data_as_dict and 'kind' in data_as_dict and 'metadata' in data_as_dict:
+                mm.parse_manifest(manifest_data=data_as_dict)
+        parsed_data = parse_raw_yaml_data(yaml_data=self.manifest_data_service_y)
+        for part_id, data_as_dict in parsed_data.items():
+            if 'version' in data_as_dict and 'kind' in data_as_dict and 'metadata' in data_as_dict:
+                mm.parse_manifest(manifest_data=data_as_dict)
+
+        # mm.apply_manifest(name='service-x')
+        mm.apply_manifest(name='service-y')
+
+        result = self.vc.get_value(variable_name='MyServiceY:service-y:default:VAL_Y')
+        self.assertEqual(result, 'I say: Hello world!')
+
+
 class TestManifestManager(unittest.TestCase):    # pragma: no cover
 
     def setUp(self):
@@ -1057,7 +1161,7 @@ spec:
             mm.parse_manifest(manifest_data=parse_raw_yaml_data(yaml_data=manifest_1_v01_b_data)['part_1'])
         self.assertTrue('Direct dependency violation detected in class' in str(context.exception))
 
-    @mock.patch.dict(os.environ, {"DEBUG": "1"})        
+    @mock.patch.dict(os.environ, {"DEBUG": "1"})
     def test_indirect_circular_reference_in_apply_raise_exception(self):
         ###
         ### Manifest Setup

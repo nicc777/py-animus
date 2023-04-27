@@ -133,7 +133,7 @@ class MyServiceY(ManifestBase):
         variable_cache.store_variable(
             variable=Variable(
                 name='{}:VAL_Y'.format(self._var_name(target_environment=target_environment)), 
-                initial_value='{} world'.format(self.spec['greetingText'])
+                initial_value='{}'.format(self.spec['greetingText'])
             )
         )
         # remaining implementation logic omitted...
@@ -157,9 +157,14 @@ version: v1
 metadata:
   name: service-y
 spec:
-  greetingText: 'I say: {{ .Variables.MyServiceX:service-x:default:VAL_Y }}!'
+  greetingText: 'I say: {{ .Variables.MyServiceX:service-x:default:VAL_X }} world!'
 #                           \___  __/ \____  __/ \___  __/ \__  _/ \_  _/
 #                               \/         \/        \/       \/     \/
 #                       Type of Lookup     |  Manifest Name   | Variable Name
 #                                     Manifest Type      Environment
 ```
+
+> **Note**
+> In the unittest file `tests/test_manifest_management.py` in test class `TestManifestBaseVariableSubstitutionDemo` this exact scenario is tested.
+
+The result is that in the variable named `MyServiceY:service-y:default:VAL_Y`, the final calculated value would be `I say: Hello world!`
