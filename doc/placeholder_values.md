@@ -3,6 +3,7 @@
 - [Guidelines and Best Practices](#guidelines-and-best-practices)
   - [Syntax for the Placeholder](#syntax-for-the-placeholder)
   - [Environments](#environments)
+  - [Variables and Manifest Dependencies](#variables-and-manifest-dependencies)
 
 
 # Placeholder Values
@@ -52,14 +53,14 @@ If, for example, the command line parameter `-e` (or `--env`) has a value of `te
 
 ## Syntax for the Placeholder
 
-The general syntax is: `{{ .Values.<<name>> }}`
+The general syntax is: `{{ .Values.<<name>> }}` or `{{ .Variables.<<name>> }}`
 
 Note the following rules:
 
 * Start with `{{`
 * End with `}}`
-* There must be exactly ONE space between `{{` and `.Values.`
-* `.Values.` indicates the kind of value replacement, and in this case it expects the value to come from a values file. In the future other types of sources will also be supported, for example a secrets store of some kind.
+* There must be exactly ONE space between `{{` and the either `.Values.` or `.Variables.`
+* `.Values.` or `.Variables.` indicates the kind of value replacement, and in the case of `.Values.` it expects the value to come from a values file. The `.Variables.` type indicates the value to originate from a stored variable, typically as a result of a previous applied manifest which typically produces variable values. 
 * After `.Values.` the `<<name>>` represents the variable name to be used as a lookup in the values file. It maps to the `name` field. General rules:
     * Start with an alpha character ([ASCII](https://en.wikipedia.org/wiki/ASCII) decimal values 65 to 80 (inclusive) and 97 to 122 (inclusive))
     * May include other printable ASCII characters like any of the following: `- _ = +` (and more)
@@ -77,3 +78,88 @@ Another consideration comes from the principle of "_fail securely_" and in this 
 Although not strictly required, define values for every environment used in all the manifests to ensure proper coverage and edge cases.
 
 When no variable for an environment is found, the placeholder value will be used literally - this is the current behavior, but may change in the future.
+
+## Variables and Manifest Dependencies
+
+Assume you have the following Manifest Implementations:
+
+```python
+# File: my-custom-manifest-implementation-for-service-x.py
+from py_animus.manifest_management import *
+from py_animus import get_logger, parse_raw_yaml_data
+
+class MyServiceX(ManifestBase):
+
+    def __init__(self, logger=get_logger(), post_parsing_method: object = my_post_parsing_method, version: str='v1', supported_versions: tuple=('v1',)):
+        super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
+
+    def _var_name(self, target_environment: str='default'):
+        return '{}:{}:{}'.format(
+            self.__class__.__name__,
+            self.metadata['name'],
+            target_environment
+        )
+
+    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders()):
+        variable_cache.store_variable(
+            variable=Variable(
+                name='{}:VAL_X'.format(self._var_name(target_environment=target_environment)), 
+                initial_value='Hello'
+            )
+        )
+        # remaining implementation logic omitted...
+    
+    # Other methods omitted...
+
+
+
+# File: my-custom-manifest-implementation-for-service-y.py
+from py_animus.manifest_management import *
+from py_animus import get_logger, parse_raw_yaml_data
+
+class MyServiceY(ManifestBase):
+
+    def __init__(self, logger=get_logger(), post_parsing_method: object = my_post_parsing_method, version: str='v1', supported_versions: tuple=('v1',)):
+        super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
+
+    def _var_name(self, target_environment: str='default'):
+        return '{}:{}:{}'.format(
+            self.__class__.__name__,
+            self.metadata['name'],
+            target_environment
+        )
+
+    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders()):
+        variable_cache.store_variable(
+            variable=Variable(
+                name='{}:VAL_Y'.format(self._var_name(target_environment=target_environment)), 
+                initial_value='{} world'.format(self.spec['greetingText'])
+            )
+        )
+        # remaining implementation logic omitted...
+    
+    # Other methods omitted...
+```
+
+The variable from a manifest of service X can now be re-used in service Y with the following hypothetical manifests:
+
+```yaml
+---
+kind: MyServiceX
+version: v1
+metadata:
+  name: service-x
+spec:
+  greeting: 'Hello'
+---
+kind: MyServiceY
+version: v1
+metadata:
+  name: service-y
+spec:
+  greetingText: 'I say: {{ .Variables.MyServiceX:service-x:default:VAL_Y }}!'
+#                           \___  __/ \____  __/ \___  __/ \__  _/ \_  _/
+#                               \/         \/        \/       \/     \/
+#                       Type of Lookup     |  Manifest Name   | Variable Name
+#                                     Manifest Type      Environment
+```
