@@ -156,6 +156,9 @@ kind: MyServiceY
 version: v1
 metadata:
   name: service-y
+  dependencies:
+    apply: 
+    - service-x
 spec:
   greetingText: 'I say: {{ .Variables.MyServiceX:service-x:default:VAL_X }} world!'
 #                           \___  __/ \____  __/ \___  __/ \__  _/ \_  _/
