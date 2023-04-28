@@ -486,7 +486,7 @@ spec:
             self.assertTrue(expected_value in more, 'Expected "{}" to be in list'.format(expected_value))
 
 
-class MyServiceX(ManifestBase):
+class MyServiceX(ManifestBase): # pragma: no cover
 
     def __init__(self, logger=get_logger(), post_parsing_method: object = my_post_parsing_method, version: str='v1', supported_versions: tuple=('v1',)):
         super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
@@ -510,7 +510,7 @@ class MyServiceX(ManifestBase):
         )
 
 
-class MyServiceY(ManifestBase):
+class MyServiceY(ManifestBase): # pragma: no cover
 
     def __init__(self, logger=get_logger(), post_parsing_method: object = my_post_parsing_method, version: str='v1', supported_versions: tuple=('v1',)):
         super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
@@ -582,7 +582,7 @@ spec:
             if 'version' in data_as_dict and 'kind' in data_as_dict and 'metadata' in data_as_dict:
                 mm.parse_manifest(manifest_data=data_as_dict)
 
-        # mm.apply_manifest(name='service-x')
+        # This should automatically first process the dependant manifest
         mm.apply_manifest(name='service-y')
 
         result = self.vc.get_value(variable_name='MyServiceY:service-y:default:VAL_Y')
