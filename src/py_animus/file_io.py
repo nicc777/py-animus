@@ -13,6 +13,8 @@ import tempfile
 from pathlib import Path
 import re
 import hashlib
+import random
+from py_animus.utils import generate_random_string
 
 
 """
@@ -113,3 +115,45 @@ def create_directory(path: str):
         traceback.print_exc()
         return False
     return True
+
+
+def delete_directory(dir: str)->bool:
+    try:
+        os.remove(dir)
+    except:    
+        try:
+            shutil.rmtree(dir)
+        except:
+            traceback.print_exc()
+            return False
+    return True
+
+
+def create_temp_directory()->str:
+    """Create a directory
+
+    Args:
+        None
+
+    Returns:
+        String to the directory that was created
+
+    Raises:
+        None
+    """
+    tmp_dir = None
+    try:
+        tmp_dir = '{}{}{}'.format(
+            tempfile.gettempdir(), 
+            os.sep,
+            generate_random_string(length=32)
+        )
+        delete_directory(tmp_dir) # Ensure it does not exist
+        os.mkdir(tmp_dir)
+    except:
+        traceback.print_exc()
+    return tmp_dir
+
+
+
+
