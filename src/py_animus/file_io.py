@@ -93,3 +93,23 @@ def read_large_text_file(path_to_file: str, callback_func: callable, chunk_size:
                 current_chunk_sequence_number += 1
     except:
         traceback.print_exc()
+
+
+def create_directory(path: str):
+    """Create a directory
+
+    Args:
+        path: The directory to create
+
+    Returns:
+        Boolean true if successful
+
+    Raises:
+        None
+    """
+    try:
+        os.mkdir(path)
+    except:
+        traceback.print_exc()
+        return False
+    return True
