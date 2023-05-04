@@ -14,6 +14,7 @@ from pathlib import Path
 import re
 import hashlib
 import random
+import copy
 from py_animus.utils import generate_random_string
 
 
@@ -154,6 +155,50 @@ def create_temp_directory()->str:
         traceback.print_exc()
     return tmp_dir
 
+
+def get_file_size(file_path: str)->int:
+    size = 0
+    try:
+        pass
+    except:
+        traceback.print_exc()
+    return size
+
+
+def calculate_file_checksum(file_path: str, checksum_algorithm: str='md5')->str:
+    checksum = None
+    try:
+        pass
+    except:
+        traceback.print_exc()
+    return checksum
+
+
+def list_files(directory: str, recurse: bool=False, include_size: bool=False, calc_md5_checksum: bool=False, calc_sha255_checksum: bool=False, progress_callback_function: callable=None, result: dict=dict())->dict:
+    """List all files in a directory.
+
+    Note that each flag that is set to true may have a negative effect on performance.
+
+    Args:
+        directory: (required) string with the directory to scan.
+        recurse: (optional) boolean to dive into sub-directories.
+        include_size: (optional) include the file size of each file in the result set
+        calc_md5_checksum: (optional) include the MD5 checksum of the file
+        calc_sha255_checksum: (optional) include the SHA256 checksum of the file
+        progress_callback_function: (optional) if set, this function will periodically be called with the accumulated result
+        result: (optional) dict that will ultimately also contain the final result. If progress_callback_function() is called, the result object will be passed and the returned result (if a dictionary) will replace the current result value
+
+    Returns:
+        Dictionary with the collected data, unless modified by the progress_callback_function() callback function
+
+    Raises:
+        None
+    """
+    try:
+        pass
+    except:
+        traceback.print_exc()
+    return copy.deepcopy(result)
 
 
 
