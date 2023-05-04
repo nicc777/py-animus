@@ -274,6 +274,19 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
 
 
 def copy_file(source_file_path: str, destination_directory: str, new_name: str=None)->str:
+    """Copy a file
+
+    Args:
+        source_file_path: (required) string containing the full path of the source file, for example `/path/to/file.txt`
+        destination_directory: (required) string containing the destination directory only. By default, the source file name will be used as the target filename
+        new_name: (optional) string that will be the final filename, if set
+
+    Returns:
+        String with the final full path of the destination file, if the copy was successful. May return None which may indicate failure.
+
+    Raises:
+        None
+    """
     try:
         parts = source_file_path.split(os.sep)
         source_file_name = parts[-1]
