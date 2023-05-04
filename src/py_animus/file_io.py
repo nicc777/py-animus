@@ -189,6 +189,7 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
 
     The result dictionary will have the following structure, unless modified by the progress_callback_function() (if set):
 
+        ```python
         {
             '/full/path/to/file1.txt': {
                 'size': 123,                # Or None, if include_size was False
@@ -197,6 +198,7 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
             },
             '/full/path/to/file2.txt': { ... },
         }
+        ```
 
     Therefore, the dictionary keys are the files with their full paths.
 
