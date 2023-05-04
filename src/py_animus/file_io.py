@@ -176,7 +176,7 @@ def get_file_size(file_path: str)->int:
 def calculate_file_checksum(file_path: str, checksum_algorithm: str='md5', _known_size: int=None)->str:
     """Returns the checksum of a file
 
-    _**WARNING**_: This function was not intended to calculate very large files. Files over 10MiB size will be ignored.
+    _**WARNING**_: This function was not intended to calculate very large files. Files over 10 MiB size will be ignored.
 
     Args:
         file_path: (required) string containing the path to a file
