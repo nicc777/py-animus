@@ -157,7 +157,7 @@ def create_temp_directory()->str:
 
 
 def get_file_size(file_path: str)->int:
-    size = 0
+    size = None
     try:
         pass
     except:
@@ -179,6 +179,26 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
 
     Note that each flag that is set to true may have a negative effect on performance.
 
+    The progress_callback_function(), if used, must return a dict and must accept the following keyword parameters:
+
+    * current_root: str
+    * current_result: dict
+
+    The result dictionary will have the following structure, unless modified by the progress_callback_function() (if set):
+
+        {
+            '/full/path/to/file1.txt': {
+                'size': 123,                # Or None, if include_size was False
+                'md5': 'abc...xyz',         # Or None, if calc_md5_checksum was False
+                'sha256': 'abc...xyz',      # Or None, if calc_sha255_checksum was False
+            },
+            '/full/path/to/file2.txt': { ... },
+        }
+
+    Therefore, the dictionary keys are the files with their full paths.
+
+    if the progress_callback_function() is set, the callback will be done after every 100 files, and one final call just before the final result is returned. The final call will have the `current_root` value set to None, indicating that it is the final call.
+
     Args:
         directory: (required) string with the directory to scan.
         recurse: (optional) boolean to dive into sub-directories.
@@ -194,6 +214,7 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
     Raises:
         None
     """
+    file_scan_counter = 0
     try:
         for root, dirs, files in os.walk(directory):
             if recurse is True:
@@ -201,7 +222,7 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
                     result = {
                         **result,
                         **list_files(
-                            directory=dir,
+                            directory='{}{}{}'.format(root, os.sep, dir),
                             recurse=recurse,
                             include_size=include_size,
                             calc_md5_checksum=calc_md5_checksum,
@@ -210,8 +231,42 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
                             result=copy.deepcopy(result)
                         )
                     }
+            for file in files:
+                if progress_callback_function is not None:
+                    file_scan_counter += 1
+                    if file_scan_counter > 100:
+                        file_scan_counter = 0
+                        try:
+                            callback_params = {
+                                'current_root': root,
+                                'current_result': copy.deepcopy(result)
+                            }
+                            result = copy.deepcopy(progress_callback_function(**callback_params))
+                        except:
+                            traceback.print_exc()
+                file_full_path = '{}{}{}'.format(root, os.sep, file)
+                file_metadata = dict()
+                file_metadata['size'] = None
+                file_metadata['md5'] = None
+                file_metadata['sha256'] = None
+                if include_size is True:
+                    file_metadata['size'] = get_file_size(file_path=file_full_path)
+                if calc_md5_checksum is True:
+                    file_metadata['md5'] = calculate_file_checksum(file_path=file_full_path, checksum_algorithm='md5')
+                if calc_sha255_checksum is True:
+                    file_metadata['sha256'] = calculate_file_checksum(file_path=file_full_path, checksum_algorithm='sha256')
+                result[file_full_path] = copy.deepcopy(file_metadata)
     except:
         traceback.print_exc()
+    if progress_callback_function is not None:
+        try:
+            callback_params = {
+                'current_root': None,
+                'current_result': copy.deepcopy(result)
+            }
+            result = copy.deepcopy(progress_callback_function(**callback_params))
+        except:
+            traceback.print_exc()
     return copy.deepcopy(result)
 
 
