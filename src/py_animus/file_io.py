@@ -154,6 +154,17 @@ def create_temp_directory()->str:
 
 
 def get_file_size(file_path: str)->int:
+    """Returns the size of a file
+
+    Args:
+        file_path: (required) string containing the path to a file
+
+    Returns:
+        Integer with the file size. A None return value may indicate an error
+
+    Raises:
+        None
+    """
     size = None
     try:
         size = os.path.getsize(filename=file_path)
@@ -162,9 +173,28 @@ def get_file_size(file_path: str)->int:
     return size
 
 
-def calculate_file_checksum(file_path: str, checksum_algorithm: str='md5')->str:
+def calculate_file_checksum(file_path: str, checksum_algorithm: str='md5', _known_size: int=None)->str:
+    """Returns the checksum of a file
+
+    _**WARNING**_: This function was not intended to calculate very large files. Files over 10MiB size will be ignored.
+
+    Args:
+        file_path: (required) string containing the path to a file
+        checksum_algorithm: (optional) string containing either 'md5' or 'sha256' (default='md5')
+
+    Returns:
+        String with the calculated file content checksum. A None return value may indicate an error
+
+    Raises:
+        None
+    """
     checksum = None
+    max_size = 1024 * 1024 * 10
     try:
+        if _known_size is None:
+            _known_size = get_file_size(file_path=file_path)
+        if _known_size > max_size:
+            return None
         if checksum_algorithm.lower().startswith('md5'):
             checksum = hashlib.md5(open(file_path,'rb').read()).hexdigest()
         elif checksum_algorithm.lower().startswith('sha256'):
@@ -254,9 +284,9 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
                 if include_size is True:
                     file_metadata['size'] = get_file_size(file_path=file_full_path)
                 if calc_md5_checksum is True:
-                    file_metadata['md5'] = calculate_file_checksum(file_path=file_full_path, checksum_algorithm='md5')
+                    file_metadata['md5'] = calculate_file_checksum(file_path=file_full_path, checksum_algorithm='md5', _known_size=file_metadata['size'])
                 if calc_sha255_checksum is True:
-                    file_metadata['sha256'] = calculate_file_checksum(file_path=file_full_path, checksum_algorithm='sha256')
+                    file_metadata['sha256'] = calculate_file_checksum(file_path=file_full_path, checksum_algorithm='sha256', _known_size=file_metadata['size'])
                 result[file_full_path] = copy.deepcopy(file_metadata)
     except:
         traceback.print_exc()
