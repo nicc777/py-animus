@@ -273,4 +273,18 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
     return copy.deepcopy(result)
 
 
+def copy_file(source_file_path: str, destination_directory: str, new_name: str=None)->str:
+    try:
+        parts = source_file_path.split(os.sep)
+        source_file_name = parts[-1]
+        final_destination = '{}{}'.format(destination_directory, os.sep)
+        if new_name is not None:
+            final_destination = '{}{}'.format(final_destination, new_name)
+        else:
+            final_destination = '{}{}'.format(final_destination, source_file_name)
+        shutil.copyfile(source_file_path, final_destination)
+        return final_destination
+    except:
+        traceback.print_exc()
+        return None
 
