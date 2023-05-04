@@ -159,7 +159,7 @@ def create_temp_directory()->str:
 def get_file_size(file_path: str)->int:
     size = None
     try:
-        pass
+        size = os.path.getsize(filename=file_path)
     except:
         traceback.print_exc()
     return size
@@ -168,7 +168,10 @@ def get_file_size(file_path: str)->int:
 def calculate_file_checksum(file_path: str, checksum_algorithm: str='md5')->str:
     checksum = None
     try:
-        pass
+        if checksum_algorithm.lower().startswith('md5'):
+            checksum = hashlib.md5(open(file_path,'rb').read()).hexdigest()
+        elif checksum_algorithm.lower().startswith('sha256'):
+            checksum = hashlib.sha256(open(file_path,'rb').read()).hexdigest()
     except:
         traceback.print_exc()
     return checksum
