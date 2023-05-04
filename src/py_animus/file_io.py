@@ -195,7 +195,21 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
         None
     """
     try:
-        pass
+        for root, dirs, files in os.walk(directory):
+            if recurse is True:
+                for dir in dirs:
+                    result = {
+                        **result,
+                        **list_files(
+                            directory=dir,
+                            recurse=recurse,
+                            include_size=include_size,
+                            calc_md5_checksum=calc_md5_checksum,
+                            calc_sha255_checksum=calc_sha255_checksum,
+                            progress_callback_function=progress_callback_function,
+                            result=copy.deepcopy(result)
+                        )
+                    }
     except:
         traceback.print_exc()
     return copy.deepcopy(result)
