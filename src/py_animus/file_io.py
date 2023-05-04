@@ -231,6 +231,8 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
 
     if the progress_callback_function() is set, the callback will be done after every 100 files, and one final call just before the final result is returned. The final call will have the `current_root` value set to None, indicating that it is the final call.
 
+    _**WARNING**_: This operation could take a long time and could also consume a large amount of memory as the result set grows. The intention in context of the application is not to use this function to scan directories with a lot of individual files and/or sub-directories
+
     Args:
         directory: (required) string with the directory to scan.
         recurse: (optional) boolean to dive into sub-directories.
