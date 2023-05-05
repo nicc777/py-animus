@@ -36,6 +36,17 @@ class TestFileIoCreateDirs(unittest.TestCase):    # pragma: no cover
         delete_directory(dir=tmp_dir)
         self.assertFalse(os.path.exists(tmp_dir))
 
+    def test_create_temp_dir_with_sub_dir(self):
+        tmp_dir = create_temp_directory()
+        sub_dir = '{}{}test1'.format(tmp_dir, os.sep)
+        create_directory(path=sub_dir)
+        print('test_create_temp_dir(): tmp_dir={}'.format(tmp_dir))
+        self.assertIsNotNone(sub_dir)
+        self.assertIsInstance(sub_dir, str)
+        self.assertTrue(os.path.isdir(sub_dir))
+        delete_directory(dir=tmp_dir)
+        self.assertFalse(os.path.exists(tmp_dir))
+
 
 
 if __name__ == '__main__':
