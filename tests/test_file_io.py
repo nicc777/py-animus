@@ -172,6 +172,23 @@ class TestFileIoRemainingFunctions(unittest.TestCase):    # pragma: no cover
             self.assertIsInstance(file_meta_data['size'], int)
             self.assertTrue(file_meta_data['size'] > 0)
 
+    def test_get_file_list_basic_with_md5_checksums(self):
+        base_dir = self.dir_setup_data[0]['dir']
+        file_listing = list_files(directory=base_dir, calc_md5_checksum=True)
+        self.assertIsNotNone(file_listing)
+        self.assertIsInstance(file_listing, dict)
+        self.assertEqual(len(file_listing), 2)
+        for file_with_full_path, file_meta_data in file_listing.items():
+            self.assertIsNotNone(file_with_full_path)
+            self.assertIsNotNone(file_meta_data)
+            self.assertTrue(base_dir in file_with_full_path)
+            self.assertTrue(file_with_full_path.endswith('txt'))
+            self.assertIsNone(file_meta_data['size'])
+            self.assertIsNotNone(file_meta_data['md5'])
+            self.assertIsNone(file_meta_data['sha256'])
+            self.assertIsInstance(file_meta_data['md5'], str)
+            self.assertTrue(len(file_meta_data['md5']) > 0)
+
 
 
 if __name__ == '__main__':
