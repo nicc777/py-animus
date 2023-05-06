@@ -144,10 +144,19 @@ class TestFileIoRemainingFunctions(unittest.TestCase):    # pragma: no cover
             print('* Deleted directory "{}"'.format(dir_name))
 
     def test_get_file_list_basic(self):
-        file_listing = list_files(directory=self.dir_setup_data[0]['dir'])
+        base_dir = self.dir_setup_data[0]['dir']
+        file_listing = list_files(directory=base_dir)
         self.assertIsNotNone(file_listing)
         self.assertIsInstance(file_listing, dict)
         self.assertEqual(len(file_listing), 2)
+        for file_with_full_path, file_meta_data in file_listing.items():
+            self.assertIsNotNone(file_with_full_path)
+            self.assertIsNotNone(file_meta_data)
+            self.assertTrue(base_dir in file_with_full_path)
+            self.assertTrue(file_with_full_path.endswith('txt'))
+            self.assertIsNone(file_meta_data['size'])
+            self.assertIsNone(file_meta_data['md5'])
+            self.assertIsNone(file_meta_data['sha256'])
 
     
 
