@@ -48,6 +48,13 @@ class TestFileIoCreateDirs(unittest.TestCase):    # pragma: no cover
         self.assertFalse(os.path.exists(tmp_dir))
 
 
+def dir_list_callback_strips_metadata(current_root: str, current_result: dict)->dict:   # pragma: no cover
+    new_result = dict()
+    for file_with_full_path, file_meta_data in current_result.items():
+        new_result[file_with_full_path] = dict()
+    return new_result
+
+
 class TestFileIoRemainingFunctions(unittest.TestCase):    # pragma: no cover
 
     def setUp(self):
@@ -157,6 +164,21 @@ class TestFileIoRemainingFunctions(unittest.TestCase):    # pragma: no cover
             self.assertIsNone(file_meta_data['size'])
             self.assertIsNone(file_meta_data['md5'])
             self.assertIsNone(file_meta_data['sha256'])
+
+    def test_get_file_list_basic_with_callback(self):
+        base_dir = self.dir_setup_data[0]['dir']
+        file_listing = list_files(directory=base_dir, progress_callback_function=dir_list_callback_strips_metadata)
+        self.assertIsNotNone(file_listing)
+        self.assertIsInstance(file_listing, dict)
+        self.assertEqual(len(file_listing), 2)
+        for file_with_full_path, file_meta_data in file_listing.items():
+            self.assertIsNotNone(file_with_full_path)
+            self.assertIsNotNone(file_meta_data)
+            self.assertTrue(base_dir in file_with_full_path)
+            self.assertTrue(file_with_full_path.endswith('txt'))
+            self.assertFalse('size' in file_meta_data)
+            self.assertFalse('md5' in file_meta_data)
+            self.assertFalse('sha256' in file_meta_data)
 
     def test_get_file_list_basic_with_file_sizes(self):
         base_dir = self.dir_setup_data[0]['dir']
