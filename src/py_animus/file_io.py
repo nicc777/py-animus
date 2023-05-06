@@ -220,7 +220,7 @@ def calculate_file_checksum(file_path: str, checksum_algorithm: str='md5', _know
     return checksum
 
 
-def list_files(directory: str, recurse: bool=False, include_size: bool=False, calc_md5_checksum: bool=False, calc_sha255_checksum: bool=False, progress_callback_function: callable=None, result: dict=dict())->dict:
+def list_files(directory: str, recurse: bool=False, include_size: bool=False, calc_md5_checksum: bool=False, calc_sha256_checksum: bool=False, progress_callback_function: callable=None, result: dict=dict())->dict:
     """List all files in a directory.
 
     Note that each flag that is set to true may have a negative effect on performance.
@@ -277,7 +277,7 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
                             recurse=recurse,
                             include_size=include_size,
                             calc_md5_checksum=calc_md5_checksum,
-                            calc_sha255_checksum=calc_sha255_checksum,
+                            calc_sha256_checksum=calc_sha256_checksum,
                             progress_callback_function=progress_callback_function,
                             result=copy.deepcopy(result)
                         )
@@ -304,7 +304,7 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
                     file_metadata['size'] = get_file_size(file_path=file_full_path)
                 if calc_md5_checksum is True:
                     file_metadata['md5'] = calculate_file_checksum(file_path=file_full_path, checksum_algorithm='md5', _known_size=file_metadata['size'])
-                if calc_sha255_checksum is True:
+                if calc_sha256_checksum is True:
                     file_metadata['sha256'] = calculate_file_checksum(file_path=file_full_path, checksum_algorithm='sha256', _known_size=file_metadata['size'])
                 result[file_full_path] = copy.deepcopy(file_metadata)
     except:                             # pragma: no cover

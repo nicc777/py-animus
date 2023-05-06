@@ -216,7 +216,7 @@ class TestFileIoListingFunctions(unittest.TestCase):    # pragma: no cover
 
     def test_get_file_list_basic_with_sha256_checksums(self):
         base_dir = self.dir_setup_data[0]['dir']
-        file_listing = list_files(directory=base_dir, calc_sha255_checksum=True)
+        file_listing = list_files(directory=base_dir, calc_sha256_checksum=True)
         self.assertIsNotNone(file_listing)
         self.assertIsInstance(file_listing, dict)
         self.assertEqual(len(file_listing), 2)
@@ -251,7 +251,7 @@ class TestFileIoListingFunctions(unittest.TestCase):    # pragma: no cover
 
     def test_get_file_list_recursively_with_everything(self):
         base_dir = self.dir_setup_data[0]['dir']
-        file_listing = list_files(directory=base_dir, include_size=True, recurse=True, calc_md5_checksum=True, calc_sha255_checksum=True)
+        file_listing = list_files(directory=base_dir, include_size=True, recurse=True, calc_md5_checksum=True, calc_sha256_checksum=True)
         print('>>> file_listing={}'.format(json.dumps(file_listing)))
         self.assertIsNotNone(file_listing)
         self.assertIsInstance(file_listing, dict)
@@ -335,6 +335,74 @@ class TestFileIoReadFunctions(unittest.TestCase):    # pragma: no cover
         self.assertIsNotNone(result)
         self.assertIsInstance(result, str)
         self.assertEqual(len(result), 20)
+
+
+class TestFileIoCopyFunctions(unittest.TestCase):    # pragma: no cover
+
+    def setUp(self):
+        print('-'*80)
+        print()
+        self.tmp_dir = create_temp_directory()
+        # Create a small file
+        self.small_file = '{}{}small_file.txt'.format(self.tmp_dir, os.sep)
+        self.small_data = generate_random_string(length=128)
+        with open(self.small_file, 'w') as f:
+            f.write(self.small_data)
+        print('SETUP COMPLETE')
+        print()
+        
+    def tearDown(self):
+        print()
+        print()
+        print('DELETING DIRECTORIES')
+        delete_directory(dir=self.tmp_dir)
+        print('* Deleted directory "{}"'.format(self.tmp_dir))
+        print()
+        print()
+
+    def test_read_small_file_keep_original_file_name(self):
+        dest_dir = create_temp_directory()
+        dest_file_result = copy_file(source_file_path=self.small_file, destination_directory=dest_dir)
+        source_files = list_files(directory=self.tmp_dir, calc_sha256_checksum=True, include_size=True)
+        dest_files = list_files(directory=dest_dir, calc_sha256_checksum=True, include_size=True)
+        source_checksum = 'wrong'
+        source_size = -1
+        for source_file, source_file_meta_data in source_files.items():
+            self.assertEqual(source_file, self.small_file)
+            source_checksum = source_file_meta_data['sha256']
+            source_size = source_file_meta_data['md5']
+        dest_checksum = 'wrong-again'
+        dest_size = -2
+        for dest_file, dest_file_meta_data in dest_files.items():
+            self.assertEqual(dest_file, dest_file_result)
+            dest_checksum = dest_file_meta_data['sha256']
+            dest_size = dest_file_meta_data['md5']
+        self.assertEqual(source_checksum, dest_checksum)
+        self.assertEqual(source_size, dest_size)
+        delete_directory(dir=dest_dir)
+
+    def test_read_small_file_new_name(self):
+        dest_dir = create_temp_directory()
+        dest_file_result = copy_file(source_file_path=self.small_file, destination_directory=dest_dir, new_name='target_file.text')
+        source_files = list_files(directory=self.tmp_dir, calc_sha256_checksum=True, include_size=True)
+        dest_files = list_files(directory=dest_dir, calc_sha256_checksum=True, include_size=True)
+        source_checksum = 'wrong'
+        source_size = -1
+        for source_file, source_file_meta_data in source_files.items():
+            self.assertEqual(source_file, self.small_file)
+            source_checksum = source_file_meta_data['sha256']
+            source_size = source_file_meta_data['md5']
+        dest_checksum = 'wrong-again'
+        dest_size = -2
+        for dest_file, dest_file_meta_data in dest_files.items():
+            self.assertTrue('target_file.text' in dest_file)
+            self.assertEqual(dest_file, dest_file_result)
+            dest_checksum = dest_file_meta_data['sha256']
+            dest_size = dest_file_meta_data['md5']
+        self.assertEqual(source_checksum, dest_checksum)
+        self.assertEqual(source_size, dest_size)
+        delete_directory(dir=dest_dir)
+
 
 
 if __name__ == '__main__':
