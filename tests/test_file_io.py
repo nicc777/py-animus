@@ -224,6 +224,28 @@ class TestFileIoRemainingFunctions(unittest.TestCase):    # pragma: no cover
             self.assertIsInstance(file_meta_data['size'], int)
             self.assertTrue(file_meta_data['size'] > 0)
 
+    def test_get_file_list_recursively_with_everything(self):
+        base_dir = self.dir_setup_data[0]['dir']
+        file_listing = list_files(directory=base_dir, include_size=True, recurse=True, calc_md5_checksum=True, calc_sha255_checksum=True)
+        print('>>> file_listing={}'.format(json.dumps(file_listing)))
+        self.assertIsNotNone(file_listing)
+        self.assertIsInstance(file_listing, dict)
+        self.assertEqual(len(file_listing), 8)
+        for file_with_full_path, file_meta_data in file_listing.items():
+            self.assertIsNotNone(file_with_full_path)
+            self.assertIsNotNone(file_meta_data)
+            self.assertTrue(base_dir in file_with_full_path)
+            self.assertTrue(file_with_full_path.endswith('txt'))
+            self.assertIsNotNone(file_meta_data['size'])
+            self.assertIsNotNone(file_meta_data['md5'])
+            self.assertIsNotNone(file_meta_data['sha256'])
+            self.assertIsInstance(file_meta_data['size'], int)
+            self.assertTrue(file_meta_data['size'] > 0)
+            self.assertIsInstance(file_meta_data['md5'], str)
+            self.assertTrue(len(file_meta_data['md5']) > 0)
+            self.assertIsInstance(file_meta_data['sha256'], str)
+            self.assertTrue(len(file_meta_data['sha256']) > 0)
+
 
 
 if __name__ == '__main__':
