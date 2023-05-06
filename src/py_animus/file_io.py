@@ -122,7 +122,7 @@ def create_directory(path: str):
     """
     try:
         os.mkdir(path)
-    except:
+    except:                             # pragma: no cover
         # traceback.print_exc()
         return False
     return True
@@ -134,8 +134,8 @@ def delete_directory(dir: str)->bool:
     except:    
         try:
             shutil.rmtree(dir)
-        except:
-            traceback.print_exc()
+        except:                         # pragma: no cover
+            # traceback.print_exc()
             return False
     return True
 
@@ -161,7 +161,7 @@ def create_temp_directory()->str:
         )
         delete_directory(tmp_dir) # Ensure it does not exist
         os.mkdir(tmp_dir)
-    except:
+    except:                             # pragma: no cover
         pass
         # traceback.print_exc()
     return tmp_dir
@@ -182,7 +182,7 @@ def get_file_size(file_path: str)->int:
     size = None
     try:
         size = os.path.getsize(filename=file_path)
-    except:
+    except:                             # pragma: no cover
         pass
         # traceback.print_exc()
     return size
@@ -214,7 +214,7 @@ def calculate_file_checksum(file_path: str, checksum_algorithm: str='md5', _know
             checksum = hashlib.md5(open(file_path,'rb').read()).hexdigest()
         elif checksum_algorithm.lower().startswith('sha256'):
             checksum = hashlib.sha256(open(file_path,'rb').read()).hexdigest()
-    except:
+    except:                             # pragma: no cover
         pass
         # traceback.print_exc()
     return checksum
@@ -307,7 +307,7 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
                 if calc_sha255_checksum is True:
                     file_metadata['sha256'] = calculate_file_checksum(file_path=file_full_path, checksum_algorithm='sha256', _known_size=file_metadata['size'])
                 result[file_full_path] = copy.deepcopy(file_metadata)
-    except:
+    except:                             # pragma: no cover
         traceback.print_exc()
     if progress_callback_function is not None:
         try:
@@ -316,7 +316,7 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
                 'current_result': copy.deepcopy(result)
             }
             result = copy.deepcopy(progress_callback_function(**callback_params))
-        except:
+        except:                         # pragma: no cover
             pass
             # traceback.print_exc()
     return copy.deepcopy(result)
@@ -346,7 +346,7 @@ def copy_file(source_file_path: str, destination_directory: str, new_name: str=N
             final_destination = '{}{}'.format(final_destination, source_file_name)
         shutil.copyfile(source_file_path, final_destination)
         return final_destination
-    except:
-        traceback.print_exc()
+    except:                             # pragma: no cover
+        # traceback.print_exc()
         return None
 
