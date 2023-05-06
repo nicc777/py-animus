@@ -272,6 +272,24 @@ class TestFileIoListingFunctions(unittest.TestCase):    # pragma: no cover
             self.assertTrue(len(file_meta_data['sha256']) > 0)
 
 
+def file_read_callback(
+    path_to_file: str,
+    current_chunk_sequence_number: int,
+    chunk_size: int,
+    content: str,
+    return_object: object,
+):
+    print()
+    if return_object is None:
+        return_object = ''
+    print('file_read_callback(): path_to_file                  = {}'.format(path_to_file))
+    print('file_read_callback(): current_chunk_sequence_number = {}'.format(current_chunk_sequence_number))
+    print('file_read_callback(): chunk_size                    = {}'.format(chunk_size))
+    print('file_read_callback(): content size                  = {}'.format(len(content)))
+    print('file_read_callback(): return_object                 = {}'.format(return_object))
+    return '{}{}'.format(copy.deepcopy(return_object), copy.deepcopy(content[0:5]))
+
+
 class TestFileIoReadFunctions(unittest.TestCase):    # pragma: no cover
 
     def setUp(self):
@@ -307,10 +325,16 @@ class TestFileIoReadFunctions(unittest.TestCase):    # pragma: no cover
         self.assertEqual(len(result), 128)
 
     def test_read_large_file(self):
-        result = read_text_file(self.large_file)
+        result = read_text_file(path_to_file=self.large_file)
         self.assertIsNotNone(result)
         self.assertIsInstance(result, str)
         self.assertEqual(len(result), 20000)
+
+    def test_read_large_file_with_callback(self):
+        result = read_large_text_file(path_to_file=self.large_file, callback_func=file_read_callback, chunk_size=5000)
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, str)
+        self.assertEqual(len(result), 20)
 
 
 if __name__ == '__main__':

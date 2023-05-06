@@ -88,10 +88,9 @@ def read_large_text_file(path_to_file: str, callback_func: callable, chunk_size:
     Raises:
         None
     """
-
+    return_object = None
     try:
         current_chunk_sequence_number = 0
-        return_object = None
         with open(path_to_file, 'r') as f:
             while chunk := f.read(chunk_size):
                 parameters = {
@@ -106,6 +105,7 @@ def read_large_text_file(path_to_file: str, callback_func: callable, chunk_size:
     except:
         pass
         # traceback.print_exc()
+    return return_object
 
 
 def create_directory(path: str):
