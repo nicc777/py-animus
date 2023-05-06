@@ -135,7 +135,7 @@ def delete_directory(dir: str)->bool:
         try:
             shutil.rmtree(dir)
         except:
-            # traceback.print_exc()
+            traceback.print_exc()
             return False
     return True
 
@@ -264,6 +264,7 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
     Raises:
         None
     """
+    result = dict()
     file_scan_counter = 0
     try:
         for root, dirs, files in _dir_walk_level(some_dir=directory, level=0):

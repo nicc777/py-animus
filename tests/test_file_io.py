@@ -59,6 +59,7 @@ class TestFileIoRemainingFunctions(unittest.TestCase):    # pragma: no cover
 
     def setUp(self):
         print('-'*80)
+        print()
         self.tmp_dir = create_temp_directory()
         self.dir_setup_data = (
             {
@@ -140,15 +141,17 @@ class TestFileIoRemainingFunctions(unittest.TestCase):    # pragma: no cover
                     with open('{}{}{}'.format(dir_name, os.sep, file_name), 'w') as f:
                         f.write(file_content)
                     print('   - Created file "{}"'.format(file_name))
+        print('SETUP COMPLETE')
+        print()
         
     def tearDown(self):
+        print()
+        print()
         print('DELETING DIRECTORIES')
-        test_data_as_list = list(self.dir_setup_data)
-        test_data_as_list.reverse()
-        for test_data in test_data_as_list:
-            dir_name = test_data['dir']
-            delete_directory(dir=dir_name)
-            print('* Deleted directory "{}"'.format(dir_name))
+        delete_directory(dir=self.tmp_dir)
+        print('* Deleted directory "{}"'.format(self.tmp_dir))
+        print()
+        print()
 
     def test_get_file_list_basic(self):
         base_dir = self.dir_setup_data[0]['dir']
