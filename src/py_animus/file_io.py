@@ -33,6 +33,18 @@ from py_animus.utils import generate_random_string
 """
 
 
+def _dir_walk_level(some_dir, level=1):
+    # FROM https://stackoverflow.com/questions/229186/os-walk-without-digging-into-directories-below
+    some_dir = some_dir.rstrip(os.path.sep)
+    assert os.path.isdir(some_dir)
+    num_sep = some_dir.count(os.path.sep)
+    for root, dirs, files in os.walk(some_dir):
+        yield root, dirs, files
+        num_sep_this = root.count(os.path.sep)
+        if num_sep + level <= num_sep_this:
+            del dirs[:]
+
+
 def read_text_file(path_to_file: str)->str:
     """Read the text from a text file
 
@@ -92,7 +104,8 @@ def read_large_text_file(path_to_file: str, callback_func: callable, chunk_size:
                 return_object = callback_func(**parameters)
                 current_chunk_sequence_number += 1
     except:
-        traceback.print_exc()
+        pass
+        # traceback.print_exc()
 
 
 def create_directory(path: str):
@@ -110,7 +123,7 @@ def create_directory(path: str):
     try:
         os.mkdir(path)
     except:
-        traceback.print_exc()
+        # traceback.print_exc()
         return False
     return True
 
@@ -122,7 +135,7 @@ def delete_directory(dir: str)->bool:
         try:
             shutil.rmtree(dir)
         except:
-            traceback.print_exc()
+            # traceback.print_exc()
             return False
     return True
 
@@ -149,7 +162,8 @@ def create_temp_directory()->str:
         delete_directory(tmp_dir) # Ensure it does not exist
         os.mkdir(tmp_dir)
     except:
-        traceback.print_exc()
+        pass
+        # traceback.print_exc()
     return tmp_dir
 
 
@@ -169,7 +183,8 @@ def get_file_size(file_path: str)->int:
     try:
         size = os.path.getsize(filename=file_path)
     except:
-        traceback.print_exc()
+        pass
+        # traceback.print_exc()
     return size
 
 
@@ -200,7 +215,8 @@ def calculate_file_checksum(file_path: str, checksum_algorithm: str='md5', _know
         elif checksum_algorithm.lower().startswith('sha256'):
             checksum = hashlib.sha256(open(file_path,'rb').read()).hexdigest()
     except:
-        traceback.print_exc()
+        pass
+        # traceback.print_exc()
     return checksum
 
 
@@ -250,7 +266,7 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
     """
     file_scan_counter = 0
     try:
-        for root, dirs, files in os.walk(directory):
+        for root, dirs, files in _dir_walk_level(some_dir=directory, level=0):
             if recurse is True:
                 for dir in dirs:
                     result = {
@@ -300,7 +316,8 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
             }
             result = copy.deepcopy(progress_callback_function(**callback_params))
         except:
-            traceback.print_exc()
+            pass
+            # traceback.print_exc()
     return copy.deepcopy(result)
 
 

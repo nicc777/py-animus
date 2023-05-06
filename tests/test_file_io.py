@@ -124,17 +124,30 @@ class TestFileIoRemainingFunctions(unittest.TestCase):    # pragma: no cover
             },
         )
         print('PREPARING DIRECTORIES AND FILES')
-        for dir in self.dir_setup_data:
-            for dir_name, file_data in dir.items():
-                create_directory(path=dir_name)
-                print('* Created directory "{}"'.format(dir_name))
+        for test_data in self.dir_setup_data:
+            dir_name = test_data['dir']
+            create_directory(path=dir_name)
+            print('* Created directory "{}"'.format(dir_name))
+            for test_file_data in test_data['files']:
+                for file_name, file_content in test_file_data.items():
+                    with open('{}{}{}'.format(dir_name, os.sep, file_name), 'w') as f:
+                        f.write(file_content)
+                    print('   - Created file "{}"'.format(file_name))
         
     def tearDown(self):
         print('DELETING DIRECTORIES')
-        for dir in self.dir_setup_data:
-            for dir_name, file_data in dir.items():
-                delete_directory(dir=dir_name)
-                print('* Deleted directory "{}"'.format(dir_name))
+        test_data_as_list = list(self.dir_setup_data)
+        test_data_as_list.reverse()
+        for test_data in test_data_as_list:
+            dir_name = test_data['dir']
+            delete_directory(dir=dir_name)
+            print('* Deleted directory "{}"'.format(dir_name))
+
+    def test_get_file_list_basic(self):
+        file_listing = list_files(directory=self.dir_setup_data[0]['dir'])
+        self.assertIsNotNone(file_listing)
+        self.assertIsInstance(file_listing, dict)
+        self.assertEqual(len(file_listing), 2)
 
     
 
