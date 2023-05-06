@@ -158,7 +158,19 @@ class TestFileIoRemainingFunctions(unittest.TestCase):    # pragma: no cover
             self.assertIsNone(file_meta_data['md5'])
             self.assertIsNone(file_meta_data['sha256'])
 
-    
+    def test_get_file_list_basic_with_file_sizes(self):
+        base_dir = self.dir_setup_data[0]['dir']
+        file_listing = list_files(directory=base_dir, include_size=True)
+        for file_with_full_path, file_meta_data in file_listing.items():
+            self.assertIsNotNone(file_with_full_path)
+            self.assertIsNotNone(file_meta_data)
+            self.assertTrue(base_dir in file_with_full_path)
+            self.assertTrue(file_with_full_path.endswith('txt'))
+            self.assertIsNotNone(file_meta_data['size'])
+            self.assertIsNone(file_meta_data['md5'])
+            self.assertIsNone(file_meta_data['sha256'])
+            self.assertIsInstance(file_meta_data['size'], int)
+            self.assertTrue(file_meta_data['size'] > 0)
 
 
 
