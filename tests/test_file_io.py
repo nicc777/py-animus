@@ -55,7 +55,7 @@ def dir_list_callback_strips_metadata(current_root: str, current_result: dict)->
     return new_result
 
 
-class TestFileIoRemainingFunctions(unittest.TestCase):    # pragma: no cover
+class TestFileIoListingFunctions(unittest.TestCase):    # pragma: no cover
 
     def setUp(self):
         print('-'*80)
@@ -271,6 +271,46 @@ class TestFileIoRemainingFunctions(unittest.TestCase):    # pragma: no cover
             self.assertIsInstance(file_meta_data['sha256'], str)
             self.assertTrue(len(file_meta_data['sha256']) > 0)
 
+
+class TestFileIoReadFunctions(unittest.TestCase):    # pragma: no cover
+
+    def setUp(self):
+        print('-'*80)
+        print()
+        self.tmp_dir = create_temp_directory()
+        # Create a small file
+        self.small_file = '{}{}small_file.txt'.format(self.tmp_dir, os.sep)
+        self.small_data = generate_random_string(length=128)
+        with open(self.small_file, 'w') as f:
+            f.write(self.small_data)
+        # Create a large file ()
+        self.large_data = generate_random_string(length=20000)
+        self.large_file = '{}{}large_file.txt'.format(self.tmp_dir, os.sep)
+        with open(self.large_file, 'w') as f:
+            f.write(self.large_data)
+        print('SETUP COMPLETE')
+        print()
+        
+    def tearDown(self):
+        print()
+        print()
+        print('DELETING DIRECTORIES')
+        delete_directory(dir=self.tmp_dir)
+        print('* Deleted directory "{}"'.format(self.tmp_dir))
+        print()
+        print()
+
+    def test_read_small_file(self):
+        result = read_text_file(self.small_file)
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, str)
+        self.assertEqual(len(result), 128)
+
+    def test_read_large_file(self):
+        result = read_text_file(self.large_file)
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, str)
+        self.assertEqual(len(result), 20000)
 
 
 if __name__ == '__main__':
