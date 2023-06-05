@@ -1780,6 +1780,18 @@ spec:
         self.assertEqual(vc_data['MyManifest1:test1-1-val']['value'], 'val3')
         self.assertEqual(vc_data['MyManifest1:test1-3-val']['value'], 'val9')
 
+    def test_remove_newline_from_string_values_if_present(self):
+        text = """Hello
+ world!"""
+        expected = "Hello world!"
+        self.assertNotEqual(text, expected)
+        vps = ValuePlaceHolders(logger=get_logger())
+        vps.add_environment_value(placeholder_name='test', environment_name='default', value=text)
+        result = vps.get_value_placeholder(placeholder_name='test', create_in_not_exists=True).get_environment_value(environment_name='default')
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, str)
+        self.assertEqual(result, expected)
+
 
 
 class TestDependencyReferences(unittest.TestCase):    # pragma: no cover
