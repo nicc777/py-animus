@@ -45,6 +45,10 @@ class ValuePlaceholder:
         self.per_environment_values = dict()
 
     def add_environment_value(self, environment_name: str, value: object):
+        if value is not None:
+            if isinstance(value, str):
+                value = value.replace('\n', '')
+                value = value.replace('\r', '')
         self.per_environment_values[environment_name] = value
 
     def get_environment_value(self, environment_name: str, default_value_when_not_found: object=None, raise_exception_when_not_found: bool=True):
