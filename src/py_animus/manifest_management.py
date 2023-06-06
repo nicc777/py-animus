@@ -113,7 +113,7 @@ class ValuePlaceHolders:
             default_value_when_not_found: object='',
             raise_exception_when_not_found: bool=False
         ):
-        self.logger.debug('Parsing for placeholders. input_str="{}'.format(input_str))
+        self.logger.debug('Parsing for placeholders. input_str="{}"'.format(input_str))
         return_str = copy.deepcopy(input_str)
         if input_str.find('{}{} .Values.'.format('{', '{')) >= 0:
             for matched_placeholder in re.findall('\{\{\s+\.Values\.([\w|\s|\-|\_|\.|\:]+)\s+\}\}', input_str):
