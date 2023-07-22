@@ -117,6 +117,41 @@ Resources:
         self.assertIsInstance(result, dict)
         self.assertEqual(len(result), 3)
 
+    def test_custom_tags_yaml_03(self):
+        yaml_string = """---
+AWSTemplateFormatVersion: "2010-09-09"
+
+Parameters:
+
+  RootDomainName:
+    Type: String
+    Default: example.tld
+
+Resources:
+
+  DNS: 
+    Type: "AWS::Route53::HostedZone"
+    Properties: 
+      HostedZoneConfig: 
+        Comment: !Sub "Deployed in account ${}AWS::AccountId{} in region ${}AWS::Region{}"
+      Name: !Ref RootDomainName
+""".format('{', '}', '{', '}')
+        
+        pre_result = None
+        try:
+            pre_result = parse_raw_yaml_data(yaml_data=yaml_string)
+        except:
+            pass
+        self.assertIsNotNone(pre_result)
+        self.assertIsInstance(pre_result, dict)
+        result = dict()
+        if 'part_1' in pre_result:
+            result = pre_result['part_1']
+        print('test_custom_tags_yaml_01(): result: {}'.format(json.dumps(result, default=str)))
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, dict)
+        self.assertEqual(len(result), 3)
+
 
 if __name__ == '__main__':
     unittest.main()

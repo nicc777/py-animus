@@ -83,15 +83,19 @@ def parse_raw_yaml_data(yaml_data: str, logger=get_logger(), use_custom_parser_f
         return load_from_str(s=yaml_data)
     configuration = dict()
     current_part = 0
-    # logger.debug('parse_raw_yaml_data(): RAW DATA: {}'.format(yaml_data))
     try:
         for data in yaml.load_all(yaml_data, Loader=Loader):
             current_part += 1
             configuration['part_{}'.format(current_part)] = data
-        # logger.debug('configuration={}'.format(configuration))
     except: # pragma: no cover
-        traceback.print_exc()
-        raise Exception('Failed to parse configuration')
+        try:
+            # Even though the use_custom_parser_for_custom_tags flag was False, let's try using the custom parser
+            parsed_data = load_from_str(s=yaml_data)
+            logger.warning('It seems the YAML contained custom tags !!! WARNING: This conversion only works ONE WAY. You will not be able to reconstruct the original YAML from the resulting dict')
+            return parsed_data
+        except:
+            traceback.print_exc()
+            raise Exception('Failed to parse configuration')
     return configuration
     
 
