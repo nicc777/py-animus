@@ -1,5 +1,5 @@
 """
-    Take verbatim from https://gist.github.com/lukeplausin/0f103517d718ce6844180b4ccf212775 on 2023-07-22
+    Taken verbatim from https://gist.github.com/lukeplausin/0f103517d718ce6844180b4ccf212775 on 2023-07-22 with the exception of the load_from_str() function
 
     Credit goes to https://gist.github.com/lukeplausin
 """
