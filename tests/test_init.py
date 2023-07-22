@@ -67,7 +67,7 @@ Resources:
         
         pre_result = None
         try:
-            pre_result = parse_raw_yaml_data(yaml_data=yaml_string)
+            pre_result = parse_raw_yaml_data(yaml_data=yaml_string, use_custom_parser_for_custom_tags=True)
         except:
             pass
         self.assertIsNotNone(pre_result)
@@ -75,7 +75,7 @@ Resources:
         result = dict()
         if 'part_1' in pre_result:
             result = pre_result['part_1']
-        print('test_custom_tags_yaml(): result: {}'.format(json.dumps(result, default=str)))
+        print('test_custom_tags_yaml_01(): result: {}'.format(json.dumps(result, default=str)))
         self.assertIsNotNone(result)
         self.assertIsInstance(result, dict)
         self.assertEqual(len(result), 3)
@@ -112,7 +112,7 @@ Resources:
         result = dict()
         if 'part_1' in pre_result:
             result = pre_result['part_1']
-        print('test_custom_tags_yaml(): result: {}'.format(json.dumps(result, default=str)))
+        print('test_custom_tags_yaml_02(): result: {}'.format(json.dumps(result, default=str)))
         self.assertIsNotNone(result)
         self.assertIsInstance(result, dict)
         self.assertEqual(len(result), 3)

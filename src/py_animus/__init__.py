@@ -13,6 +13,7 @@ import logging.handlers
 import sys
 import os
 from datetime import datetime
+from py_animus.helpers.yaml_helper import load_from_str
 
 import yaml
 try:    # pragma: no cover
@@ -77,7 +78,9 @@ def get_logger(
     return logger
 
 
-def parse_raw_yaml_data(yaml_data: str, logger=get_logger())->dict:
+def parse_raw_yaml_data(yaml_data: str, logger=get_logger(), use_custom_parser_for_custom_tags: bool=False)->dict:
+    if use_custom_parser_for_custom_tags is True:
+        return load_from_str(s=yaml_data)
     configuration = dict()
     current_part = 0
     # logger.debug('parse_raw_yaml_data(): RAW DATA: {}'.format(yaml_data))
@@ -90,4 +93,5 @@ def parse_raw_yaml_data(yaml_data: str, logger=get_logger())->dict:
         traceback.print_exc()
         raise Exception('Failed to parse configuration')
     return configuration
+    
 
