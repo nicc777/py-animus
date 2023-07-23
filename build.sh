@@ -2,6 +2,6 @@
 
 rm -frR dist/
 
-docker build --no-cache -t animus .
+#docker build --no-cache -t animus .
 
 python3 -m  build
