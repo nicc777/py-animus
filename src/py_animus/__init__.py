@@ -57,7 +57,7 @@ def get_logging_stream_handler(
 
 def get_logger(
     level=logging.INFO,
-    log_format: str='%(asctime)s %(levelname)s - %(message)s'
+    log_format: str='%(asctime)s %(levelname)s %(filename)s %(funcName)s %(lineno)d - %(message)s'
 )->logging.Logger:
     if is_debug_set_in_environment() is True:
         level = logging.DEBUG
