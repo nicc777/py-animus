@@ -12,6 +12,21 @@ from py_animus import get_logger
 
 
 class UnitOfWorkExceptionHandling:
+    """
+        Class to assist with UnitOfWork error handling.
+
+        The following flags are defined:
+
+            SILENT: Do not print or log anything
+            ECHO_TRACEBACK: Dump the stacktrace using the Python built in traceback functionality for this
+            ECHO_LOGGER: Use the logger (if set) to log the exception stack trace
+            PASS_EXCEPTION_ON: If set to True, a new Exception will be raised to be handled by the calling party.
+
+        In addition, the following values are set:
+
+            LOGGER: The logger class
+            LEVEL: The level to use when using the LOGGER class
+    """
 
     SILENT = False
     ECHO_TRACEBACK = True
@@ -21,6 +36,29 @@ class UnitOfWorkExceptionHandling:
     LEVEL = 'error'
 
     def set_flag(self, flag_name: str, value: bool):
+        """Sets one of the flags and returns a copy of the class instance
+
+        Examples:
+
+            # Use defaults:
+            >>> t = UnitOfWorkExceptionHandling()   
+
+            # Sets the SILENT flag value:
+            >>> t = UnitOfWorkExceptionHandling().set_flag(flag_name='SILENT', value=False)
+
+            # Sets both the SILENT and ECHO_TRACEBACK flag values:
+            >>> t = UnitOfWorkExceptionHandling().set_flag(flag_name='SILENT', value=True).set_flag(flag_name='ECHO_TRACEBACK', value=False)
+
+        Args:
+            flag_name: (str) One of 'SILENT', 'ECHO_TRACEBACK', 'ECHO_LOGGER' or 'PASS_EXCEPTION_ON'
+            value: (bool) The flag value (True or False)
+
+        Returns:
+            A copy of Self
+
+        Raises:
+            Exception: On validation errors of input parameters
+        """
         if value is None:
             raise Exception('value cannot be None')
         if isinstance(value, bool) is False:
@@ -38,24 +76,49 @@ class UnitOfWorkExceptionHandling:
         return self
 
     def set_level(self, level: str):
+        """Sets the logging level
+
+        Examples:
+
+            # Use defaults:
+            >>> t = UnitOfWorkExceptionHandling()   
+
+            # Sets logging level to "ino":
+            >>> t = UnitOfWorkExceptionHandling().set_level(level='info')
+
+            # Sets both the SILENT and ECHO_TRACEBACK flag values as well as the logging level:
+            >>> t = UnitOfWorkExceptionHandling().set_flag(flag_name='SILENT', value=True).set_flag(flag_name='ECHO_TRACEBACK', value=False).set_level(level='info')
+
+        Args:
+            level: (str) One of 'info', 'debug', 'error' or 'warning'
+
+        Returns:
+            A copy of Self
+
+        Raises:
+            Exception: On validation errors of input parameters
+        """
         if level is None:
             raise Exception('level cannot be None')
         if isinstance(level, str) is False:
             raise Exception('level must be a string type')
         if level.lower() not in ('info', 'debug', 'error', 'warn', 'warning'):
             raise Exception('unrecognized level')
-        
         if level.lower().startswith('i'):
             self.LEVEL = 'info'
-
         if level.lower().startswith('d'):
             self.LEVEL = 'debug'
-
         if level.lower().startswith('e'):
             self.LEVEL = 'error'
-
         if level.lower().startswith('w'):
             self.LEVEL = 'warning'
+        return self
+    
+    def set_logger_class(self, logger):
+        if logger is None:
+            raise Exception('logger cannot be None')
+        self.LOGGER = logger
+        return self
 
     def _handle_echo_traceback(self, trace, logger)->bool:
         if self.ECHO_TRACEBACK is True:
