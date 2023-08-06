@@ -27,18 +27,15 @@ class UnitOfWorkExceptionHandling:
             raise Exception('value must be a boolean type')
         if flag_name.upper() not in ('SILENT', 'ECHO_TRACEBACK', 'ECHO_LOGGER', 'PASS_EXCEPTION_ON',):
             raise Exception('unrecognized flag_name')
-        
         if flag_name.upper() == 'SILENT':
             self.SILENT = value
-
         if flag_name.upper() == 'ECHO_TRACEBACK':
             self.ECHO_TRACEBACK = value
-
         if flag_name.upper() == 'ECHO_LOGGER':
             self.ECHO_LOGGER = value
-
         if flag_name.upper() == 'PASS_EXCEPTION_ON':
             self.PASS_EXCEPTION_ON = value
+        return self
 
     def set_level(self, level: str):
         if level is None:
