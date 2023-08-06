@@ -7,18 +7,117 @@
 """
 import traceback
 import copy
+import sys
 from py_animus import get_logger
+
+
+class UnitOfWorkExceptionHandling:
+
+    SILENT = False
+    ECHO_TRACEBACK = True
+    ECHO_LOGGER = False
+    PASS_EXCEPTION_ON = False
+    LOGGER = None
+    LEVEL = 'error'
+
+    def set_flag(self, flag_name: str, value: bool):
+        if value is None:
+            raise Exception('value cannot be None')
+        if isinstance(value, bool) is False:
+            raise Exception('value must be a boolean type')
+        if flag_name.upper() not in ('SILENT', 'ECHO_TRACEBACK', 'ECHO_LOGGER', 'PASS_EXCEPTION_ON',):
+            raise Exception('unrecognized flag_name')
+        
+        if flag_name.upper() == 'SILENT':
+            self.SILENT = value
+
+        if flag_name.upper() == 'ECHO_TRACEBACK':
+            self.ECHO_TRACEBACK = value
+
+        if flag_name.upper() == 'ECHO_LOGGER':
+            self.ECHO_LOGGER = value
+
+        if flag_name.upper() == 'PASS_EXCEPTION_ON':
+            self.PASS_EXCEPTION_ON = value
+
+    def set_level(self, level: str):
+        if level is None:
+            raise Exception('level cannot be None')
+        if isinstance(level, str) is False:
+            raise Exception('level must be a string type')
+        if level.lower() not in ('info', 'debug', 'error', 'warn', 'warning'):
+            raise Exception('unrecognized level')
+        
+        if level.lower().startswith('i'):
+            self.LEVEL = 'info'
+
+        if level.lower().startswith('d'):
+            self.LEVEL = 'debug'
+
+        if level.lower().startswith('e'):
+            self.LEVEL = 'error'
+
+        if level.lower().startswith('w'):
+            self.LEVEL = 'warning'
+
+    def _handle_echo_traceback(self, trace, logger)->bool:
+        if self.ECHO_TRACEBACK is True:
+            try:
+                trace.print_exc()
+            except:
+                return False
+        return True
+    
+    def _handle_echo_logger(self, trace, logger)->bool:
+        if self.ECHO_LOGGER is True and self.LOGGER is not None:
+            try:
+                getattr(logger, self.LEVEL)('EXCEPTION: {}'.format(traceback.format_exc()))
+            except:
+                return False
+        return True
+
+    def handle_exception(self, trace, logger)->dict:
+        handled_successfully = False
+        flag_values = {
+            'SILENT'            : self.SILENT,
+            'ECHO_TRACEBACK'    : self.ECHO_TRACEBACK,
+            'ECHO_LOGGER'       : self.ECHO_LOGGER,
+            'PASS_EXCEPTION_ON' : self.PASS_EXCEPTION_ON,
+            'LOGGER'            : True if self.LOGGER is not None else False,
+            'LEVEL'             : self.LEVEL
+        }
+
+        if self.SILENT:
+            handled_successfully = True
+        else:
+            if self.ECHO_TRACEBACK:
+                handled_successfully = self._handle_echo_traceback(trace=trace, logger=logger)
+            if self.ECHO_LOGGER:
+                handled_successfully = self._handle_echo_logger(trace=trace, logger=logger)
+
+        flag_values['HandledSuccessfully'] = handled_successfully
+        return flag_values
 
 
 class UnitOfWork:
 
-    def __init__(self, id: str, scopes: list, dependant_unit_of_work_ids: list, work_class: object, run_method_name: str='apply', logger=get_logger()):
+    def __init__(
+            self,
+            id: str,
+            scopes: list,
+            dependant_unit_of_work_ids: list,
+            work_class: object,
+            run_method_name: str='apply_manifest',
+            logger=get_logger(),
+            exception_handling: UnitOfWorkExceptionHandling=UnitOfWorkExceptionHandling()
+        ):
         self.id = id
         self.scopes = scopes
         self.dependencies = dependant_unit_of_work_ids
         self.work_class = work_class
         self.run_method_name = run_method_name
         self.logger = logger
+        self.exception_handling = exception_handling
 
     def run(self, **kwargs):
 
@@ -28,10 +127,23 @@ class UnitOfWork:
 
         self.logger.info('UnitOfWork: ID={}'.format(self.id))
         self.logger.info('UnitOfWork:    kwargs={}'.format(parameters))
+        exception_result =dict()
         try:
             getattr(self.work_class, self.run_method_name)(**parameters)
-        except:
-            traceback.print_exc()
+        # except:
+        #     traceback.print_exc()
+        except Exception as e:
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            tb = traceback.TracebackException(exc_type, exc_value, exc_tb)
+            exception_result = self.exception_handling.handle_exception(trace=tb, logger=self.logger)
+
+        if len(exception_result) > 0:
+            if 'HandledSuccessfully' in exception_result:
+                if exception_result['HandledSuccessfully'] is False:
+                    self.logger.warning('The exception was caught but something went wrong with the exception handling.')
+            if 'PASS_EXCEPTION_ON' in exception_result:
+                if exception_result['PASS_EXCEPTION_ON'] is True:
+                    raise Exception('UnitOfWork "{}" threw an exception and configuration forced this exception to be raised to halt further processing.'.format(self.id))
 
 
 class AllWork:
