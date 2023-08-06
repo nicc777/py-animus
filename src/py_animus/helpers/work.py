@@ -6,6 +6,7 @@
     https://raw.githubusercontent.com/nicc777/verbacratis/main/LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt
 """
 import traceback
+import copy
 from py_animus import get_logger
 
 
@@ -71,12 +72,22 @@ class ExecutionPlan:
             self.execution_order.append(uow.id)
 
     def calculate_execution_plan(self):
+        self.execution_order = list()
         for uow in self.all_work.all_work_list:
             self.add_unit_of_work_to_execution_order(uow=uow)
 
+    def calculate_scoped_execution_plan(self, scope: str):
+        final_execution_order = list()
+        self.calculate_execution_plan()
+        current_execution_order = copy.deepcopy(self.execution_order)
+        for uof_id in current_execution_order:
+            uow = self.all_work.get_unit_of_work_by_id(id=uof_id)
+            if scope in uow.scopes:
+                final_execution_order.append(uof_id)
+        self.execution_order = copy.deepcopy(final_execution_order)
+
     def do_work(self, scope: str, **kwargs):
-        if len(self.execution_order) == 0:
-            self.calculate_execution_plan()
+        self.calculate_execution_plan()
         
         parameters = dict()
         for k,v in kwargs.items():

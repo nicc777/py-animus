@@ -59,7 +59,7 @@ class MyManifest1(ManifestBase): # pragma: no cover
         return  
     
 
-class TestClassUnitOfWork(unittest.TestCase):    # pragma: no cover
+class TestUnifiedClasses(unittest.TestCase):    # pragma: no cover
 
     @mock.patch.dict(os.environ, {"DEBUG": "1"})   
     def setUp(self):
@@ -77,6 +77,9 @@ metadata:
     - env2
     - env3
     skipApplyAll: true
+    dependencies:
+        delete: 
+        - test2
 spec:
     val: 'Value 1'
 """
@@ -91,6 +94,9 @@ metadata:
     dependencies:
         apply: 
         - test1
+        delete:
+        - test3
+        - test4
 spec:
     val: 'Value 2'
 """
@@ -105,6 +111,8 @@ metadata:
     dependencies:
         apply: 
         - test2
+        delete:
+        - test4
 spec:
     val: 'Value 3'
 """
@@ -153,10 +161,10 @@ spec:
                 all_work = AllWork(logger=self.logger)
 
                 manifests = list()
-                manifests.append(self._parse_manifest(manifest_obj=MyManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_1, target_environments=[scope,]))
-                manifests.append(self._parse_manifest(manifest_obj=MyManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_2, target_environments=[scope,]))
-                manifests.append(self._parse_manifest(manifest_obj=MyManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_3, target_environments=[scope,]))
-                manifests.append(self._parse_manifest(manifest_obj=MyManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_4, target_environments=[scope,]))
+                manifests.append(self._parse_manifest(manifest_obj=MyManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_1, target_environments=self.parsed_manifest_1['metadata']['environments']))
+                manifests.append(self._parse_manifest(manifest_obj=MyManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_2, target_environments=self.parsed_manifest_2['metadata']['environments']))
+                manifests.append(self._parse_manifest(manifest_obj=MyManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_3, target_environments=self.parsed_manifest_3['metadata']['environments']))
+                manifests.append(self._parse_manifest(manifest_obj=MyManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_4, target_environments=self.parsed_manifest_4['metadata']['environments']))
                 
                 # self.logger.info('manifests: {}'.format(json.dumps(manifests, default=str)))
 
@@ -219,6 +227,52 @@ spec:
 
                 self.logger.info('FINAL variable_cache value: {}'.format(json.dumps(variable_cache.to_dict(), default=str)))
 
+
+    def test_env_1_maintains_correct_order_event_with_adding_work_in_different_orders_for_apply_action(self):
+        """
+            Expected orders:
+
+                1 -> 2 -> 4 (3 is not executed in env1)
+        """
+        scope = 'env1'
+        manifests = list()
+        manifests.append(self._parse_manifest(manifest_obj=MyManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_4, target_environments=self.parsed_manifest_4['metadata']['environments']))
+        manifests.append(self._parse_manifest(manifest_obj=MyManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_3, target_environments=self.parsed_manifest_3['metadata']['environments']))
+        manifests.append(self._parse_manifest(manifest_obj=MyManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_2, target_environments=self.parsed_manifest_2['metadata']['environments']))
+        manifests.append(self._parse_manifest(manifest_obj=MyManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_1, target_environments=self.parsed_manifest_1['metadata']['environments']))
+
+        all_work = AllWork(logger=self.logger)
+
+        for manifest in manifests:
+
+            dependencies = list()
+            if 'dependencies' in manifest.metadata:
+                dependencies = manifest.metadata['dependencies']['apply'] if 'apply' in manifest.metadata['dependencies'] else list()
+            self.logger.info('* Dependencies for manifest named "{}": "{}"'.format(manifest.metadata['name'], dependencies))
+
+            uow = UnitOfWork(
+                id=copy.deepcopy(manifest.metadata['name']),
+                scopes=copy.deepcopy(manifest.target_environments),
+                dependant_unit_of_work_ids=dependencies,
+                work_class=copy.deepcopy(manifest),
+                run_method_name='apply_manifest',
+                logger=self.logger
+            )
+            self.assertIsNotNone(uow)
+
+            all_work.add_unit_of_work(unit_of_work=uow)
+
+        execution_plan = ExecutionPlan(all_work=all_work, logger=self.logger)
+        execution_plan.calculate_scoped_execution_plan(scope='env1')
+        self.logger.info('Execution plan execution order: {}'.format(execution_plan.execution_order))
+        self.assertIsNotNone(execution_plan.execution_order)
+        self.assertIsInstance(execution_plan.execution_order, list)
+        self.assertEqual(len(execution_plan.execution_order), 3)
+        self.assertEqual(execution_plan.execution_order[0], 'test1')
+        self.assertEqual(execution_plan.execution_order[1], 'test2')
+        self.assertEqual(execution_plan.execution_order[2], 'test4')
+
+        
 
 
 if __name__ == '__main__':
