@@ -115,6 +115,28 @@ class UnitOfWorkExceptionHandling:
         return self
     
     def set_logger_class(self, logger):
+        """Sets the logging level
+
+        Examples:
+
+            # Use defaults:
+            >>> t = UnitOfWorkExceptionHandling()   
+
+            # Sets logging level to "ino":
+            >>> t = UnitOfWorkExceptionHandling().set_level(level='info')
+
+            # Sets both the SILENT and ECHO_TRACEBACK flag values as well as the logging level:
+            >>> t = UnitOfWorkExceptionHandling().set_flag(flag_name='SILENT', value=True).set_flag(flag_name='ECHO_TRACEBACK', value=False).set_logger_class(logger=.....)
+
+        Args:
+            logger: (object) A logging implementation that implements all of these methods: 'info', 'debug', 'error' and 'warning'
+
+        Returns:
+            A copy of Self
+
+        Raises:
+            Exception: On validation errors of input parameters
+        """
         if logger is None:
             raise Exception('logger cannot be None')
         self.LOGGER = logger
