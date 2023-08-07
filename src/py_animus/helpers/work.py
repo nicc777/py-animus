@@ -151,7 +151,7 @@ class UnitOfWorkExceptionHandling:
         return True
     
     def _handle_echo_logger(self, trace, logger)->bool:
-        if self.ECHO_LOGGER is True and self.LOGGER is not None:
+        if self.ECHO_LOGGER is True and logger is not None:
             try:
                 getattr(logger, self.LEVEL)('EXCEPTION: {}'.format(traceback.format_exc()))
             except:
@@ -169,12 +169,12 @@ class UnitOfWorkExceptionHandling:
             'LEVEL'             : self.LEVEL
         }
 
-        if self.SILENT:
+        if self.SILENT is True:
             handled_successfully = True
         else:
-            if self.ECHO_TRACEBACK:
+            if self.ECHO_TRACEBACK is True:
                 handled_successfully = self._handle_echo_traceback(trace=trace, logger=logger)
-            if self.ECHO_LOGGER:
+            if self.ECHO_LOGGER is True:
                 handled_successfully = self._handle_echo_logger(trace=trace, logger=logger)
 
         flag_values['HandledSuccessfully'] = handled_successfully

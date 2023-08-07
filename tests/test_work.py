@@ -21,10 +21,34 @@ import time
 
 from py_animus.manifest_management import *
 from py_animus import get_logger, parse_raw_yaml_data
-from py_animus.helpers.work import UnitOfWork, AllWork, ExecutionPlan
+from py_animus.helpers.work import UnitOfWork, AllWork, ExecutionPlan, UnitOfWorkExceptionHandling
 
 running_path = os.getcwd()
 print('Current Working Path: {}'.format(running_path))
+
+
+class MockLogger:
+
+    def __init__(self):
+        self.messages = list()
+
+    def info(self, message):
+        self.messages.append('INFO: {}'.format(message))
+
+    def error(self, message):
+        self.messages.append('ERROR: {}'.format(message))
+
+    def debug(self, message):
+        self.messages.append('DEBUG: {}'.format(message))
+
+    def warning(self, message):
+        self.messages.append('WARNING: {}'.format(message))
+
+    def warn(self, message):
+        self.warning(message=message)
+
+
+test_logger = MockLogger()
 
 
 def my_post_parsing_method(**params):   # pragma: no cover
@@ -272,6 +296,59 @@ spec:
         self.assertEqual(execution_plan.execution_order[1], 'test2')
         self.assertEqual(execution_plan.execution_order[2], 'test4')
 
+
+class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no cover
+
+    @mock.patch.dict(os.environ, {"DEBUG": "1"})   
+    def setUp(self):
+        test_logger.messages = list()
+
+    def test_basic_init_and_functionality_with_silent_exception(self):
+        exception_handler = UnitOfWorkExceptionHandling().set_flag(flag_name='SILENT', value=True)
+
+        result = None
+
+        def bad_function():
+            raise Exception('This will always fail')
+
+        def test_function(eh: UnitOfWorkExceptionHandling=exception_handler):
+            nonlocal result
+            try:
+                bad_function()
+            except:
+                result = eh.handle_exception(trace=traceback.extract_tb(tb=sys.exc_info()[2]), logger=test_logger)
+                print('result={}'.format(result))
+        
+        test_function(eh=exception_handler)
+
+        print('Logger Messages: {}'.format(test_logger.messages))
+        self.assertTrue(len(test_logger.messages) == 0)
+        self.assertIsNotNone(result)
+
+    def test_basic_init_and_functionality_with_logging_exception(self):
+        exception_handler = UnitOfWorkExceptionHandling().set_flag(flag_name='ECHO_LOGGER', value=True)
+
+        result = None
+
+        def bad_function():
+            raise Exception('This will always fail')
+
+        def test_function(eh: UnitOfWorkExceptionHandling=exception_handler, logger=test_logger):
+            nonlocal result
+            try:
+                bad_function()
+            except:
+                result = eh.handle_exception(trace=traceback.extract_tb(tb=sys.exc_info()[2]), logger=logger)
+                print('result={}'.format(result))
+        
+        test_function(eh=exception_handler)
+
+        print('Logger Messages: {}'.format(test_logger.messages))
+        self.assertTrue(len(test_logger.messages) > 0)
+        print('Exception Message: {}'.format(test_logger.messages[0]))
+        self.assertTrue('This will always fail' in test_logger.messages[0])
+        self.assertIsNotNone(result)
+        
         
 
 
