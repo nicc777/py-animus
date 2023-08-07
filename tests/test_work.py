@@ -350,6 +350,7 @@ class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no c
         self.assertTrue(len(test_logger.messages) > 0)
         print('Exception Message: {}'.format(test_logger.messages[0]))
         self.assertTrue('This will always fail' in test_logger.messages[0])
+        self.assertTrue(test_logger.messages[0].startswith('ERROR:'))
         self.assertIsNotNone(result)
         self.assertFalse(exception_handler.PASS_EXCEPTION_ON)
         self.assertFalse(result['PASS_EXCEPTION_ON'])
@@ -381,6 +382,41 @@ class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no c
         self.assertTrue(exception_handler.PASS_EXCEPTION_ON)
         self.assertTrue(result['PASS_EXCEPTION_ON'])
         self.assertTrue(result['HandledSuccessfully'])
+
+    def test_basic_init_and_functionality_with_all_logging_levels(self):
+        log_levels = ('info', 'debug', 'error', 'warn', 'warning',)
+        for log_level in log_levels:
+            exception_handler = UnitOfWorkExceptionHandling().set_flag(flag_name='ECHO_LOGGER', value=True).set_level(level=log_level)
+
+            result = None
+
+            def bad_function():
+                raise Exception('This will always fail')
+
+            def test_function(eh: UnitOfWorkExceptionHandling=exception_handler, logger=test_logger):
+                nonlocal result
+                try:
+                    bad_function()
+                except:
+                    result = eh.handle_exception(trace=traceback.extract_tb(tb=sys.exc_info()[2]), logger=logger)
+                    print('result={}'.format(result))
+            
+            test_function(eh=exception_handler)
+
+            log_line_leader = '{}:'.format(log_level.upper())
+            if log_line_leader == 'WARN:':
+                log_line_leader = 'WARNING:'
+
+            print('Logger Messages: {}'.format(test_logger.messages))
+            self.assertTrue(len(test_logger.messages) > 0)
+            print('Exception Message: {}'.format(test_logger.messages[0]))
+            self.assertTrue('This will always fail' in test_logger.messages[0])
+            self.assertTrue(test_logger.messages[0].startswith(log_line_leader))
+            self.assertIsNotNone(result)
+            self.assertFalse(exception_handler.PASS_EXCEPTION_ON)
+            self.assertFalse(result['PASS_EXCEPTION_ON'])
+            self.assertTrue(result['HandledSuccessfully'])
+            test_logger.messages = list()
         
         
 
