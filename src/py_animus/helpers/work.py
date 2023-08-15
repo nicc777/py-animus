@@ -145,8 +145,11 @@ class UnitOfWorkExceptionHandling:
     def _handle_echo_traceback(self, trace)->bool:
         if self.ECHO_TRACEBACK is True:
             try:
-                trace.print_exc()
+                # formatted_Exception = trace.format_exception_only()
+                formatted_Exception = str(trace)
+                print(formatted_Exception)
             except:
+                traceback.print_exc()
                 return False
         return True
     

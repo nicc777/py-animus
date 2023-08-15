@@ -380,7 +380,7 @@ spec:
                 dependant_unit_of_work_ids=dependencies,
                 work_class=copy.deepcopy(manifest),
                 run_method_name='apply_manifest',
-                logger=self.logger,
+                logger=test_logger,
                 exception_handling=exception_handler
             )
             self.assertIsNotNone(uow)
