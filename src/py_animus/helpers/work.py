@@ -306,5 +306,8 @@ class ExecutionPlan:
                     raise Exception('Cannot continue further due to UnitOfWork named "{}" that threw exception'.format(uow.id))
                 elif exception_raised is True and self.stop_on_exception is False:
                     self.logger.warning('UnitOfWork named "{}" that threw exception, but configuration insist that work carries on'.format(uow.id))
+
+            else:
+                self.logger.info('UnitOfWork named "{}" skipped as it is not in scope "{}"'.format(uow.id, scope))
                 
         self.execution_order = list()
