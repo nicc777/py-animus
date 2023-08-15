@@ -173,6 +173,8 @@ class UnitOfWorkExceptionHandling:
             'LEVEL'             : self.LEVEL
         }
 
+        self.LOGGER.error('Handled Exception. Message: {}'.format(str(trace)))
+
         if self.SILENT is True:
             handled_successfully = True
         else:

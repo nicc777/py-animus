@@ -93,11 +93,11 @@ class MyProblematicManifest1(ManifestBase): # pragma: no cover
 
     def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders()):
         self.log(message='[{}] apply_manifest(): MANIFEST: {}'.format(self.metadata['name'], json.dumps(self.to_dict())), level='info')
-        raise Exception('ALWAY FAIL')
+        raise Exception('ALWAYS FAIL')
     
     def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders()):
         self.log(message='[{}] delete_manifest(): MANIFEST: {}'.format(self.metadata['name'], json.dumps(self.to_dict())), level='info')
-        raise Exception('ALWAY FAIL')
+        raise Exception('ALWAYS FAIL')
 
 
 class TestUnifiedClasses(unittest.TestCase):    # pragma: no cover
@@ -403,6 +403,11 @@ spec:
         self.assertEqual(variable_cache.to_dict(), dict())
         self.logger.info('test_logger_messages: {}'.format(json.dumps(test_logger.messages, default=str)))
         self.assertTrue(len(test_logger.messages) > 0)
+        exception_message_found = False
+        for line in test_logger.messages:
+            if 'ALWAYS FAIL' in line:
+                exception_message_found = True
+        self.assertTrue(exception_message_found, 'The expected exception message "ALWAYS FAIL" was not present')
         
 
 class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no cover
