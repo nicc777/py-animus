@@ -360,7 +360,7 @@ spec:
 
 
     @mock.patch.dict(os.environ, {"DEBUG": "1"})   
-    def test_basic_failure(self):
+    def test_basic_failure_with_hard_stop(self):
         exception_handler = UnitOfWorkExceptionHandling().set_flag(flag_name='SILENT', value=False).set_logger_class(logger=test_logger)
         manifests = list()
         manifests.append(self._parse_manifest(manifest_obj=MyProblematicManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_1))
@@ -401,6 +401,55 @@ spec:
         with self.assertRaises(Exception):
             execution_plan.do_work(scope='default', **parameters)
         self.assertEqual(variable_cache.to_dict(), dict())
+        self.logger.info('test_logger_messages: {}'.format(json.dumps(test_logger.messages, default=str)))
+        self.assertTrue(len(test_logger.messages) > 0)
+        exception_message_found = False
+        for line in test_logger.messages:
+            if 'ALWAYS FAIL' in line:
+                exception_message_found = True
+        self.assertTrue(exception_message_found, 'The expected exception message "ALWAYS FAIL" was not present')
+
+    @mock.patch.dict(os.environ, {"DEBUG": "1"})   
+    def test_basic_failure_without_interrupting_execution_of_all_work(self):
+        exception_handler = UnitOfWorkExceptionHandling().set_flag(flag_name='SILENT', value=False).set_logger_class(logger=test_logger).set_flag(flag_name='PASS_EXCEPTION_ON', value=False)
+        manifests = list()
+        manifests.append(self._parse_manifest(manifest_obj=MyProblematicManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_1))
+        manifests.append(self._parse_manifest(manifest_obj=MyManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_2))
+        all_work = AllWork(logger=self.logger)
+
+        for manifest in manifests:
+
+            dependencies = list()
+            if 'dependencies' in manifest.metadata:
+                dependencies = manifest.metadata['dependencies']['apply'] if 'apply' in manifest.metadata['dependencies'] else list()
+            self.logger.info('* Dependencies for manifest named "{}": "{}"'.format(manifest.metadata['name'], dependencies))
+
+            uow = UnitOfWork(
+                id=copy.deepcopy(manifest.metadata['name']),
+                scopes=copy.deepcopy(manifest.target_environments),
+                dependant_unit_of_work_ids=dependencies,
+                work_class=copy.deepcopy(manifest),
+                run_method_name='apply_manifest',
+                logger=test_logger,
+                exception_handling=exception_handler
+            )
+            self.assertIsNotNone(uow)
+
+            all_work.add_unit_of_work(unit_of_work=uow)
+
+        execution_plan = ExecutionPlan(all_work=all_work, logger=self.logger)
+        execution_plan.calculate_scoped_execution_plan()
+        self.assertEqual(len(execution_plan.execution_order), 2)
+
+        # Execute plan
+        variable_cache = VariableCache()
+        parameters = dict()
+        parameters['manifest_lookup_function'] = dummy_manifest_lookup_function
+        parameters['variable_cache'] = variable_cache
+        parameters['target_environment'] = 'default'
+
+        execution_plan.do_work(scope='default', **parameters)
+        self.assertTrue(len(variable_cache.to_dict()) > 0)
         self.logger.info('test_logger_messages: {}'.format(json.dumps(test_logger.messages, default=str)))
         self.assertTrue(len(test_logger.messages) > 0)
         exception_message_found = False
