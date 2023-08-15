@@ -31,7 +31,7 @@ class UnitOfWorkExceptionHandling:
     SILENT = False
     ECHO_TRACEBACK = True
     ECHO_LOGGER = False
-    PASS_EXCEPTION_ON = False
+    PASS_EXCEPTION_ON = True
     LOGGER = None
     LEVEL = 'error'
 
@@ -195,6 +195,8 @@ class UnitOfWork:
             exception_handling: UnitOfWorkExceptionHandling=UnitOfWorkExceptionHandling()
         ):
         self.id = id
+        if len(scopes) == 0:
+            scopes = ['default',]
         self.scopes = scopes
         self.dependencies = dependant_unit_of_work_ids
         self.work_class = work_class
@@ -213,8 +215,6 @@ class UnitOfWork:
         exception_result =dict()
         try:
             getattr(self.work_class, self.run_method_name)(**parameters)
-        # except:
-        #     traceback.print_exc()
         except Exception as e:
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb = traceback.TracebackException(exc_type, exc_value, exc_tb)
@@ -273,7 +273,7 @@ class ExecutionPlan:
         for uow in self.all_work.all_work_list:
             self.add_unit_of_work_to_execution_order(uow=uow)
 
-    def calculate_scoped_execution_plan(self, scope: str):
+    def calculate_scoped_execution_plan(self, scope: str='default'):
         final_execution_order = list()
         self.calculate_execution_plan()
         current_execution_order = copy.deepcopy(self.execution_order)

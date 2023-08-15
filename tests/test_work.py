@@ -81,7 +81,24 @@ class MyManifest1(ManifestBase): # pragma: no cover
         variable_cache.store_variable(variable=Variable(name='{}:{}-applied'.format(self.kind, self.metadata['name']), initial_value=False), overwrite_existing=True)
         variable_cache.store_variable(variable=Variable(name='{}:{}-deleted'.format(self.kind, self.metadata['name']), initial_value=True), overwrite_existing=True)
         return  
+
+
+class MyProblematicManifest1(ManifestBase): # pragma: no cover
+
+    def __init__(self, logger=get_logger(), post_parsing_method: object = my_post_parsing_method, version: str='v0.1', supported_versions: tuple=('v0.1',)):
+        super().__init__(logger=logger, post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
+
+    def implemented_manifest_differ_from_this_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders())->bool:
+        return True # We are always different
+
+    def apply_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders()):
+        self.log(message='[{}] apply_manifest(): MANIFEST: {}'.format(self.metadata['name'], json.dumps(self.to_dict())), level='info')
+        raise Exception('ALWAY FAIL')
     
+    def delete_manifest(self, manifest_lookup_function: object=dummy_manifest_lookup_function, variable_cache: VariableCache=VariableCache(), increment_exec_counter: bool=False, target_environment: str='default', value_placeholders: ValuePlaceHolders=ValuePlaceHolders()):
+        self.log(message='[{}] delete_manifest(): MANIFEST: {}'.format(self.metadata['name'], json.dumps(self.to_dict())), level='info')
+        raise Exception('ALWAY FAIL')
+
 
 class TestUnifiedClasses(unittest.TestCase):    # pragma: no cover
 
@@ -297,6 +314,79 @@ spec:
         self.assertEqual(execution_plan.execution_order[2], 'test4')
 
 
+class TestUnitOfWorkFailureHandling(unittest.TestCase):    # pragma: no cover
+
+    @mock.patch.dict(os.environ, {"DEBUG": "1"})   
+    def setUp(self):
+        print('-'*80)
+
+        self.logger = get_logger()
+
+        self.manifest_1 =  """---
+kind: MyManifest1
+version: v0.1
+metadata:
+    name: test1
+spec:
+    val: 'Value 1'
+"""
+
+        self.manifest_2 =  """---
+kind: MyProblematicManifest1
+version: v0.1
+metadata:
+    name: test2
+spec:
+    val: 'Value 2'
+"""
+
+        self.parsed_manifest_1 = parse_raw_yaml_data(yaml_data=self.manifest_1, logger=self.logger)['part_1']
+        self.parsed_manifest_2 = parse_raw_yaml_data(yaml_data=self.manifest_2, logger=self.logger)['part_1']
+        
+        self.logger.info('parsed_manifest_1: {}'.format(json.dumps(self.parsed_manifest_1, default=str)))
+        self.logger.info('parsed_manifest_2: {}'.format(json.dumps(self.parsed_manifest_2, default=str)))
+        
+
+    def _parse_manifest(self, manifest_obj: ManifestBase, parsed_manifest_dict: dict, target_environments: list=list())->ManifestBase:
+        manifest_obj.parse_manifest(
+            manifest_data=parsed_manifest_dict,
+            target_environments=target_environments
+        )
+        self.logger.info('Created final version of manifest object for manifest named "{}"'.format(manifest_obj.metadata['name']))
+        return copy.deepcopy(manifest_obj)
+
+
+    @mock.patch.dict(os.environ, {"DEBUG": "1"})   
+    def test_unit_of_work_basic(self):
+        manifests = list()
+        manifests.append(self._parse_manifest(manifest_obj=MyManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_1))
+        manifests.append(self._parse_manifest(manifest_obj=MyProblematicManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_2))
+        all_work = AllWork(logger=self.logger)
+
+        for manifest in manifests:
+
+            dependencies = list()
+            if 'dependencies' in manifest.metadata:
+                dependencies = manifest.metadata['dependencies']['apply'] if 'apply' in manifest.metadata['dependencies'] else list()
+            self.logger.info('* Dependencies for manifest named "{}": "{}"'.format(manifest.metadata['name'], dependencies))
+
+            uow = UnitOfWork(
+                id=copy.deepcopy(manifest.metadata['name']),
+                scopes=copy.deepcopy(manifest.target_environments),
+                dependant_unit_of_work_ids=dependencies,
+                work_class=copy.deepcopy(manifest),
+                run_method_name='apply_manifest',
+                logger=self.logger
+            )
+            self.assertIsNotNone(uow)
+
+            all_work.add_unit_of_work(unit_of_work=uow)
+
+        execution_plan = ExecutionPlan(all_work=all_work, logger=self.logger)
+        execution_plan.calculate_scoped_execution_plan()
+        self.assertEqual(len(execution_plan.execution_order), 2)
+
+
 class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no cover
 
     @mock.patch.dict(os.environ, {"DEBUG": "1"})   
@@ -324,8 +414,8 @@ class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no c
         print('Logger Messages: {}'.format(test_logger.messages))
         self.assertTrue(len(test_logger.messages) == 0)
         self.assertIsNotNone(result)
-        self.assertFalse(exception_handler.PASS_EXCEPTION_ON)
-        self.assertFalse(result['PASS_EXCEPTION_ON'])
+        self.assertTrue(exception_handler.PASS_EXCEPTION_ON)
+        self.assertTrue(result['PASS_EXCEPTION_ON'])
         self.assertTrue(result['HandledSuccessfully'])
 
     def test_basic_init_and_functionality_with_logging_exception(self):
@@ -352,8 +442,8 @@ class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no c
         self.assertTrue('This will always fail' in test_logger.messages[0])
         self.assertTrue(test_logger.messages[0].startswith('ERROR:'))
         self.assertIsNotNone(result)
-        self.assertFalse(exception_handler.PASS_EXCEPTION_ON)
-        self.assertFalse(result['PASS_EXCEPTION_ON'])
+        self.assertTrue(exception_handler.PASS_EXCEPTION_ON)
+        self.assertTrue(result['PASS_EXCEPTION_ON'])
         self.assertTrue(result['HandledSuccessfully'])
 
     def test_basic_init_and_functionality_with_passing_on_exception(self):
@@ -413,8 +503,8 @@ class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no c
             self.assertTrue('This will always fail' in test_logger.messages[0])
             self.assertTrue(test_logger.messages[0].startswith(log_line_leader))
             self.assertIsNotNone(result)
-            self.assertFalse(exception_handler.PASS_EXCEPTION_ON)
-            self.assertFalse(result['PASS_EXCEPTION_ON'])
+            self.assertTrue(exception_handler.PASS_EXCEPTION_ON)
+            self.assertTrue(result['PASS_EXCEPTION_ON'])
             self.assertTrue(result['HandledSuccessfully'])
             test_logger.messages = list()
         
