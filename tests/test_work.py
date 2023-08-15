@@ -304,7 +304,7 @@ class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no c
         test_logger.messages = list()
 
     def test_basic_init_and_functionality_with_silent_exception(self):
-        exception_handler = UnitOfWorkExceptionHandling().set_flag(flag_name='SILENT', value=True)
+        exception_handler = UnitOfWorkExceptionHandling().set_flag(flag_name='SILENT', value=True).set_logger_class(logger=test_logger)
 
         result = None
 
@@ -316,7 +316,7 @@ class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no c
             try:
                 bad_function()
             except:
-                result = eh.handle_exception(trace=traceback.extract_tb(tb=sys.exc_info()[2]), logger=test_logger)
+                result = eh.handle_exception(trace=traceback.extract_tb(tb=sys.exc_info()[2]))
                 print('result={}'.format(result))
         
         test_function(eh=exception_handler)
@@ -329,7 +329,7 @@ class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no c
         self.assertTrue(result['HandledSuccessfully'])
 
     def test_basic_init_and_functionality_with_logging_exception(self):
-        exception_handler = UnitOfWorkExceptionHandling().set_flag(flag_name='ECHO_LOGGER', value=True)
+        exception_handler = UnitOfWorkExceptionHandling().set_flag(flag_name='ECHO_LOGGER', value=True).set_logger_class(logger=test_logger)
 
         result = None
 
@@ -341,7 +341,7 @@ class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no c
             try:
                 bad_function()
             except:
-                result = eh.handle_exception(trace=traceback.extract_tb(tb=sys.exc_info()[2]), logger=logger)
+                result = eh.handle_exception(trace=traceback.extract_tb(tb=sys.exc_info()[2]))
                 print('result={}'.format(result))
         
         test_function(eh=exception_handler)
@@ -357,7 +357,7 @@ class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no c
         self.assertTrue(result['HandledSuccessfully'])
 
     def test_basic_init_and_functionality_with_passing_on_exception(self):
-        exception_handler = UnitOfWorkExceptionHandling().set_flag(flag_name='ECHO_LOGGER', value=True).set_flag(flag_name='PASS_EXCEPTION_ON', value=True)
+        exception_handler = UnitOfWorkExceptionHandling().set_flag(flag_name='ECHO_LOGGER', value=True).set_flag(flag_name='PASS_EXCEPTION_ON', value=True).set_logger_class(logger=test_logger)
 
         result = None
 
@@ -369,7 +369,7 @@ class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no c
             try:
                 bad_function()
             except:
-                result = eh.handle_exception(trace=traceback.extract_tb(tb=sys.exc_info()[2]), logger=logger)
+                result = eh.handle_exception(trace=traceback.extract_tb(tb=sys.exc_info()[2]))
                 print('result={}'.format(result))
         
         test_function(eh=exception_handler)
@@ -386,7 +386,7 @@ class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no c
     def test_basic_init_and_functionality_with_all_logging_levels(self):
         log_levels = ('info', 'debug', 'error', 'warn', 'warning',)
         for log_level in log_levels:
-            exception_handler = UnitOfWorkExceptionHandling().set_flag(flag_name='ECHO_LOGGER', value=True).set_level(level=log_level)
+            exception_handler = UnitOfWorkExceptionHandling().set_flag(flag_name='ECHO_LOGGER', value=True).set_level(level=log_level).set_logger_class(logger=test_logger)
 
             result = None
 
@@ -398,7 +398,7 @@ class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no c
                 try:
                     bad_function()
                 except:
-                    result = eh.handle_exception(trace=traceback.extract_tb(tb=sys.exc_info()[2]), logger=logger)
+                    result = eh.handle_exception(trace=traceback.extract_tb(tb=sys.exc_info()[2]))
                     print('result={}'.format(result))
             
             test_function(eh=exception_handler)

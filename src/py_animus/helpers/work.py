@@ -142,7 +142,7 @@ class UnitOfWorkExceptionHandling:
         self.LOGGER = logger
         return self
 
-    def _handle_echo_traceback(self, trace, logger)->bool:
+    def _handle_echo_traceback(self, trace)->bool:
         if self.ECHO_TRACEBACK is True:
             try:
                 trace.print_exc()
@@ -150,15 +150,16 @@ class UnitOfWorkExceptionHandling:
                 return False
         return True
     
-    def _handle_echo_logger(self, trace, logger)->bool:
-        if self.ECHO_LOGGER is True and logger is not None:
+    def _handle_echo_logger(self, trace)->bool:
+        if self.ECHO_LOGGER is True:
             try:
-                getattr(logger, self.LEVEL)('EXCEPTION: {}'.format(traceback.format_exc()))
+                if self.LOGGER is not None:
+                    getattr(self.LOGGER, self.LEVEL)('EXCEPTION: {}'.format(traceback.format_exc()))
             except:
                 return False
         return True
 
-    def handle_exception(self, trace, logger)->dict:
+    def handle_exception(self, trace)->dict:
         handled_successfully = False
         flag_values = {
             'SILENT'            : self.SILENT,
@@ -173,9 +174,9 @@ class UnitOfWorkExceptionHandling:
             handled_successfully = True
         else:
             if self.ECHO_TRACEBACK is True:
-                handled_successfully = self._handle_echo_traceback(trace=trace, logger=logger)
+                handled_successfully = self._handle_echo_traceback(trace=trace)
             if self.ECHO_LOGGER is True:
-                handled_successfully = self._handle_echo_logger(trace=trace, logger=logger)
+                handled_successfully = self._handle_echo_logger(trace=trace)
 
         flag_values['HandledSuccessfully'] = handled_successfully
         return flag_values
@@ -257,6 +258,7 @@ class ExecutionPlan:
         self.all_work = all_work
         self.execution_order = list()
         self.logger = logger
+        self.exception_handler = UnitOfWorkExceptionHandling().set_logger_class(logger=logger)
 
     def add_unit_of_work_to_execution_order(self, uow: UnitOfWork):
         for parent_uow_id in uow.dependencies:
@@ -290,5 +292,12 @@ class ExecutionPlan:
         for uof_id in self.execution_order:
             uow = self.all_work.get_unit_of_work_by_id(id=uof_id)
             if scope in uow.scopes:
-                uow.run(**parameters)
+
+                try:
+                    uow.run(**parameters)
+                except:
+                    result = self.exception_handler.handle_exception(trace=traceback.extract_tb(tb=sys.exc_info()[2]), logger=self.logger)
+                    print('result={}'.format(result))
+
+                
         self.execution_order = list()
