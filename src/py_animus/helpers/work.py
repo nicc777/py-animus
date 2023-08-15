@@ -254,11 +254,12 @@ class AllWork:
 
 class ExecutionPlan:
 
-    def __init__(self, all_work:AllWork, logger=get_logger()):
+    def __init__(self, all_work:AllWork, logger=get_logger(), stop_on_exception: bool=True):
         self.all_work = all_work
         self.execution_order = list()
         self.logger = logger
         self.exception_handler = UnitOfWorkExceptionHandling().set_logger_class(logger=logger)
+        self.stop_on_exception = stop_on_exception
 
     def add_unit_of_work_to_execution_order(self, uow: UnitOfWork):
         for parent_uow_id in uow.dependencies:
@@ -293,11 +294,17 @@ class ExecutionPlan:
             uow = self.all_work.get_unit_of_work_by_id(id=uof_id)
             if scope in uow.scopes:
 
+                exception_raised = False
                 try:
                     uow.run(**parameters)
                 except:
-                    result = self.exception_handler.handle_exception(trace=traceback.extract_tb(tb=sys.exc_info()[2]), logger=self.logger)
-                    print('result={}'.format(result))
+                    result = self.exception_handler.handle_exception(trace=traceback.extract_tb(tb=sys.exc_info()[2]))
+                    self.logger.error('UnitOfWork named "{}" failed with Exception. UnitOfWorkExceptionHandling result: {}'.format(uow.id, result))
+                    exception_raised = True
 
+                if exception_raised is True and self.stop_on_exception is True:
+                    raise Exception('Cannot continue further due to UnitOfWork named "{}" that threw exception'.format(uow.id))
+                elif exception_raised is True and self.stop_on_exception is False:
+                    self.logger.warning('UnitOfWork named "{}" that threw exception, but configuration insist that work carries on'.format(uow.id))
                 
         self.execution_order = list()
