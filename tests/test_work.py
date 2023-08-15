@@ -323,7 +323,7 @@ class TestUnitOfWorkFailureHandling(unittest.TestCase):    # pragma: no cover
         self.logger = get_logger()
 
         self.manifest_1 =  """---
-kind: MyManifest1
+kind: MyProblematicManifest1
 version: v0.1
 metadata:
     name: test1
@@ -332,10 +332,13 @@ spec:
 """
 
         self.manifest_2 =  """---
-kind: MyProblematicManifest1
+kind: MyManifest1
 version: v0.1
 metadata:
     name: test2
+    dependencies:
+        apply: 
+        - test1
 spec:
     val: 'Value 2'
 """
@@ -357,10 +360,11 @@ spec:
 
 
     @mock.patch.dict(os.environ, {"DEBUG": "1"})   
-    def test_unit_of_work_basic(self):
+    def test_basic_failure(self):
+        exception_handler = UnitOfWorkExceptionHandling().set_flag(flag_name='SILENT', value=False).set_logger_class(logger=test_logger)
         manifests = list()
-        manifests.append(self._parse_manifest(manifest_obj=MyManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_1))
-        manifests.append(self._parse_manifest(manifest_obj=MyProblematicManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_2))
+        manifests.append(self._parse_manifest(manifest_obj=MyProblematicManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_1))
+        manifests.append(self._parse_manifest(manifest_obj=MyManifest1(logger=self.logger), parsed_manifest_dict=self.parsed_manifest_2))
         all_work = AllWork(logger=self.logger)
 
         for manifest in manifests:
@@ -376,7 +380,8 @@ spec:
                 dependant_unit_of_work_ids=dependencies,
                 work_class=copy.deepcopy(manifest),
                 run_method_name='apply_manifest',
-                logger=self.logger
+                logger=self.logger,
+                exception_handling=exception_handler
             )
             self.assertIsNotNone(uow)
 
@@ -386,6 +391,19 @@ spec:
         execution_plan.calculate_scoped_execution_plan()
         self.assertEqual(len(execution_plan.execution_order), 2)
 
+        # Execute plan
+        variable_cache = VariableCache()
+        parameters = dict()
+        parameters['manifest_lookup_function'] = dummy_manifest_lookup_function
+        parameters['variable_cache'] = variable_cache
+        parameters['target_environment'] = 'default'
+
+        with self.assertRaises(Exception):
+            execution_plan.do_work(scope='default', **parameters)
+        self.assertEqual(variable_cache.to_dict(), dict())
+        self.logger.info('test_logger_messages: {}'.format(json.dumps(test_logger.messages, default=str)))
+        self.assertTrue(len(test_logger.messages) > 0)
+        
 
 class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no cover
 

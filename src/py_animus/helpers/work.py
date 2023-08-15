@@ -218,7 +218,7 @@ class UnitOfWork:
         except Exception as e:
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb = traceback.TracebackException(exc_type, exc_value, exc_tb)
-            exception_result = self.exception_handling.handle_exception(trace=tb, logger=self.logger)
+            exception_result = self.exception_handling.handle_exception(trace=tb)
 
         if len(exception_result) > 0:
             if 'HandledSuccessfully' in exception_result:
@@ -293,19 +293,20 @@ class ExecutionPlan:
         for uof_id in self.execution_order:
             uow = self.all_work.get_unit_of_work_by_id(id=uof_id)
             if scope in uow.scopes:
+                uow.run(**parameters)
 
-                exception_raised = False
-                try:
-                    uow.run(**parameters)
-                except:
-                    result = self.exception_handler.handle_exception(trace=traceback.extract_tb(tb=sys.exc_info()[2]))
-                    self.logger.error('UnitOfWork named "{}" failed with Exception. UnitOfWorkExceptionHandling result: {}'.format(uow.id, result))
-                    exception_raised = True
+                # exception_raised = False
+                # try:
+                #     uow.run(**parameters)
+                # except:
+                #     result = self.exception_handler.handle_exception(trace=traceback.extract_tb(tb=sys.exc_info()[2]))
+                #     self.logger.error('UnitOfWork named "{}" failed with Exception. UnitOfWorkExceptionHandling result: {}'.format(uow.id, result))
+                #     exception_raised = True
 
-                if exception_raised is True and self.stop_on_exception is True:
-                    raise Exception('Cannot continue further due to UnitOfWork named "{}" that threw exception'.format(uow.id))
-                elif exception_raised is True and self.stop_on_exception is False:
-                    self.logger.warning('UnitOfWork named "{}" that threw exception, but configuration insist that work carries on'.format(uow.id))
+                # if exception_raised is True and self.stop_on_exception is True:
+                #     raise Exception('Cannot continue further due to UnitOfWork named "{}" that threw exception'.format(uow.id))
+                # elif exception_raised is True and self.stop_on_exception is False:
+                #     self.logger.warning('UnitOfWork named "{}" that threw exception, but configuration insist that work carries on'.format(uow.id))
 
             else:
                 self.logger.info('UnitOfWork named "{}" skipped as it is not in scope "{}"'.format(uow.id, scope))
