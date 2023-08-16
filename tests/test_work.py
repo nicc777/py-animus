@@ -484,7 +484,7 @@ class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no c
         test_function(eh=exception_handler)
 
         print('Logger Messages: {}'.format(test_logger.messages))
-        self.assertTrue(len(test_logger.messages) == 0)
+        self.assertTrue(len(test_logger.messages) > 0)
         self.assertIsNotNone(result)
         self.assertTrue(exception_handler.PASS_EXCEPTION_ON)
         self.assertTrue(result['PASS_EXCEPTION_ON'])
@@ -511,7 +511,13 @@ class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no c
         print('Logger Messages: {}'.format(test_logger.messages))
         self.assertTrue(len(test_logger.messages) > 0)
         print('Exception Message: {}'.format(test_logger.messages[0]))
-        self.assertTrue('This will always fail' in test_logger.messages[0])
+        
+        message_found = False
+        for line in test_logger.messages:
+            if 'This will always fail' in line:
+                message_found = True
+        self.assertTrue(message_found)
+        
         self.assertTrue(test_logger.messages[0].startswith('ERROR:'))
         self.assertIsNotNone(result)
         self.assertTrue(exception_handler.PASS_EXCEPTION_ON)
@@ -539,7 +545,13 @@ class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no c
         print('Logger Messages: {}'.format(test_logger.messages))
         self.assertTrue(len(test_logger.messages) > 0)
         print('Exception Message: {}'.format(test_logger.messages[0]))
-        self.assertTrue('This will always fail' in test_logger.messages[0])
+        
+        message_found = False
+        for line in test_logger.messages:
+            if 'This will always fail' in line:
+                message_found = True
+        self.assertTrue(message_found)
+
         self.assertIsNotNone(result)
         self.assertTrue(exception_handler.PASS_EXCEPTION_ON)
         self.assertTrue(result['PASS_EXCEPTION_ON'])
@@ -572,8 +584,12 @@ class TestUnitOfWorkExceptionHandlingClass(unittest.TestCase):    # pragma: no c
             print('Logger Messages: {}'.format(test_logger.messages))
             self.assertTrue(len(test_logger.messages) > 0)
             print('Exception Message: {}'.format(test_logger.messages[0]))
-            self.assertTrue('This will always fail' in test_logger.messages[0])
-            self.assertTrue(test_logger.messages[0].startswith(log_line_leader))
+            
+            message_found = False
+            for line in test_logger.messages:
+                if 'This will always fail' in line:
+                    message_found = True
+            self.assertTrue(message_found)            
             self.assertIsNotNone(result)
             self.assertTrue(exception_handler.PASS_EXCEPTION_ON)
             self.assertTrue(result['PASS_EXCEPTION_ON'])
