@@ -8,6 +8,7 @@
 import traceback
 import copy
 import sys
+import json
 from py_animus import get_logger
 
 
@@ -220,7 +221,9 @@ class UnitOfWork:
         exception_result =dict()
         try:
             getattr(self.work_class, self.run_method_name)(**parameters)
+            self.logger.info('COMPLETED with no errors - UnitOfWork: ID={}'.format(self.id))
         except Exception as e:
+            self.logger.info('EXCEPTION caught - UnitOfWork: ID={}'.format(self.id))
             exc_type, exc_value, exc_tb = sys.exc_info()
             tb = traceback.TracebackException(exc_type, exc_value, exc_tb)
             exception_result = self.exception_handling.handle_exception(trace=tb)
@@ -290,6 +293,7 @@ class ExecutionPlan:
 
     def do_work(self, scope: str, **kwargs):
         self.calculate_execution_plan()
+        self.logger.info('Calculated execution_order: {}'.format(json.dumps(self.execution_order, default=str)))
         
         parameters = dict()
         for k,v in kwargs.items():

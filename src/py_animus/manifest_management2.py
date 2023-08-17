@@ -1125,7 +1125,7 @@ class ManifestManager:
         self.logger.info('APPLY: Calculated Execution Order: {}'.format(json.dumps(execution_plan.execution_order, default=str)))
         parameters = {
             'manifest_lookup_function': self.get_manifest_instance_by_name,
-            'variable_cache: VariableCache': self.variable_cache, 
+            'variable_cache': self.variable_cache, 
             'increment_exec_counter': False, 
             'target_environment': target_environment, 
             'value_placeholders': self.environment_values

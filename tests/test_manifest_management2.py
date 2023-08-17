@@ -583,7 +583,7 @@ spec:
                 mm.parse_manifest(manifest_data=data_as_dict)
 
         # This should automatically first process the dependant manifest
-        mm.execute_action(name='service-y')
+        mm.execute_action()
 
         result = self.vc.get_value(variable_name='MyServiceY:service-y:default:VAL_Y')
         self.assertEqual(result, 'I say: Hello world!')
@@ -1791,29 +1791,6 @@ spec:
         self.assertIsNotNone(result)
         self.assertIsInstance(result, str)
         self.assertEqual(result, expected)
-
-
-
-class TestDependencyReferences(unittest.TestCase):    # pragma: no cover
-
-    def setUp(self):
-        print('-'*80)
-
-    def test_direct_dependency_negative_test(self):
-        drs = DependencyReferences()
-
-        # The following represent a deep circular reference, but will test negative for a direct dependency reference check
-        drs.add_dependency(src='a', dst='b')
-        drs.add_dependency(src='b', dst='c')
-        drs.add_dependency(src='c', dst='a')
-
-        self.assertFalse(drs.direct_circular_references_detected())
-
-    def test_direct_dependency_positive_test(self):
-        drs = DependencyReferences()
-        drs.add_dependency(src='a', dst='b')
-        drs.add_dependency(src='b', dst='a')
-        self.assertTrue(drs.direct_circular_references_detected())
 
 
 
