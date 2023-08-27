@@ -6,6 +6,11 @@ A python based plugable and extensible manifest processing system
 
 The general idea is to create an extensible system that would be responsible for processing YAML Manifest files (similar to Kubernetes) in a consistent way to ensure the desired state as described in these files can be achieved.
 
+> **warning**
+> As of August 2023 I have started a major refactoring exercise which will lead to a completely new version 1 implementation with all the current features. I will not create individual issues, but only use [ONE issue](https://github.com/nicc777/py-animus/issues/83) to track this.
+>
+> As a result, I do not consider the current implementation up to version `v1.0.16` stable or really usable. The new implementation will start with version `v1.1.0`
+
 # Why use this solution
 
 The project was created as a result of finding a better way to manage environments with a mixture of deployment technologies including AWS CloudFormation and Terraform.
