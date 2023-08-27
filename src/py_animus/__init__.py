@@ -78,7 +78,7 @@ def get_logger(
     return logger
 
 
-def parse_raw_yaml_data(yaml_data: str, logger=get_logger(), use_custom_parser_for_custom_tags: bool=False)->dict:
+def parse_raw_yaml_data_and_ignore_all_tags(yaml_data: str, logger=get_logger(), use_custom_parser_for_custom_tags: bool=False)->dict:
     if use_custom_parser_for_custom_tags is True:
         return load_from_str(s=yaml_data)
     configuration = dict()

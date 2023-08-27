@@ -6,10 +6,14 @@
     https://raw.githubusercontent.com/nicc777/verbacratis/main/LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt
 """
 
+from py_animus.models import Value, Values, ScopedValues, Variable, VariableCache
 
 
 def run_main():
     print('Nothing to do yet...')
+
+    scoped_values = ScopedValues(scope='default')
+    variable_cache = VariableCache()
 
     return True
 

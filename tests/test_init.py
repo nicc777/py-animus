@@ -33,7 +33,7 @@ description: |
   This is a multi line
   test message
 """
-        result = parse_raw_yaml_data(yaml_data=yaml_string)['part_1']
+        result = parse_raw_yaml_data_and_ignore_all_tags(yaml_data=yaml_string)['part_1']
         self.assertIsNotNone(result)
         self.assertIsInstance(result, dict)
         self.assertEqual(len(result), 2)
@@ -67,7 +67,7 @@ Resources:
         
         pre_result = None
         try:
-            pre_result = parse_raw_yaml_data(yaml_data=yaml_string, use_custom_parser_for_custom_tags=True)
+            pre_result = parse_raw_yaml_data_and_ignore_all_tags(yaml_data=yaml_string, use_custom_parser_for_custom_tags=True)
         except:
             pass
         self.assertIsNotNone(pre_result)
@@ -106,7 +106,7 @@ Resources:
       Name: 
         Ref: RootDomainName
 """.format('{', '}', '{', '}')
-        pre_result = parse_raw_yaml_data(yaml_data=yaml_string)
+        pre_result = parse_raw_yaml_data_and_ignore_all_tags(yaml_data=yaml_string)
         self.assertIsNotNone(pre_result)
         self.assertIsInstance(pre_result, dict)
         result = dict()
@@ -139,7 +139,7 @@ Resources:
         
         pre_result = None
         try:
-            pre_result = parse_raw_yaml_data(yaml_data=yaml_string)
+            pre_result = parse_raw_yaml_data_and_ignore_all_tags(yaml_data=yaml_string)
         except:
             pass
         self.assertIsNotNone(pre_result)

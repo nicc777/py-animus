@@ -83,12 +83,10 @@ def load_from_str(s: str)->dict:
     yaml.constructor.SafeConstructor.add_constructor(None, SafeUnknownConstructor.construct_undefined)
     configuration = dict()
     current_part = 0
-    # logger.debug('parse_raw_yaml_data(): RAW DATA: {}'.format(yaml_data))
     try:
         for data in yaml.load_all(s, Loader=MySafeLoader):
             current_part += 1
             configuration['part_{}'.format(current_part)] = data
-        # logger.debug('configuration={}'.format(configuration))
     except: # pragma: no cover
         traceback.print_exc()
         raise Exception('Failed to parse configuration')
