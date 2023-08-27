@@ -97,5 +97,14 @@ def parse_raw_yaml_data_and_ignore_all_tags(yaml_data: str, logger=get_logger(),
             traceback.print_exc()
             raise Exception('Failed to parse configuration')
     return configuration
-    
+
+
+def parse_command_line_arguments(overrides: list=list())->tuple:
+    cli_parameters = overrides
+    if len(sys.argv) > 1 and len(overrides) == 0:
+        cli_parameters = list(sys.argv)
+    if len(cli_parameters) != 4:
+        print('provided cli_parameters: {}'.format(cli_parameters))
+        raise Exception('Expected exactly 3 arguments but got {}: <<action>> <<path-to-project-yaml>> <<project-name>>'.format(len(cli_parameters)-1))
+    return tuple(cli_parameters)
 

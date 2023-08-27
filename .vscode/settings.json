@@ -2,8 +2,10 @@
     "cSpell.words": [
         "chardet",
         "clazz",
+        "cprint",
         "levelname",
-        "plugable"
+        "plugable",
+        "termcolor"
     ],
     "python.testing.unittestArgs": [
         "-v",

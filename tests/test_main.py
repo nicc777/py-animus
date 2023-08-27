@@ -23,6 +23,6 @@ class TestClassMain(unittest.TestCase):    # pragma: no cover
         print('-'*80)
 
     def test_basic_init(self):
-        result = run_main()
+        result = run_main(cli_parameter_overrides=['animus.py', 'apply', '/path/to/project.yaml', 'project'])
         self.assertIsNotNone(result)
         self.assertTrue(result)
