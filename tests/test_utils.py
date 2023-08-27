@@ -15,8 +15,7 @@ print('sys.path={}'.format(sys.path))
 import unittest
 
 
-from py_animus.manifest_management import *
-from py_animus.utils import *
+from py_animus.helpers.utils import *
 
 running_path = os.getcwd()
 print('Current Working Path: {}'.format(running_path))

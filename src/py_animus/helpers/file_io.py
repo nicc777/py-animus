@@ -12,7 +12,7 @@ import shutil
 import tempfile
 import hashlib
 import copy
-from py_animus.utils import generate_random_string
+from py_animus.helpers.utils import generate_random_string
 
 
 """
