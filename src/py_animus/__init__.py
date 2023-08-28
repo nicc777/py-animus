@@ -99,12 +99,22 @@ def parse_raw_yaml_data_and_ignore_all_tags(yaml_data: str, logger=get_logger(),
     return configuration
 
 
-def parse_command_line_arguments(overrides: list=list())->tuple:
+def validate_list(input_list: list, min_length: int=0, max_length: int=999, can_be_none: bool=False, error_message: str='List validation failed'):
+    if input_list is None:
+        if can_be_none is False:
+            raise Exception(error_message)
+    if len(input_list) < min_length or len(input_list) > max_length:
+        raise Exception(error_message)
+
+
+def _validate_command_line_arguments(cli_parameters:list, action_handlers: dict):
+    validate_list(input_list=cli_parameters, min_length=4, max_length=4, error_message='Command line argument validation failed. Required: <<action>> <<path-to-project-yaml>> <<project-name>>')
+
+
+def parse_command_line_arguments(overrides: list=list(), action_handlers: dict=dict())->tuple:
     cli_parameters = overrides
     if len(sys.argv) > 1 and len(overrides) == 0:
         cli_parameters = list(sys.argv)
-    if len(cli_parameters) != 4:
-        print('provided cli_parameters: {}'.format(cli_parameters))
-        raise Exception('Expected exactly 3 arguments but got {}: <<action>> <<path-to-project-yaml>> <<project-name>>'.format(len(cli_parameters)-1))
+    _validate_command_line_arguments(cli_parameters=cli_parameters, action_handlers=action_handlers)
     return tuple(cli_parameters)
 

@@ -112,7 +112,7 @@ def print_console_feedback_line(
 
 def run_main(cli_parameter_overrides: list=list()):
     print('Nothing to do yet...')
-    cli_arguments = parse_command_line_arguments(overrides=cli_parameter_overrides)
+    cli_arguments = parse_command_line_arguments(overrides=cli_parameter_overrides, action_handlers=ACTION_HANDLERS)
     print_console_feedback_line(
         leader='STARTING',
         leader_bold=True,
