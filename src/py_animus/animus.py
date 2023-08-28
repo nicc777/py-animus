@@ -56,9 +56,10 @@ def print_console_feedback_line(
     leader_reverse: bool=False,
     leader_bold: bool=True,
     message: str='',
-    message_color: str='white',
+    message_color: str='green',
     message_blink: bool=False,
     message_reverse: bool=False,
+    variables_heading_text: str='  Variables:',
     variables: list=list(),
     variable_color: str='blue',
     variable_reverse: bool=False
@@ -82,9 +83,10 @@ def print_console_feedback_line(
         )
     )
     if len(variables) > 0:
+        print()
         print(
             _format_line_for_print(
-                text='  Variables:',
+                text='{}'.format(variables_heading_text),
                 text_color='white',
                 text_reverse=True
             )
@@ -103,6 +105,8 @@ def print_console_feedback_line(
                 )
             )
         )
+    print()
+    print()
         
 
 
@@ -114,7 +118,8 @@ def run_main(cli_parameter_overrides: list=list()):
         leader_bold=True,
         leader_reverse=True,
         message='Animus is now running',
-        variables=cli_arguments
+        variables_heading_text='  Command Line Arguments:',
+        variables=[cli_arguments,]
     )
 
     return True
