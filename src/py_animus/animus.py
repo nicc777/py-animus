@@ -108,14 +108,22 @@ def print_console_feedback_line(
         )
     print()
     print()
-        
+
+
+def step_read_project_manifest(start_manifest: str):
+    print_console_feedback_line(
+        leader='STEP: ',
+        leader_bold=True,
+        leader_reverse=True,
+        message='Reading project manifest: {}'.format(start_manifest),
+    )
 
 
 def run_main(cli_parameter_overrides: list=list()):
     print('Nothing to do yet...')
     cli_arguments = parse_command_line_arguments(overrides=cli_parameter_overrides, action_handlers=ACTION_HANDLERS)
     print_console_feedback_line(
-        leader='STARTING',
+        leader='STARTING: ',
         leader_bold=True,
         leader_reverse=True,
         message='Animus is now running',
@@ -125,8 +133,11 @@ def run_main(cli_parameter_overrides: list=list()):
     action = cli_arguments[1]
     start_manifest = cli_arguments[2]
     project_name = cli_arguments[3]
+    scope = cli_arguments[4]
     if file_exists(start_manifest) is False:
         raise Exception('Manifest file "{}" does not exist!'.format(start_manifest))
+
+    step_read_project_manifest(start_manifest=start_manifest)
 
     return True
 
