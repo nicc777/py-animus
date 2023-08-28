@@ -349,4 +349,11 @@ def copy_file(source_file_path: str, destination_directory: str, new_name: str=N
     except:                             # pragma: no cover
         # traceback.print_exc()
         return None
+    
+
+def file_exists(file: str)->bool:
+    if os.path.exists(file) is False:
+        return False
+    if os.path.isfile(file) is False:
+        return False
 

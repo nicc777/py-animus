@@ -10,6 +10,7 @@ import json
 
 from py_animus import parse_command_line_arguments
 from py_animus.models import VariableCache, AllScopedValues
+from py_animus.helpers.file_io import file_exists
 
 from termcolor import colored, cprint
 
@@ -121,6 +122,11 @@ def run_main(cli_parameter_overrides: list=list()):
         variables_heading_text='  Command Line Arguments:',
         variables=[cli_arguments,]
     )
+    action = cli_arguments[1]
+    start_manifest = cli_arguments[2]
+    project_name = cli_arguments[3]
+    if file_exists(start_manifest) is False:
+        raise Exception('Manifest file "{}" does not exist!'.format(start_manifest))
 
     return True
 
