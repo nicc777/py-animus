@@ -127,7 +127,7 @@ def validate_word_in_list_of_possible_values(input_string: str, possible_values:
 
 
 def _validate_command_line_arguments(cli_parameters:list, action_handlers: dict):
-    validate_list(input_list=cli_parameters, min_length=5, max_length=5, error_message='Command line argument validation failed. Required: <<action>> <<path-to-project-yaml>> <<project-name>> <<environment-or-scope>>')
+    validate_list(input_list=cli_parameters, min_length=5, max_length=5, error_message='Command line argument validation failed. Required: <<action>> <<path-to-project-manifest>> <<project-name>> <<environment-or-scope>>')
     for param in cli_parameters[1:]:
         validate_string_value(input_string=param, can_be_empty=False, min_length=3, max_length=1024, error_message='Every command line argument must be a valid string: <<action>> <<path-to-project-yaml>> <<project-name>>')
     validate_word_in_list_of_possible_values(input_string=cli_parameters[1], possible_values=list(action_handlers.keys()), error_message='action parameter must be one of: {}'.format(list(action_handlers.keys())))
