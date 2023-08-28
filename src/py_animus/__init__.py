@@ -103,12 +103,34 @@ def validate_list(input_list: list, min_length: int=0, max_length: int=999, can_
     if input_list is None:
         if can_be_none is False:
             raise Exception(error_message)
-    if len(input_list) < min_length or len(input_list) > max_length:
+    if input_list is not None:
+        if isinstance(input_list, list) is False:
+            raise Exception(error_message)
+        if len(input_list) < min_length or len(input_list) > max_length:
+            raise Exception(error_message)
+
+
+def validate_string_value(input_string: str, can_be_none: bool=False, can_be_empty: str=True, min_length: int=0, max_length: int=1024, error_message: str='List validation failed'):
+    if can_be_none is False:
+        if input_string is None:
+            raise Exception(error_message)
+    if input_string is not None:
+        if len(input_string) == 0 and can_be_empty is False:
+            raise Exception(error_message)
+        if len(input_string) < min_length or len(input_string) > max_length:
+            raise Exception(error_message)
+
+
+def validate_word_in_list_of_possible_values(input_string: str, possible_values: list=list(), error_message: str='The input string did not match any of the required values'):
+    if input_string not in possible_values:
         raise Exception(error_message)
 
 
 def _validate_command_line_arguments(cli_parameters:list, action_handlers: dict):
     validate_list(input_list=cli_parameters, min_length=4, max_length=4, error_message='Command line argument validation failed. Required: <<action>> <<path-to-project-yaml>> <<project-name>>')
+    for param in cli_parameters[1:]:
+        validate_string_value(input_string=param, can_be_empty=False, min_length=3, max_length=1024, error_message='Every command line argument must be a valid string: <<action>> <<path-to-project-yaml>> <<project-name>>')
+    validate_word_in_list_of_possible_values(input_string=cli_parameters[1], possible_values=list(action_handlers.keys()), error_message='action parameter must be one of: {}'.format(list(action_handlers.keys())))
 
 
 def parse_command_line_arguments(overrides: list=list(), action_handlers: dict=dict())->tuple:
