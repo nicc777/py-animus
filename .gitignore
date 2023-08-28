@@ -131,3 +131,5 @@ dmypy.json
 reports/
 doc/.$animus.bkp
 doc/.$animus.dtmp
+design-diagrams/.$processes.drawio.dtmp
+design-diagrams/.$processes.drawio.bkp
