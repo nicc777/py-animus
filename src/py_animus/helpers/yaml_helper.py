@@ -6,6 +6,15 @@
 
 import yaml
 import traceback
+import copy
+from py_animus.models import VariableCache, AllScopedValues, all_scoped_values, variable_cache, scope
+
+
+#######################################################################################################################
+###                                                                                                                 ###
+###               I M P O R T    A N D    C O M P L E T E L Y    I G N O R E    C U S T O M    T A G S              ###
+###                                                                                                                 ###
+#######################################################################################################################
 
 
 class SafeUnknownConstructor(yaml.constructor.SafeConstructor):
@@ -72,6 +81,7 @@ class SafeUnknownDumper(SafeUnknownRepresenter, yaml.dumper.SafeDumper):
                                         tags=tags,
                                         sort_keys=sort_keys)
 
+
 def load_handle(f):
     MySafeLoader = SafeUnknownLoader
     yaml.constructor.SafeConstructor.add_constructor(None, SafeUnknownConstructor.construct_undefined)
@@ -91,3 +101,72 @@ def load_from_str(s: str)->dict:
         traceback.print_exc()
         raise Exception('Failed to parse configuration')
     return configuration
+
+
+#######################################################################################################################
+###                                                                                                                 ###
+###                                     Y A M L    F I L E    F U N C T I O N S                                     ###
+###                                                                                                                 ###
+#######################################################################################################################
+
+
+def get_kind_from_text(text: str):
+    for line in text.splitlines():
+        if line.lower().startswith('kind:'):
+            kind = line.split(':')[1].strip()
+            return kind
+    return 'unknown'
+
+
+def add_new_yaml_section_to_yaml_sections(yaml_sections: dict, section_text: str)->dict:
+    if len(section_text) > 0:
+        kind = get_kind_from_text(text = section_text)
+        if kind not in yaml_sections:
+            yaml_sections[kind] = list()
+        yaml_sections[kind].append(section_text)
+    return copy.deepcopy(yaml_sections)
+
+
+def spit_yaml_file_with_multiple_yaml_sections(yaml_file: str)->dict:
+    yaml_sections = dict()  # index is the "kind" each section, with the value a list of manifests of that kind
+    section_text = ''
+    with open(yaml_file, 'r') as f:
+        for line in f:
+            if line.startswith('---'):  # YAML Section start
+                yaml_sections = add_new_yaml_section_to_yaml_sections(yaml_sections=copy.deepcopy(yaml_sections), section_text=section_text)
+                section_text = ''
+            else:
+                if len(section_text) > 0:
+                    section_text = '{}\n{}'.format(section_text, line.strip())
+                else:
+                    section_text = '{}'.format(line.strip())
+    if len(section_text) > 0:
+        yaml_sections = add_new_yaml_section_to_yaml_sections(yaml_sections=copy.deepcopy(yaml_sections), section_text=section_text)
+    return yaml_sections
+
+
+#######################################################################################################################
+###                                                                                                                 ###
+###                                 I M P O R T    W I T H    C U S T O M    T A G S                                ###
+###                                                                                                                 ###
+#######################################################################################################################
+
+
+class ValueTag(yaml.YAMLObject):
+    yaml_tag = u'!Value'
+
+    def __init__(self, value_reference):
+        self.value_reference = value_reference
+
+    def __repr__(self):
+        return all_scoped_values.find_scoped_values(scope=scope).find_value_by_name(name=self.value_reference)
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        return ValueTag(node.value)
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        return dumper.represent_scalar(cls.yaml_tag, data.txt_var_original)
+
+

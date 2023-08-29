@@ -8,7 +8,9 @@
 import traceback
 import copy
 import json
-from py_animus import get_logger, get_utc_timestamp, is_debug_set_in_environment
+import logging
+from py_animus.helpers import get_utc_timestamp, is_debug_set_in_environment
+
 
 class Value:
 
@@ -97,30 +99,27 @@ class Variable:
         name: A String with the Variable name.
         initial_value: Any object containing a any value
         ttl: Integer with the time to live for the variable value in the cache (in seconds, default is -1 or unlimited lifespan while the application is running)
-        logger: The logging.Logger class used for logging.
         mask_in_logs: A boolean to indicate if the value is sensitive and that it should be masked in logs
     """
 
-    def __init__(self, name: str, initial_value=None, ttl: int=-1, logger=get_logger(), mask_in_logs: bool=False):
+    def __init__(self, name: str, initial_value=None, ttl: int=-1, mask_in_logs: bool=False):
         """Initializes a new instance of a Variable to be stored in the VariableCache.
 
         Args:
           name: String with a unique name of this variable. (Will be validated as unique in VariableCache)
           initial_value: Object storing some initial value (Optional, default=None)
           ttl: Integer of seconds for Variable's value to be considered valid in the context of the VariableCache. (Optional, default=-1 which never expires)
-          logger: An instance of logging.Logger used for logging (Optional, default is teh result from internal call to get_logger())
         """
         self.name = name
         self.value = initial_value
         self.ttl = ttl
         self.init_timestamp = get_utc_timestamp(with_decimal=False)
         self.debug = is_debug_set_in_environment()
-        self.logger = logger
         self.mask_in_logs = mask_in_logs
 
     def _log_debug(self, message):
         if self.debug is True:
-            self.logger.debug('[{}:{}] {}'.format(self.__class__.__name__, self.name, message))
+            logging.debug('[{}:{}] {}'.format(self.__class__.__name__, self.name, message))
 
     def set_value(self, value, reset_ttl: bool=True):
         """Set the value of the Variable.
@@ -186,9 +185,9 @@ class Variable:
     def log_value(self, value_if_expired=None, raise_exception_on_expired: bool=True, reset_timer_on_value_read: bool=False):
         value = self.get_value(value_if_expired=value_if_expired, raise_exception_on_expired=raise_exception_on_expired, reset_timer_on_value_read=reset_timer_on_value_read, for_logging=True)
         if is_debug_set_in_environment() is True:
-            self.logger.debug('Variable(name="{}", init_timestamp={}, ttl={}, mask_in_logs={}): "{}"'.format(self.name, self. init_timestamp, self.ttl, self.mask_in_logs, value))
+            logging.debug('Variable(name="{}", init_timestamp={}, ttl={}, mask_in_logs={}): "{}"'.format(self.name, self. init_timestamp, self.ttl, self.mask_in_logs, value))
         else:
-            self.logger.info('Variable(name="{}"): "{}"'.format(self.name, value))
+            logging.info('Variable(name="{}"): "{}"'.format(self.name, value))
     
     def to_dict(self, for_logging: bool=False):
         final_value = ''
@@ -213,17 +212,15 @@ class VariableCache:
 
     Attributes:
         values: Dictionary of Variable instance, index by each Variable name
-        logger: The logging.Logger class used for logging.
     """
 
-    def __init__(self, logger=get_logger()):
+    def __init__(self):
         """Initializes a new instance of a VariableCache hold a collection of Variable instances.
 
         Args:
           logger: An instance of logging.Logger used for logging (Optional, default is teh result from internal call to get_logger())
         """
         self.values = dict()
-        self.logger = logger
 
     def store_variable(self, variable: Variable, overwrite_existing: bool=False):
         """Stores an instance of Variable
@@ -270,16 +267,16 @@ class VariableCache:
             Exception: When the Variable is not found, and if `raise_exception_on_not_found` is True
         """
         if variable_name not in self.values and raise_exception_on_not_found is True:
-            self.logger.debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to True'.format(variable_name))
+            logging.debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to True'.format(variable_name))
             raise Exception('Variable "{}" not found'.format(variable_name))
         elif variable_name not in self.values and raise_exception_on_not_found is False:
-            self.logger.debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to False - Returning default_value_if_not_found'.format(variable_name))
+            logging.debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to False - Returning default_value_if_not_found'.format(variable_name))
             return default_value_if_not_found
         return copy.deepcopy(self.values[variable_name].get_value(value_if_expired=value_if_expired, raise_exception_on_expired=raise_exception_on_expired, reset_timer_on_value_read=reset_timer_on_value_read, for_logging=for_logging))
 
     def delete_variable(self, variable_name: str):
         if variable_name in self.values:
-            self.logger.debug('[variable_name={}] Deleted'.format(variable_name))
+            logging.debug('[variable_name={}] Deleted'.format(variable_name))
             self.values.pop(variable_name)
 
     def to_dict(self, for_logging: bool=False):
@@ -291,3 +288,9 @@ class VariableCache:
 
     def __str__(self)->str:
         return json.dumps(self.to_dict(for_logging=True))
+    
+
+all_scoped_values = AllScopedValues()
+variable_cache = VariableCache()
+scope = 'default'
+

@@ -9,7 +9,7 @@
 import json
 
 from py_animus import parse_command_line_arguments
-from py_animus.models import VariableCache, AllScopedValues
+from py_animus.models import VariableCache, AllScopedValues, all_scoped_values, variable_cache, scope
 from py_animus.helpers.file_io import file_exists
 
 from termcolor import colored, cprint
@@ -27,10 +27,6 @@ ACTION_HANDLERS = {
     'apply': action_apply,
     'delete': action_delete,
 }
-
-
-all_scoped_values = AllScopedValues()
-variable_cache = VariableCache()
 
 
 def _format_line_for_print(
