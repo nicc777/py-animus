@@ -12,6 +12,7 @@ from py_animus import parse_command_line_arguments
 from py_animus.models import VariableCache, AllScopedValues, all_scoped_values, variable_cache, scope
 from py_animus.helpers.file_io import file_exists, read_text_file
 from py_animus.helpers.yaml_helper import spit_yaml_text_with_multiple_yaml_sections
+from py_animus.utils.http_requests_io import download_files
 
 from termcolor import colored, cprint
 
@@ -132,7 +133,10 @@ def run_main(cli_parameter_overrides: list=list()):
     project_name = cli_arguments[3]
     scope = cli_arguments[4]
 
-    # TODO If start_manifest is a URL, attempt to download the file and process it.
+    if start_manifest.lower().startswith('http'):
+        files = download_files(urls=[start_manifest,])
+        if len(files) > 0:
+            start_manifest = files[0]
 
     if file_exists(start_manifest) is False:
         raise Exception('Manifest file "{}" does not exist!'.format(start_manifest))

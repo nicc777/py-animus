@@ -12,6 +12,7 @@ import shutil
 import tempfile
 import hashlib
 import copy
+import re
 from py_animus.helpers.utils import generate_random_string
 
 
@@ -357,3 +358,14 @@ def file_exists(file: str)->bool:
     if os.path.isfile(file) is False:
         return False
 
+
+def find_matching_files(start_dir:str, pattern: str='.*')->list:
+    files_found = list()
+    regex = re.compile(pattern)
+    for root, dirs, files in os.walk(start_dir):
+        for file in files:
+            if regex.match(file):
+                full_file_path = '{}{}{}'.format(root, os.sep, file)
+                full_file_path = full_file_path.replace('{}{}'.format(os.sep, os.sep), '{}'.format(os.sep))
+                files_found.append(full_file_path)
+    return files_found
