@@ -1,0 +1,56 @@
+---
+kind: Project
+version: v1
+metadata:
+  name: project-1
+  environments:
+  - sandbox1
+  - sandbox2
+spec:
+  actions:
+    apply:
+    - shell-script-v1-minimal
+    delete:
+    - shell-script-v1-minimal
+---
+kind: FileHandlerLogging
+version: v1
+metadata:
+  name: FileHandler
+spec:
+  filename: /tmp/test.log
+  level: !Value project-1-log-level
+---
+kind: StreamHandlerLogging
+version: v1
+metadata:
+  name: StreamHandler
+spec:
+  level: !Value project-1-log-level
+---
+kind: Values
+version: v1
+metadata:
+    name: project-1-values
+spec:
+    values:
+    - valueName: project-1-log-level
+      defaultValue: info
+      environmentOverrides:
+      - environmentName: sandbox1
+        value: debug
+      - environmentName: sandbox2
+        value: info
+---
+kind: ShellScript
+version: v1
+metadata:
+  name: shell-script-v1-minimal
+  skipDeleteAll: true
+spec:
+  source:
+    type: inline
+    value: !Sub 
+    - echo "Action: ${action}"
+    - action: !Variable std::action
+    # Alternative: value: !Sub "Action: ${std::action}" 

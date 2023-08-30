@@ -115,6 +115,10 @@ def step_read_project_manifest(start_manifest: str):
         leader_reverse=True,
         message='Reading project manifest: {}'.format(start_manifest),
     )
+    start_manifest_text = read_text_file(path_to_file=start_manifest)
+    start_manifest_yaml_sections = spit_yaml_text_with_multiple_yaml_sections(yaml_text=start_manifest_text)
+    if 'Values' in start_manifest_yaml_sections:
+        pass # TODO Process values
 
 
 def run_main(cli_parameter_overrides: list=list()):
@@ -140,11 +144,6 @@ def run_main(cli_parameter_overrides: list=list()):
 
     if file_exists(start_manifest) is False:
         raise Exception('Manifest file "{}" does not exist!'.format(start_manifest))
-    start_manifest_text = read_text_file(path_to_file=start_manifest)
-    start_manifest_yaml_sections = spit_yaml_text_with_multiple_yaml_sections(yaml_text=start_manifest_text)
-    if 'Values' in start_manifest_yaml_sections:
-        pass # TODO Process values
-
 
     step_read_project_manifest(start_manifest=start_manifest)
 
