@@ -131,6 +131,9 @@ def run_main(cli_parameter_overrides: list=list()):
     start_manifest = cli_arguments[2]
     project_name = cli_arguments[3]
     scope = cli_arguments[4]
+
+    # TODO If start_manifest is a URL, attempt to download the file and process it.
+
     if file_exists(start_manifest) is False:
         raise Exception('Manifest file "{}" does not exist!'.format(start_manifest))
     start_manifest_text = read_text_file(path_to_file=start_manifest)
