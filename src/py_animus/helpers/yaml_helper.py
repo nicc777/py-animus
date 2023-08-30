@@ -127,10 +127,10 @@ def add_new_yaml_section_to_yaml_sections(yaml_sections: dict, section_text: str
     return copy.deepcopy(yaml_sections)
 
 
-def spit_yaml_file_with_multiple_yaml_sections(yaml_file: str)->dict:
+def spit_yaml_text_with_multiple_yaml_sections(yaml_text: str)->dict:
     yaml_sections = dict()  # index is the "kind" each section, with the value a list of manifests of that kind
     section_text = ''
-    with open(yaml_file, 'r') as f:
+    with open(yaml_text, 'r') as f:
         for line in f:
             if line.startswith('---'):  # YAML Section start
                 yaml_sections = add_new_yaml_section_to_yaml_sections(yaml_sections=copy.deepcopy(yaml_sections), section_text=section_text)

@@ -10,7 +10,8 @@ import json
 
 from py_animus import parse_command_line_arguments
 from py_animus.models import VariableCache, AllScopedValues, all_scoped_values, variable_cache, scope
-from py_animus.helpers.file_io import file_exists
+from py_animus.helpers.file_io import file_exists, read_text_file
+from py_animus.helpers.yaml_helper import spit_yaml_text_with_multiple_yaml_sections
 
 from termcolor import colored, cprint
 
@@ -132,6 +133,11 @@ def run_main(cli_parameter_overrides: list=list()):
     scope = cli_arguments[4]
     if file_exists(start_manifest) is False:
         raise Exception('Manifest file "{}" does not exist!'.format(start_manifest))
+    start_manifest_text = read_text_file(path_to_file=start_manifest)
+    start_manifest_yaml_sections = spit_yaml_text_with_multiple_yaml_sections(yaml_text=start_manifest_text)
+    if 'Values' in start_manifest_yaml_sections:
+        pass # TODO Process values
+
 
     step_read_project_manifest(start_manifest=start_manifest)
 
