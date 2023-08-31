@@ -5,8 +5,8 @@
 | src/py\_animus/helpers/\_\_init\_\_.py     |       18 |       13 |     28% |
 | src/py\_animus/helpers/file\_io.py         |      131 |       20 |     85% |
 | src/py\_animus/helpers/utils.py            |       37 |        2 |     95% |
-| src/py\_animus/helpers/yaml\_helper.py     |       90 |       19 |     79% |
+| src/py\_animus/helpers/yaml\_helper.py     |       90 |       20 |     78% |
 | src/py\_animus/models/\_\_init\_\_.py      |      141 |       98 |     30% |
 | src/py\_animus/utils/\_\_init\_\_.py       |        0 |        0 |    100% |
-| src/py\_animus/utils/http\_requests\_io.py |       18 |        1 |     94% |
+| src/py\_animus/utils/http\_requests\_io.py |       18 |        0 |    100% |
 |                                  **TOTAL** |  **548** |  **172** | **69%** |
