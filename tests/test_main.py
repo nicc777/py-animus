@@ -23,6 +23,11 @@ from py_animus.animus import run_main
 
 host_name_01 = "localhost"
 server_port_01 = 7999
+example_project_manifest_01 = '{}{}examples/projects/simple-01/project-01.yaml'.format(
+    os.path.dirname(os.path.realpath(__file__)),
+    os.sep
+)
+example_project_manifest_01 = example_project_manifest_01.replace('/tests/', '/')
 
 
 class TestHttpServerBasic(BaseHTTPRequestHandler):
@@ -30,7 +35,10 @@ class TestHttpServerBasic(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text/plain")
         self.end_headers()
-        self.wfile.write(bytes("test", "utf-8"))
+        content = ''
+        with open(example_project_manifest_01, 'r') as f:
+            content = f.read()
+        self.wfile.write(bytes('{}'.format(content), 'utf-8'))
 
 
 class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
@@ -38,12 +46,8 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
     def setUp(self):
         print('-'*80)
         self.tmp_dir = tempfile.TemporaryDirectory()
-        self.manifest_file = '{}{}test.yaml'.format(self.tmp_dir.name, os.sep)
-        with open(self.manifest_file, 'w') as f:
-            f.write('test')
 
     def tearDown(self):
-        os.unlink(self.manifest_file)
         os.rmdir(self.tmp_dir.name)
 
     @classmethod
@@ -59,7 +63,7 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
         cls.web_server_01.server_close()
 
     def test_basic_init_from_local_file(self):
-        result = run_main(cli_parameter_overrides=['animus.py', 'apply', self.manifest_file, 'project', 'test-scope'])
+        result = run_main(cli_parameter_overrides=['animus.py', 'apply', example_project_manifest_01, 'project', 'test-scope'])
         self.assertIsNotNone(result)
         self.assertTrue(result)
 
