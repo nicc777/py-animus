@@ -115,8 +115,7 @@ def step_read_project_manifest(start_manifest: str):
         leader_reverse=True,
         message='Reading project manifest: {}'.format(start_manifest),
     )
-    start_manifest_text = read_text_file(path_to_file=start_manifest)
-    start_manifest_yaml_sections = spit_yaml_text_with_multiple_yaml_sections(yaml_text=start_manifest_text)
+    start_manifest_yaml_sections = spit_yaml_text_with_multiple_yaml_sections(yaml_text=start_manifest)
     if 'Values' in start_manifest_yaml_sections:
         pass # TODO Process values
 
