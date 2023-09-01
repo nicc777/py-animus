@@ -31,7 +31,7 @@ example_project_manifest_01 = '{}{}examples/projects/simple-01/project-01.yaml'.
 example_project_manifest_01 = example_project_manifest_01.replace('/tests/', '/')
 
 
-class TestHttpServerBasic(BaseHTTPRequestHandler):
+class TestHttpServerBasic(BaseHTTPRequestHandler):  # pragma: no cover
     def do_GET(self):
         self.send_response(200)
         self.send_header("Content-type", "text/plain")

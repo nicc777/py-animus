@@ -31,13 +31,13 @@ ACTION_HANDLERS = {
 }
 
 
-def _format_line_for_print(
+def _format_line_for_print( 
     text: str=None,
     text_color: str='green',
     text_blink: bool=False,
     text_reverse: bool=False,
     text_bold: bool=True
-)->str:
+)->str: # pragma: no cover
     attrs = list()
     if text_blink is True:
         attrs.append('blink')
@@ -177,5 +177,5 @@ def run_main(cli_parameter_overrides: list=list()):
     return True
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     run_main()
