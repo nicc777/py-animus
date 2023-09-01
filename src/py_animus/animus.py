@@ -9,9 +9,9 @@
 import json
 
 from py_animus import parse_command_line_arguments
-from py_animus.models import VariableCache, AllScopedValues, all_scoped_values, variable_cache, scope
+from py_animus.models import VariableCache, AllScopedValues, all_scoped_values, variable_cache, scope, ScopedValues, Value
 from py_animus.helpers.file_io import file_exists, read_text_file
-from py_animus.helpers.yaml_helper import spit_yaml_text_with_multiple_yaml_sections
+from py_animus.helpers.yaml_helper import spit_yaml_text_from_file_with_multiple_yaml_sections, load_from_str
 from py_animus.utils.http_requests_io import download_files
 
 from termcolor import colored, cprint
@@ -108,6 +108,33 @@ def print_console_feedback_line(
     print()
 
 
+def _parse_values_data(manifest_data: dict):
+    converted_data = dict((k.lower(),v) for k,v in manifest_data.items()) # Convert keys to lowercase
+    scoped_values = ScopedValues(scope=scope.value)
+    if 'kind' in converted_data:
+        if converted_data['kind'] == 'Values':
+            if 'spec' in converted_data:
+                if 'values' in converted_data['spec']:
+                    for value_data in converted_data['spec']['values']:
+                        if 'valueName' in value_data:
+                            value_name = value_data['valueName']
+                            final_value = None
+                            if 'defaultValue' in value_data:
+                                final_value = value_data['defaultValue']
+                            if 'environmentOverrides' in value_data:
+                                for override_data in value_data['environmentOverrides']:
+                                    if 'environmentName' in override_data and 'value' in override_data:
+                                        if override_data['environmentName'] == scope.value:
+                                            final_value = override_data['value']
+                            scoped_values.add_value(
+                                value=Value(
+                                    name=value_name,
+                                    initial_value=final_value
+                                )
+                            )
+    all_scoped_values.add_scoped_values(scoped_values=scoped_values)
+
+
 def step_read_project_manifest(start_manifest: str):
     print_console_feedback_line(
         leader='STEP: ',
@@ -115,9 +142,10 @@ def step_read_project_manifest(start_manifest: str):
         leader_reverse=True,
         message='Reading project manifest: {}'.format(start_manifest),
     )
-    start_manifest_yaml_sections = spit_yaml_text_with_multiple_yaml_sections(yaml_text=start_manifest)
+    start_manifest_yaml_sections = spit_yaml_text_from_file_with_multiple_yaml_sections(yaml_text=start_manifest)
     if 'Values' in start_manifest_yaml_sections:
-        pass # TODO Process values
+        for value_manifest_section_text in start_manifest_yaml_sections['Values']:
+            _parse_values_data(manifest_data=load_from_str(value_manifest_section_text)['part_1'])
 
 
 def run_main(cli_parameter_overrides: list=list()):
@@ -134,7 +162,7 @@ def run_main(cli_parameter_overrides: list=list()):
     action = cli_arguments[1]
     start_manifest = cli_arguments[2]
     project_name = cli_arguments[3]
-    scope = cli_arguments[4]
+    scope.set_scope(new_value=cli_arguments[4])
 
     if start_manifest.lower().startswith('http'):
         files = download_files(urls=[start_manifest,])

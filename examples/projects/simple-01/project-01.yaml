@@ -35,7 +35,7 @@ metadata:
 spec:
     values:
     - valueName: project-1-log-level
-      defaultValue: info
+      defaultValue: trace
       environmentOverrides:
       - environmentName: sandbox1
         value: debug

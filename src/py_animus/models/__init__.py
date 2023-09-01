@@ -292,9 +292,25 @@ class VariableCache:
         return json.dumps(self.to_dict(for_logging=True))
     
 
+
+class Scope:
+
+    def __init__(self):
+        self.value = 'default'
+
+    def set_scope(self, new_value: str):
+        self.value = new_value
+
+    def __repr__(self)->str:
+        return self.value
+
+    def __str__(self)->str:
+        return self.value
+
+
 all_scoped_values = AllScopedValues()
 variable_cache = VariableCache()
-scope = 'default'
+scope = Scope()
 
 
 class ManifestBase:

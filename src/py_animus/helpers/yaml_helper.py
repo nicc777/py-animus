@@ -127,7 +127,7 @@ def add_new_yaml_section_to_yaml_sections(yaml_sections: dict, section_text: str
     return copy.deepcopy(yaml_sections)
 
 
-def spit_yaml_text_with_multiple_yaml_sections(yaml_text: str)->dict:
+def spit_yaml_text_from_file_with_multiple_yaml_sections(yaml_text: str)->dict:
     yaml_sections = dict()  # index is the "kind" each section, with the value a list of manifests of that kind
     section_text = ''
     with open(yaml_text, 'r') as f:
@@ -136,10 +136,12 @@ def spit_yaml_text_with_multiple_yaml_sections(yaml_text: str)->dict:
                 yaml_sections = add_new_yaml_section_to_yaml_sections(yaml_sections=copy.deepcopy(yaml_sections), section_text=section_text)
                 section_text = ''
             else:
-                if len(section_text) > 0:
-                    section_text = '{}\n{}'.format(section_text, line.strip())
+                line = line.replace('\n', '')
+                line = line.replace('\r', '')
+                if len(section_text) > 0:    
+                    section_text = '{}\n{}'.format(section_text, line)
                 else:
-                    section_text = '{}'.format(line.strip())
+                    section_text = '{}'.format(line)
     if len(section_text) > 0:
         yaml_sections = add_new_yaml_section_to_yaml_sections(yaml_sections=copy.deepcopy(yaml_sections), section_text=section_text)
     return yaml_sections

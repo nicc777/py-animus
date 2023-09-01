@@ -19,6 +19,7 @@ import unittest
 
 
 from py_animus.animus import run_main
+from py_animus.models import VariableCache, AllScopedValues, all_scoped_values, variable_cache, scope, ScopedValues, Value
 
 
 host_name_01 = "localhost"
@@ -62,15 +63,26 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
     def tearDownClass(cls):
         cls.web_server_01.server_close()
 
+    def _verify_values(self):
+        self.assertIsNotNone(all_scoped_values)
+        self.assertIsInstance(all_scoped_values, AllScopedValues)
+        self.assertIsNotNone(all_scoped_values.scoped_values_collection)
+        value = all_scoped_values.find_scoped_values(scope=scope.value).find_value_by_name(name='project-1-log-level').value
+        self.assertIsNotNone(value)
+        self.assertIsInstance(value, str)
+        self.assertTrue(value, 'debug')
+
     def test_basic_init_from_local_file(self):
-        result = run_main(cli_parameter_overrides=['animus.py', 'apply', example_project_manifest_01, 'project', 'test-scope'])
+        result = run_main(cli_parameter_overrides=['animus.py', 'apply', example_project_manifest_01, 'project', 'sandbox1'])
         self.assertIsNotNone(result)
         self.assertTrue(result)
+        self._verify_values()
 
     def test_basic_init_from_http_server(self):
-        result = run_main(cli_parameter_overrides=['animus.py', 'apply', 'http://{}:{}/'.format(host_name_01, server_port_01), 'project', 'test-scope'])
+        result = run_main(cli_parameter_overrides=['animus.py', 'apply', 'http://{}:{}/'.format(host_name_01, server_port_01), 'project', 'sandbox1'])
         self.assertIsNotNone(result)
         self.assertTrue(result)
+        self._verify_values()
 
 
 if __name__ == '__main__':

@@ -77,7 +77,7 @@ spec:
             self.assertTrue(kind == 'abc', 'Failed on text string "{}"'.format(text))
 
     def test_function_spit_yaml_file_with_multiple_yaml_sections(self):
-        yaml_sections = spit_yaml_text_with_multiple_yaml_sections(yaml_text=self.manifest_file)
+        yaml_sections = spit_yaml_text_from_file_with_multiple_yaml_sections(yaml_text=self.manifest_file)
         self.assertIsNotNone(yaml_sections)
         self.assertIsInstance(yaml_sections, dict)
         self.assertTrue('K1' in yaml_sections)
