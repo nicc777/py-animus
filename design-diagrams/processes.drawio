@@ -1,4 +1,4 @@
-<mxfile host="Electron" modified="2023-08-28T05:34:08.330Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.1.2 Chrome/106.0.5249.199 Electron/21.4.3 Safari/537.36" etag="axjz_fhjYPnuFWNTAbc-" version="21.1.2" type="device">
+<mxfile host="Electron" modified="2023-09-01T04:21:04.697Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.1.2 Chrome/106.0.5249.199 Electron/21.4.3 Safari/537.36" etag="qAYPJ04sP_-rAzdOByQf" version="21.1.2" type="device">
   <diagram name="Project Init" id="9PZ8RRwFv8GzSiJsPlFz">
     <mxGraphModel dx="2924" dy="1194" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
@@ -54,7 +54,7 @@
         <mxCell id="VdCg7VXAjWynsJLB6FN2-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="VdCg7VXAjWynsJLB6FN2-9" target="VdCg7VXAjWynsJLB6FN2-23">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="VdCg7VXAjWynsJLB6FN2-9" value="Run apply action on all Values manifests for given scope" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+        <mxCell id="VdCg7VXAjWynsJLB6FN2-9" value="Extract Values from&lt;br&gt;Project Manifest" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
           <mxGeometry x="160" y="1000" width="200" height="80" as="geometry" />
         </mxCell>
         <mxCell id="VdCg7VXAjWynsJLB6FN2-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="VdCg7VXAjWynsJLB6FN2-10" target="VdCg7VXAjWynsJLB6FN2-11">
@@ -267,13 +267,13 @@
         <mxCell id="VdCg7VXAjWynsJLB6FN2-85" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
           <mxGeometry x="60" y="360" width="30" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VdCg7VXAjWynsJLB6FN2-86" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+        <mxCell id="VdCg7VXAjWynsJLB6FN2-86" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
           <mxGeometry x="330" y="1000" width="30" height="30" as="geometry" />
         </mxCell>
         <mxCell id="VdCg7VXAjWynsJLB6FN2-87" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
           <mxGeometry x="10" y="1130" width="30" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VdCg7VXAjWynsJLB6FN2-88" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+        <mxCell id="VdCg7VXAjWynsJLB6FN2-88" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
           <mxGeometry x="330" y="1160" width="30" height="30" as="geometry" />
         </mxCell>
         <mxCell id="VdCg7VXAjWynsJLB6FN2-89" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
@@ -303,7 +303,7 @@
         <mxCell id="VdCg7VXAjWynsJLB6FN2-97" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
           <mxGeometry x="330" y="2520" width="30" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="VdCg7VXAjWynsJLB6FN2-98" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+        <mxCell id="VdCg7VXAjWynsJLB6FN2-98" value="" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
           <mxGeometry x="330" y="840" width="30" height="30" as="geometry" />
         </mxCell>
         <mxCell id="VdCg7VXAjWynsJLB6FN2-99" value="Progress Key" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
