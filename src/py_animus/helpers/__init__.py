@@ -12,7 +12,7 @@ import traceback
 from git import cmd as git_cmd
 
 
-def get_utc_timestamp(with_decimal: bool=False): # pragma: no cover
+def get_utc_timestamp(with_decimal: bool=False): 
     epoch = datetime(1970,1,1,0,0,0)
     now = datetime.utcnow()
     timestamp = (now - epoch).total_seconds()
