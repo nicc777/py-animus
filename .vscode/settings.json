@@ -5,6 +5,7 @@
         "cprint",
         "levelname",
         "plugable",
+        "representer",
         "termcolor"
     ],
     "python.testing.unittestArgs": [

@@ -7,7 +7,7 @@
 import yaml
 import traceback
 import copy
-from py_animus.models import VariableCache, AllScopedValues, all_scoped_values, variable_cache, scope
+from py_animus.models import VariableCache, AllScopedValues, all_scoped_values, variable_cache, scope, ManifestBase
 
 
 #######################################################################################################################
@@ -40,52 +40,52 @@ class SafeUnknownLoader(SafeUnknownConstructor, yaml.loader.SafeLoader):
         yaml.loader.SafeLoader.__init__(self, stream)
 
 
-class SafeUnknownRepresenter(yaml.representer.SafeRepresenter):
-    def represent_data(self, wrapdata):
-        tag = False
-        if type(wrapdata).__name__.startswith('TagWrap_'):
-            datatype = getattr(wrapdata, "wrapType")
-            tag = getattr(wrapdata, "wrapTag")
-            data = datatype(wrapdata)
-        else:
-            data = wrapdata
-        node = super(SafeUnknownRepresenter, self).represent_data(data)
-        if tag:
-            node.tag = tag
-        return node
+# class SafeUnknownRepresenter(yaml.representer.SafeRepresenter):
+#     def represent_data(self, wrapdata):
+#         tag = False
+#         if type(wrapdata).__name__.startswith('TagWrap_'):
+#             datatype = getattr(wrapdata, "wrapType")
+#             tag = getattr(wrapdata, "wrapTag")
+#             data = datatype(wrapdata)
+#         else:
+#             data = wrapdata
+#         node = super(SafeUnknownRepresenter, self).represent_data(data)
+#         if tag:
+#             node.tag = tag
+#         return node
 
-class SafeUnknownDumper(SafeUnknownRepresenter, yaml.dumper.SafeDumper):
+# class SafeUnknownDumper(SafeUnknownRepresenter, yaml.dumper.SafeDumper):
 
-    def __init__(self, stream,
-            default_style=None, default_flow_style=False,
-            canonical=None, indent=None, width=None,
-            allow_unicode=None, line_break=None,
-            encoding=None, explicit_start=None, explicit_end=None,
-            version=None, tags=None, sort_keys=True):
+#     def __init__(self, stream,
+#             default_style=None, default_flow_style=False,
+#             canonical=None, indent=None, width=None,
+#             allow_unicode=None, line_break=None,
+#             encoding=None, explicit_start=None, explicit_end=None,
+#             version=None, tags=None, sort_keys=True):
 
-        SafeUnknownRepresenter.__init__(self, default_style=default_style,
-                default_flow_style=default_flow_style, sort_keys=sort_keys)
+#         SafeUnknownRepresenter.__init__(self, default_style=default_style,
+#                 default_flow_style=default_flow_style, sort_keys=sort_keys)
 
-        yaml.dumper.SafeDumper.__init__(self,  stream,
-                                        default_style=default_style,
-                                        default_flow_style=default_flow_style,
-                                        canonical=canonical,
-                                        indent=indent,
-                                        width=width,
-                                        allow_unicode=allow_unicode,
-                                        line_break=line_break,
-                                        encoding=encoding,
-                                        explicit_start=explicit_start,
-                                        explicit_end=explicit_end,
-                                        version=version,
-                                        tags=tags,
-                                        sort_keys=sort_keys)
+#         yaml.dumper.SafeDumper.__init__(self,  stream,
+#                                         default_style=default_style,
+#                                         default_flow_style=default_flow_style,
+#                                         canonical=canonical,
+#                                         indent=indent,
+#                                         width=width,
+#                                         allow_unicode=allow_unicode,
+#                                         line_break=line_break,
+#                                         encoding=encoding,
+#                                         explicit_start=explicit_start,
+#                                         explicit_end=explicit_end,
+#                                         version=version,
+#                                         tags=tags,
+#                                         sort_keys=sort_keys)
 
 
-def load_handle(f):
-    MySafeLoader = SafeUnknownLoader
-    yaml.constructor.SafeConstructor.add_constructor(None, SafeUnknownConstructor.construct_undefined)
-    return yaml.load(f, MySafeLoader)
+# def load_handle(f):
+#     MySafeLoader = SafeUnknownLoader
+#     yaml.constructor.SafeConstructor.add_constructor(None, SafeUnknownConstructor.construct_undefined)
+#     return yaml.load(f, MySafeLoader)
 
 
 def load_from_str(s: str)->dict:
@@ -159,16 +159,40 @@ class ValueTag(yaml.YAMLObject):
 
     def __init__(self, value_reference):
         self.value_reference = value_reference
+        self.resolved_value = copy.deepcopy(all_scoped_values.find_scoped_values(scope=scope.value).find_value_by_name(name=self.value_reference))
 
     def __repr__(self):
-        return all_scoped_values.find_scoped_values(scope=scope).find_value_by_name(name=self.value_reference)
-
+        return self.resolved_value.value
+    
+    def __str__(self):
+        return self.resolved_value.value
+    
     @classmethod
     def from_yaml(cls, loader, node):
         return ValueTag(node.value)
 
     @classmethod
     def to_yaml(cls, dumper, data):
-        return dumper.represent_scalar(cls.yaml_tag, data.txt_var_original)
+        return dumper.represent_scalar(cls.yaml_tag, data.value_reference)
 
+
+def parse_animus_formatted_yaml(raw_yaml_str: str, registered_extensions: dict={'ManifestBase': ManifestBase()})->ManifestBase:
+    IGNORED_KINDS = (
+        'Values',   # These manifests should by now already be parsed...
+    )
+    yaml.SafeLoader.add_constructor('!Value', ValueTag.from_yaml)
+    yaml.SafeDumper.add_multi_representer(ValueTag, ValueTag.to_yaml)
+    manifest_data = yaml.safe_load(raw_yaml_str)
+    if 'kind' in manifest_data:
+        if manifest_data['kind'] in registered_extensions:
+            if manifest_data['kind'] not in IGNORED_KINDS:
+                extension_class = registered_extensions[manifest_data['kind']]
+                extension_class.parse_manifest(manifest_data=manifest_data, target_environments=[scope.value,])
+                return extension_class
+            else:
+                return None # The processing side must ignore any IGNORED_KINDS
+        else:
+            raise Exception('Manifest kind "{}" was not found in registered extensions'.format(manifest_data['kind']))
+    else:
+        raise Exception('Expected key "Kind", but not found.')
 

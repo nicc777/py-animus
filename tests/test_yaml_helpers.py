@@ -17,6 +17,7 @@ import unittest
 
 
 from py_animus.helpers.yaml_helper import *
+from py_animus.models import ScopedValues, Values, Value
 
 running_path = os.getcwd()
 print('Current Working Path: {}'.format(running_path))
@@ -88,6 +89,39 @@ spec:
         self.assertIsInstance(yaml_sections['K2'], list)
         self.assertEqual(len(yaml_sections['K1']), 2)
         self.assertEqual(len(yaml_sections['K2']), 1)
+
+
+class TestClassValueTag(unittest.TestCase):    # pragma: no cover
+
+    def setUp(self):
+        print('-'*80)
+        scope.set_scope(new_value='test-scope')
+        scoped_values = ScopedValues(scope='test-scope')
+        scoped_values.add_value(value=Value(name='test-value-1', initial_value='test-string-1'))
+        all_scoped_values.add_scoped_values(scoped_values=scoped_values, replace=True)
+        self.test_yaml = '''kind: ManifestBase
+version: v1
+metadata:
+  name: test
+  environments:
+  - test-scope
+spec:
+  finalValue: !Value test-value-1
+'''
+
+    def test_basic_parsing(self):
+        test_extension_class = parse_animus_formatted_yaml(raw_yaml_str=self.test_yaml)
+        self.assertIsNotNone(test_extension_class)
+        self.assertIsInstance(test_extension_class, ManifestBase)
+
+        print('Final Data:')
+        print('-----------')
+        print(str(test_extension_class))
+        print('-----------')
+
+        self.assertTrue(test_extension_class.spec['finalValue'] == 'test-string-1')
+    
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -490,6 +490,27 @@ class ManifestBase:
                 self.post_parsing_method(**self.__dict__)
             except:
                 self.log(message='post_parsing_method failed with EXCEPTION: {}'.format(traceback.format_exc()), level='error')
+
+        final_spec = dict()
+        SUPPORTED_TYPES = (
+            str,
+            int,
+            float,
+            list,
+            dict
+        )
+        for key, value in self.spec.items():
+            final_spec[key] = copy.deepcopy(value)
+            if value is not None:
+                supported_type_found = False
+                for supported_type in SUPPORTED_TYPES:
+                    if isinstance(value, supported_type):
+                        supported_type_found = True
+                if supported_type_found is False:
+                    final_spec[key] = copy.deepcopy(str(value))
+        self.spec = copy.deepcopy(final_spec)
+        converted_data['spec'] = copy.deepcopy(final_spec)
+
         self.checksum = hashlib.sha256(json.dumps(converted_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest() # Credit to https://stackoverflow.com/users/2082964/chris-maes for his hint on https://stackoverflow.com/questions/6923780/python-checksum-of-a-dict
         self.log(
             message='\n\nPOST PARSING. Manifest kind "{}" named "{}":\n   metadata: {}\n   spec: {}\n\n'.format(
