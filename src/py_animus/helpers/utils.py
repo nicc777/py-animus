@@ -50,16 +50,19 @@ def generate_random_string(
     length: int=16,
     chars: str='abcdefghijklmnopqrstuvwxyz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 )->str:
+    if chars is None:
+        raise Exception('chars parameter cannot be None')
+    if isinstance(chars, str) is False:
+        raise Exception('chars must be a string object')
+    if len(chars) == 0:
+        raise Exception('chars parameter must contain at least some characters')
     result = ''
     chars_list = list(chars)
     random.shuffle(chars_list)
-    try:
-        while len(result) < length:
-            result = '{}{}'.format(
-                result,
-                random.choice(chars_list)
-            )
-    except:
-        traceback.print_exc()
+    while len(result) < length:
+        result = '{}{}'.format(
+            result,
+            random.choice(chars_list)
+        )
     return result
 

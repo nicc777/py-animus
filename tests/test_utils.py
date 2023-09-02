@@ -183,6 +183,40 @@ class TestFunctionMergeDicts(unittest.TestCase):    # pragma: no cover
         self.assertEqual(test['alt2'], '222')
 
 
+class TestFunctionGenerateRandomString(unittest.TestCase):    # pragma: no cover
+
+    def test_simple_test(self):
+        result = generate_random_string()
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, str)
+        self.assertEqual(len(result), 16)
+
+    def test_specified_length(self):
+        result = generate_random_string(length=21)
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, str)
+        self.assertEqual(len(result), 21)
+
+    def test_only_specified_characters_contained(self):
+        include_chars  = 'abcxyz1290ABCXYZ'
+        excluded_chars = 'defghijklmnopqrstuvw345678DEFGHIJKLMNOPQRSTUVW'
+        result = generate_random_string(length=1024, chars=include_chars)
+        for excluded_char in excluded_chars:
+            self.assertFalse(excluded_char in result, 'Did not expect to find char "{}" in result'.format(excluded_char))
+
+    def test_exception_when_chars_is_none(self):
+        with self.assertRaises(Exception):
+            generate_random_string(length=1024, chars=None)
+
+    def test_exception_when_chars_is_empty_string(self):
+        with self.assertRaises(Exception):
+            generate_random_string(length=1024, chars='')
+
+    def test_exception_when_chars_is_not_a_string_object(self):
+        with self.assertRaises(Exception):
+            generate_random_string(length=1024, chars=123)
+
+
 if __name__ == '__main__':
     unittest.main()
 
