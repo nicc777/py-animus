@@ -84,6 +84,10 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
         self.assertTrue(result)
         self._verify_values()
 
+    def test_basic_init_with_invalid_project_fail_raises_Exception(self):
+        with self.assertRaises(Exception):
+            run_main(cli_parameter_overrides=['animus.py', 'apply', '/path/to/emptiness/and/darkness', 'project', 'sandbox1'])
+
 
 if __name__ == '__main__':
     unittest.main()
