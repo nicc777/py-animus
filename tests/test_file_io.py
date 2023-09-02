@@ -403,6 +403,81 @@ class TestFileIoCopyFunctions(unittest.TestCase):    # pragma: no cover
         delete_directory(dir=dest_dir)
 
 
+class TestFindMatchingFilesFunctions(unittest.TestCase):    # pragma: no cover
+
+    def setUp(self):
+        print('-'*80)
+        print()
+        self.tmp_dir = create_temp_directory()
+        for filename in ('a.txt', 'b.txt', 'c.bin',  'd.bin',):
+            full_path = '{}{}{}'.format(self.tmp_dir, os.sep, filename)
+            with open(full_path, 'w') as f:
+                f.write('test')
+        print('SETUP COMPLETE')
+        print()
+
+    def tearDown(self):
+        print()
+        print()
+        print('DELETING DIRECTORIES')
+        delete_directory(dir=self.tmp_dir)
+        print('* Deleted directory "{}"'.format(self.tmp_dir))
+        print()
+        print()
+
+    def test_find_txt_files(self):
+        files = find_matching_files(start_dir=self.tmp_dir, pattern='.*\.txt$')
+        self.assertIsNotNone(files)
+        self.assertIsInstance(files, list)
+        self.assertEqual(len(files), 2)
+        for filename in ('a.txt', 'b.txt',):
+            full_path = '{}{}{}'.format(self.tmp_dir, os.sep, filename)
+            self.assertTrue(full_path in files, 'Expected to find "{}"'.format(full_path))
+
+
+class TestFileExistsFunction(unittest.TestCase):    # pragma: no cover
+
+    def setUp(self):
+        print('-'*80)
+        print()
+        self.tmp_dir = create_temp_directory()
+        for filename in ('a.txt', 'b.txt', 'c.bin',  'd.bin',):
+            full_path = '{}{}{}'.format(self.tmp_dir, os.sep, filename)
+            with open(full_path, 'w') as f:
+                f.write('test')
+        print('SETUP COMPLETE')
+        print()
+
+    def tearDown(self):
+        print()
+        print()
+        print('DELETING DIRECTORIES')
+        delete_directory(dir=self.tmp_dir)
+        print('* Deleted directory "{}"'.format(self.tmp_dir))
+        print()
+        print()
+
+    def test_existing_file(self):
+        for filename in ('a.txt', 'b.txt', 'c.bin',  'd.bin',):
+            full_path = '{}{}{}'.format(self.tmp_dir, os.sep, filename)
+            result = file_exists(file=full_path)
+            self.assertIsNotNone(result)
+            self.assertIsInstance(result, bool)
+            self.assertTrue(result, 'Expected that "{}" would yield a true result'.format(full_path))
+
+    def test_file_does_not_exist(self):
+        full_path = '{}{}funny.joke'.format(self.tmp_dir, os.sep)
+        result = file_exists(file=full_path)
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, bool)
+        self.assertFalse(result, 'Expected that "{}" would yield a false result'.format(full_path))
+
+    def test_match_is_a_directory(self):
+        result = file_exists(file=self.tmp_dir)
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, bool)
+        self.assertFalse(result, 'Expected that "{}" would yield a false result'.format(self.tmp_dir))
+
 
 if __name__ == '__main__':
     unittest.main()

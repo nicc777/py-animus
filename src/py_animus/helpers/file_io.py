@@ -103,9 +103,8 @@ def read_large_text_file(path_to_file: str, callback_func: callable, chunk_size:
                 }
                 return_object = callback_func(**parameters)
                 current_chunk_sequence_number += 1
-    except:
-        pass
-        # traceback.print_exc()
+    except:     # pragma: no cover
+        pass    
     return return_object
 
 
@@ -124,7 +123,6 @@ def create_directory(path: str):
     try:
         os.mkdir(path)
     except:                             # pragma: no cover
-        # traceback.print_exc()
         return False
     return True
 
@@ -136,7 +134,6 @@ def delete_directory(dir: str)->bool:
         try:
             shutil.rmtree(dir)
         except:                         # pragma: no cover
-            # traceback.print_exc()
             return False
     return True
 
@@ -164,7 +161,6 @@ def create_temp_directory()->str:
         os.mkdir(tmp_dir)
     except:                             # pragma: no cover
         pass
-        # traceback.print_exc()
     return tmp_dir
 
 
@@ -185,7 +181,6 @@ def get_file_size(file_path: str)->int:
         size = os.path.getsize(filename=file_path)
     except:                             # pragma: no cover
         pass
-        # traceback.print_exc()
     return size
 
 
@@ -217,7 +212,6 @@ def calculate_file_checksum(file_path: str, checksum_algorithm: str='md5', _know
             checksum = hashlib.sha256(open(file_path,'rb').read()).hexdigest()
     except:                             # pragma: no cover
         pass
-        # traceback.print_exc()
     return checksum
 
 
@@ -319,7 +313,6 @@ def list_files(directory: str, recurse: bool=False, include_size: bool=False, ca
             result = copy.deepcopy(progress_callback_function(**callback_params))
         except:                         # pragma: no cover
             pass
-            # traceback.print_exc()
     return copy.deepcopy(result)
 
 
@@ -348,7 +341,6 @@ def copy_file(source_file_path: str, destination_directory: str, new_name: str=N
         shutil.copyfile(source_file_path, final_destination)
         return final_destination
     except:                             # pragma: no cover
-        # traceback.print_exc()
         return None
     
 
@@ -357,6 +349,7 @@ def file_exists(file: str)->bool:
         return False
     if os.path.isfile(file) is False:
         return False
+    return True
 
 
 def find_matching_files(start_dir:str, pattern: str='.*')->list:
