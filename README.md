@@ -12,7 +12,7 @@ The general idea is to create an extensible system that would be responsible for
 > As a result, I do not consider the current implementation up to version `v1.0.16` stable or really usable. The new implementation will start with version `v1.1.0`
 
 > **note**
-> At the moment I am merging the [rewrite issue](https://github.com/nicc777/py-animus/issues/83) to the main branch from time to time. However, the effort is on-going and there will be no releases until the rewrite is completed.
+> At the moment I am merging the [rewrite issue](https://github.com/nicc777/py-animus/issues/83) to the main branch from time to time. However, the effort is on-going and there will be no releases until the rewrite is completed. The old main branch before the rewrite is now in a branch from the v1.0.16 tag and is available [here](https://github.com/nicc777/py-animus/tree/old_main_release_v1.0.16)
 
 # Why use this solution
 
