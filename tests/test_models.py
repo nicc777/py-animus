@@ -380,6 +380,209 @@ class TestClassVariableCache(unittest.TestCase):    # pragma: no cover
         result = vc.get_value(variable_name='test', for_logging=True)
         self.assertEqual(result, '***')
 
+    def test_init_with_default_value_if_not_found(self):
+        vc = VariableCache()
+        result = vc.get_value(
+            variable_name='test',
+            value_if_expired='test-value-1',
+            default_value_if_not_found='test-value-1',
+            raise_exception_on_expired=False,
+            raise_exception_on_not_found=False,
+            init_with_default_value_if_not_found=True
+        )
+        self.assertIsNotNone(result)
+        self.assertIsInstance(result, str)
+        self.assertTrue('test-value-1' == result)
+
+        self.assertTrue('test' in vc.values)
+
+        result2 = vc.get_value(
+            variable_name='test',
+            value_if_expired='test-value-1',
+            default_value_if_not_found='test-value-1',
+            raise_exception_on_expired=False,
+            raise_exception_on_not_found=False,
+            init_with_default_value_if_not_found=False
+        )
+        self.assertIsNotNone(result2)
+        self.assertIsInstance(result2, str)
+        self.assertTrue('test-value-1' == result2)
+
+    def test_add_dict_item_to_existing_variable(self):
+        vc = VariableCache()
+        vc.store_variable(
+            variable=Variable(
+                name='test',
+                initial_value=dict()
+            )
+        )
+        vc.add_dict_item_to_existing_variable(
+            variable_name='test',
+            key='k1',
+            value='test-value-1'
+        )
+        values = vc.get_value(variable_name='test')
+        self.assertIsNotNone(values)
+        self.assertIsInstance(values, dict)
+        self.assertTrue(len(values) == 1)
+        self.assertTrue('k1' in values)
+        self.assertTrue(values['k1'] == 'test-value-1')
+
+        vc.add_dict_item_to_existing_variable(
+            variable_name='test',
+            key='k2',
+            value='test-value-2'
+        )
+        values2 = vc.get_value(variable_name='test')
+        self.assertIsNotNone(values2)
+        self.assertIsInstance(values2, dict)
+        self.assertTrue(len(values2) == 2)
+        self.assertTrue('k1' in values2)
+        self.assertTrue('k2' in values2)
+        self.assertTrue(values2['k1'] == 'test-value-1')
+        self.assertTrue(values2['k2'] == 'test-value-2')
+
+    def test_update_dict_item_to_existing_dict_variable(self):
+        vc = VariableCache()
+        vc.store_variable(
+            variable=Variable(
+                name='test',
+                initial_value=dict()
+            )
+        )
+        vc.add_dict_item_to_existing_variable(
+            variable_name='test',
+            key='k1',
+            value='test-value-1'
+        )
+        values = vc.get_value(variable_name='test')
+        self.assertIsNotNone(values)
+        self.assertIsInstance(values, dict)
+        self.assertTrue(len(values) == 1)
+        self.assertTrue('k1' in values)
+        self.assertTrue(values['k1'] == 'test-value-1')
+
+        vc.add_dict_item_to_existing_variable(
+            variable_name='test',
+            key='k1',
+            value='test-value-2',
+            ignore_if_already_exists=False
+        )
+        values2 = vc.get_value(variable_name='test')
+        self.assertIsNotNone(values2)
+        self.assertIsInstance(values2, dict)
+        self.assertTrue(len(values2) == 1)
+        self.assertTrue('k1' in values2)
+        self.assertTrue(values2['k1'] == 'test-value-2')
+
+    def test_add_dict_item_to_existing_variable_not_a_dict_throws_exception(self):
+        vc = VariableCache()
+        vc.store_variable(
+            variable=Variable(
+                name='test',
+                initial_value=123
+            )
+        )
+        with self.assertRaises(Exception):
+            vc.add_dict_item_to_existing_variable(
+                variable_name='test',
+                key='k1',
+                value='test-value-1'
+            )
+
+    def test_add_dict_item_to_existing_variable_not_a_dict_returns_empty_dict(self):
+        vc = VariableCache()
+        vc.store_variable(
+            variable=Variable(
+                name='test',
+                initial_value=123
+            )
+        )
+        values = vc.add_dict_item_to_existing_variable(
+            variable_name='test',
+            key='k1',
+            value='test-value-1',
+            raise_exception_if_value_type_is_not_a_dict=False
+        )
+        self.assertIsNotNone(values)
+        self.assertIsInstance(values, dict)
+        self.assertTrue(len(values) == 0)
+
+    def test_add_dict_item_to_existing_variable_creates_variable_if_not_already_created(self):
+        vc = VariableCache()
+        values = vc.add_dict_item_to_existing_variable(
+            variable_name='test',
+            key='k1',
+            value='test-value-1',
+            raise_exception_if_value_type_is_not_a_dict=False
+        )
+        self.assertIsNotNone(values)
+        self.assertIsInstance(values, dict)
+        self.assertTrue(len(values) == 1)
+        self.assertTrue('k1' in values)
+        self.assertTrue(values['k1'] == 'test-value-1')
+
+    def test_add_list_item_to_existing_variable(self):
+        vc = VariableCache()
+        vc.store_variable(
+            variable=Variable(
+                name='test',
+                initial_value=list()
+            )
+        )
+        vc.add_list_item_to_existing_variable(
+            variable_name='test',
+            value='test-value-1'
+        )
+        values = vc.get_value(variable_name='test')
+        self.assertIsNotNone(values)
+        self.assertIsInstance(values, list)
+        self.assertTrue(len(values) == 1)
+        self.assertTrue('test-value-1' in values)
+
+        vc.add_list_item_to_existing_variable(
+            variable_name='test',
+            value='test-value-2'
+        )
+        values2 = vc.get_value(variable_name='test')
+        self.assertIsNotNone(values2)
+        self.assertIsInstance(values2, list)
+        self.assertTrue(len(values2) == 2)
+        self.assertTrue('test-value-1' in values2)
+        self.assertTrue('test-value-2' in values2)
+
+    def test_add_list_item_to_existing_variable_not_a_list_throws_exception(self):
+        vc = VariableCache()
+        vc.store_variable(
+            variable=Variable(
+                name='test',
+                initial_value=123
+            )
+        )
+        with self.assertRaises(Exception):
+            vc.add_list_item_to_existing_variable(variable_name='test', value='test-value-1')
+
+    def test_add_list_item_to_existing_variable_not_a_list_returns_empty_list(self):
+        vc = VariableCache()
+        vc.store_variable(
+            variable=Variable(
+                name='test',
+                initial_value=123
+            )
+        )
+        values = vc.add_list_item_to_existing_variable(variable_name='test', value='test-value-1', raise_exception_if_value_type_is_not_a_list=False)
+        self.assertIsNotNone(values)
+        self.assertIsInstance(values, list)
+        self.assertTrue(len(values) == 0)
+
+    def test_add_list_item_to_existing_variable_not_not_yet_exists(self):
+        vc = VariableCache()
+        values = vc.add_list_item_to_existing_variable(variable_name='test', value='test-value-1')
+        self.assertIsNotNone(values)
+        self.assertIsInstance(values, list)
+        self.assertTrue(len(values) == 1)
+        self.assertTrue('test-value-1' in values)
+
 
 if __name__ == '__main__':
     unittest.main()

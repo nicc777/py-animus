@@ -14,6 +14,119 @@ import yaml
 from py_animus.helpers import get_utc_timestamp, is_debug_set_in_environment
 
 
+class Action:
+
+    UNKNOWN                     = 'UNKNOWN'
+    NO_ACTION                   = 'NO_ACTION'
+    APPLY_PENDING               = 'APPLY_PENDING'
+    APPLY_DONE                  = 'APPLY_DONE'
+    APPLY_ABORTED_WITH_ERRORS   = 'APPLY_ABORTED_WITH_ERRORS'
+    APPLY_CREATE_NEW            = 'APPLY_CREATE_NEW'
+    APPLY_UPDATE_EXISTING       = 'APPLY_UPDATE_EXISTING'
+    APPLY_DELETE_EXISTING       = 'APPLY_DELETE_EXISTING'
+    APPLY_SKIP                  = 'APPLY_SKIP'
+    DELETE_PENDING              = 'APPLY_PENDING'
+    DELETE_DONE                 = 'APPLY_DONE'
+    DELETE_ABORTED_WITH_ERRORS  = 'APPLY_ABORTED_WITH_ERRORS'
+    DELETE_DELETE_EXISTING      = 'APPLY_DELETE_EXISTING'
+    DELETE_SKIP                 = 'APPLY_SKIP'
+    _possible_actions = (
+        'UNKNOWN',
+        'NO_ACTION',
+        'APPLY_PENDING',
+        'APPLY_DONE',
+        'APPLY_ABORTED_WITH_ERRORS',
+        'APPLY_CREATE_NEW',
+        'APPLY_UPDATE_EXISTING',
+        'APPLY_DELETE_EXISTING',
+        'APPLY_SKIP',
+        'APPLY_PENDING',
+        'APPLY_DONE',
+        'APPLY_ABORTED_WITH_ERRORS',
+        'APPLY_DELETE_EXISTING',
+        'APPLY_SKIP',
+    )
+
+    def __init__(self, kind: str, name: str, action_name: str, action_status: str):
+        if action_status not in self._possible_actions:
+            raise Exception('Unsupported Action Status "{}"'.format(action_status))
+        self.current_status = action_status
+        self.kind = kind
+        self.name = name
+        self.action_name = action_name
+
+    def update_action_status(self, new_action_status: str):
+        if new_action_status not in self._possible_actions:
+            raise Exception('Unsupported Action Status "{}"'.format(new_action_status))
+        self.current_status = new_action_status
+
+    def get_status(self):
+        return self.current_status
+
+
+class Actions:
+
+    _actions_considered_completed = (
+        'NO_ACTION',
+        'APPLY_DONE',
+        'APPLY_ABORTED_WITH_ERRORS',
+        'APPLY_SKIP',
+        'APPLY_DONE',
+        'APPLY_ABORTED_WITH_ERRORS',
+        'APPLY_SKIP',
+    )
+
+    def __init__(self):
+        self.actions = dict()
+        self.progress = 0.0
+
+    def _update_progress(self):
+        if len(self.actions) > 0:
+            done_count = 0
+            for action in self.actions:
+                for complete_action in self._actions_considered_completed:
+                    if complete_action == action.current_status:
+                        done_count += 1
+            self.progress = done_count / len(self.actions)
+        else:
+            self.progress = 0.0
+
+    def add_or_update_action(self, action: Action):
+        idx = '{}:{}'.format(action.kind, action.name)
+        self.actions[idx] = action
+        self._update_progress()
+
+    def get_action_names(self, kind: str, name: str)->tuple:
+        action_names = list()
+        for key in list(self.actions.keys()):
+            a_kind, a_name, a_action_name = key.split(':')
+            if a_kind == kind and a_name == name:
+                action_names.append(a_action_name)
+        return tuple(action_names)
+    
+    def get_action_values_for_manifest(self, kind: str, name: str)->list:
+        found_actions = list()
+        for key in self.get_action_names(kind=kind, name=name):
+            a_kind, a_name, _a_action_name = key.split(':')
+            found_actions.append(self.get_action_status(kind=a_kind, name=a_name, action_name=_a_action_name))
+        return found_actions
+
+    def get_action_status(self, kind: str, name: str, action_name: str)->str:
+        idx = '{}:{}:{}'.format(kind, name, action_name)
+        if idx not in self.actions:
+            raise Exception('No action status found for kind "{}" named "{}" for action name "{}"').format(kind, name, action_name)
+        return self.actions[idx].current_status
+    
+    def get_progress(self)->float:
+        return self.progress
+    
+    def get_progress_percentage(self)->float:
+        return self.progress * 100.0
+
+
+actions = Actions()
+
+
 class Value:
 
     def __init__(self, name: str, initial_value: object):
@@ -244,6 +357,7 @@ class VariableCache:
             reset_timer_on_value_read: bool=False,
             raise_exception_on_not_found: bool=True,
             default_value_if_not_found=None,
+            init_with_default_value_if_not_found: bool=False,
             for_logging: bool=False
         ):
         """Get the value of a stored Variable.
@@ -268,6 +382,13 @@ class VariableCache:
             Exception: When the value has expired (From Variable) (pass through), and if `raise_exception_on_expired` is True
             Exception: When the Variable is not found, and if `raise_exception_on_not_found` is True
         """
+        if variable_name not in self.values and init_with_default_value_if_not_found is True:
+            self.store_variable(
+                variable=Variable(
+                    name=variable_name,
+                    initial_value=default_value_if_not_found
+                )
+            )
         if variable_name not in self.values and raise_exception_on_not_found is True:
             logging.debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to True'.format(variable_name))
             raise Exception('Variable "{}" not found'.format(variable_name))
@@ -275,6 +396,70 @@ class VariableCache:
             logging.debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to False - Returning default_value_if_not_found'.format(variable_name))
             return default_value_if_not_found
         return copy.deepcopy(self.values[variable_name].get_value(value_if_expired=value_if_expired, raise_exception_on_expired=raise_exception_on_expired, reset_timer_on_value_read=reset_timer_on_value_read, for_logging=for_logging))
+
+    def add_dict_item_to_existing_variable(
+            self,
+            variable_name: str,
+            key: str,
+            value: object,
+            ignore_if_already_exists: bool=False,
+            raise_exception_if_value_type_is_not_a_dict: bool=True
+        )->dict:
+        update_value = False
+        if variable_name in self.values:
+            current_value = copy.deepcopy(self.values[variable_name].get_value(value_if_expired=dict(), raise_exception_on_expired=False, reset_timer_on_value_read=False, for_logging=False))
+            if isinstance(current_value, dict) is True:
+                if key in current_value:
+                    if ignore_if_already_exists is False:
+                        update_value = True
+                else:
+                    update_value = True
+                if update_value is True:
+                    current_value[key] = value
+                    self.store_variable(
+                        variable=Variable(
+                            name=variable_name,
+                            initial_value=current_value
+                        ),
+                        overwrite_existing=True
+                    )
+            else:
+                if raise_exception_if_value_type_is_not_a_dict is True:
+                    raise Exception('Expected a dict type variable')
+                return dict()
+        else:
+            self.store_variable(
+                variable=Variable(
+                    name=variable_name,
+                    initial_value={key: value}
+                )
+            )
+        return copy.deepcopy(self.values[variable_name].get_value(value_if_expired=dict(), raise_exception_on_expired=False, reset_timer_on_value_read=True, for_logging=False))
+    
+    def add_list_item_to_existing_variable(self, variable_name: str, value: object, ignore_if_already_exists: bool=False, raise_exception_if_value_type_is_not_a_list: bool=True)->dict:
+        if variable_name in self.values:
+            current_value = copy.deepcopy(self.values[variable_name].get_value(value_if_expired=dict(), raise_exception_on_expired=False, reset_timer_on_value_read=False, for_logging=False))
+            if isinstance(current_value, list) is True:
+                current_value.append(value)
+                self.store_variable(
+                    variable=Variable(
+                        name=variable_name,
+                        initial_value=current_value
+                    ),
+                    overwrite_existing=True
+                )
+            else:
+                if raise_exception_if_value_type_is_not_a_list is True:
+                    raise Exception('Expected a dict type variable')
+                return list()
+        else:
+            self.store_variable(
+                variable=Variable(
+                    name=variable_name,
+                    initial_value=[value,]
+                )
+            )
+        return self.get_value(variable_name=variable_name)
 
     def delete_variable(self, variable_name: str):
         if variable_name in self.values:
@@ -419,6 +604,16 @@ class ManifestBase:
         self.target_environments = ['default',]
         self.original_manifest = dict()
         self.pending_action_description = 'No pending actions'
+
+    def register_action(self, action_name: str, initial_status: str=Action.UNKNOWN):
+        """
+        This should be called during the determine_Actions() method processing
+
+        Args:
+          action_name: A String with a name for a action, for example "Create Some File"
+          initial_status: String with the initial status as defined in the Action class
+        """
+        actions.add_or_update_action(action=Action(kind=self.kind, name=self.metadata['name'], action_name=action_name, action_status=initial_status))
 
     def log(self, message: str, level: str='info'): # pragma: no cover
         """During implementation, calls to `self.log()` can be made to log messages using the configure logger.

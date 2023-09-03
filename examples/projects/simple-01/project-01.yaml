@@ -9,8 +9,12 @@ metadata:
 spec:
   actions:
     apply:
+    - FileHandler
+    - StreamHandler
     - shell-script-v1-minimal
     delete:
+    - FileHandler
+    - StreamHandler
     - shell-script-v1-minimal
 ---
 kind: FileHandlerLogging
