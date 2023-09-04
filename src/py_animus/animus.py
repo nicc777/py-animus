@@ -9,10 +9,11 @@
 import json
 
 from py_animus import parse_command_line_arguments
-from py_animus.models import VariableCache, AllScopedValues, all_scoped_values, variable_cache, scope, ScopedValues, Value
+from py_animus.models import VariableCache, AllScopedValues, all_scoped_values, variable_cache, scope, ScopedValues, Value, actions
 from py_animus.helpers.file_io import file_exists, read_text_file
-from py_animus.helpers.yaml_helper import spit_yaml_text_from_file_with_multiple_yaml_sections, load_from_str
+from py_animus.helpers.yaml_helper import spit_yaml_text_from_file_with_multiple_yaml_sections, load_from_str, parse_animus_formatted_yaml
 from py_animus.utils.http_requests_io import download_files
+from py_animus.extensions.stream_handler_logging_v1 import StreamHandlerLogging
 
 from termcolor import colored, cprint
 
@@ -146,6 +147,11 @@ def step_read_project_manifest(start_manifest: str):
     if 'Values' in start_manifest_yaml_sections:
         for value_manifest_section_text in start_manifest_yaml_sections['Values']:
             _parse_values_data(manifest_data=load_from_str(value_manifest_section_text)['part_1'])
+    if 'StreamHandlerLogging' in start_manifest_yaml_sections:
+        for value_manifest_section_text in start_manifest_yaml_sections['StreamHandlerLogging']:
+            stream_logging_instance = parse_animus_formatted_yaml(raw_yaml_str='', registered_extensions={'StreamHandlerLogging': StreamHandlerLogging})
+            stream_logging_instance.determine_actions()
+            stream_logging_instance.apply_manifest()
 
 
 def run_main(cli_parameter_overrides: list=list()):
@@ -159,7 +165,7 @@ def run_main(cli_parameter_overrides: list=list()):
         variables_heading_text='  Command Line Arguments:',
         variables=[cli_arguments,]
     )
-    action = cli_arguments[1]
+    actions.set_command(command='{}'.format(cli_arguments[1]))
     start_manifest = cli_arguments[2]
     project_name = cli_arguments[3]
     scope.set_scope(new_value=cli_arguments[4])

@@ -14,6 +14,9 @@ import yaml
 from py_animus.helpers import get_utc_timestamp, is_debug_set_in_environment
 
 
+logger = logging.getLogger()
+
+
 class Action:
 
     UNKNOWN                     = 'UNKNOWN'
@@ -76,9 +79,18 @@ class Actions:
         'APPLY_SKIP',
     )
 
+    APPLY = 'apply'
+    DELETE = 'delete'
+
     def __init__(self):
         self.actions = dict()
         self.progress = 0.0
+        self.command = 'unknown'
+
+    def set_command(self, command: str):
+        if command not in (self.APPLY, self.DELETE, ):
+            raise Exception('Unsupported command "{}"'.format(command))
+        self.command = command
 
     def _update_progress(self):
         if len(self.actions) > 0:
@@ -104,11 +116,14 @@ class Actions:
                 action_names.append(a_action_name)
         return tuple(action_names)
     
-    def get_action_values_for_manifest(self, kind: str, name: str)->list:
-        found_actions = list()
+    def get_action_values_for_manifest(self, kind: str, name: str)->dict:
+        found_actions = dict()
         for key in self.get_action_names(kind=kind, name=name):
-            a_kind, a_name, _a_action_name = key.split(':')
-            found_actions.append(self.get_action_status(kind=a_kind, name=a_name, action_name=_a_action_name))
+            a_kind, a_name, a_action_name = key.split(':')
+            try:
+                found_actions[a_action_name] = self.get_action_status(kind=a_kind, name=a_name, action_name=a_action_name)
+            except:
+                found_actions[a_action_name] = Action.NO_ACTION
         return found_actions
 
     def get_action_status(self, kind: str, name: str, action_name: str)->str:
@@ -234,7 +249,7 @@ class Variable:
 
     def _log_debug(self, message):
         if self.debug is True:
-            logging.debug('[{}:{}] {}'.format(self.__class__.__name__, self.name, message))
+            logger.debug('[{}:{}] {}'.format(self.__class__.__name__, self.name, message))
 
     def set_value(self, value, reset_ttl: bool=True):
         """Set the value of the Variable.
@@ -300,9 +315,9 @@ class Variable:
     def log_value(self, value_if_expired=None, raise_exception_on_expired: bool=True, reset_timer_on_value_read: bool=False):
         value = self.get_value(value_if_expired=value_if_expired, raise_exception_on_expired=raise_exception_on_expired, reset_timer_on_value_read=reset_timer_on_value_read, for_logging=True)
         if is_debug_set_in_environment() is True:
-            logging.debug('Variable(name="{}", init_timestamp={}, ttl={}, mask_in_logs={}): "{}"'.format(self.name, self. init_timestamp, self.ttl, self.mask_in_logs, value))
+            logger.debug('Variable(name="{}", init_timestamp={}, ttl={}, mask_in_logs={}): "{}"'.format(self.name, self. init_timestamp, self.ttl, self.mask_in_logs, value))
         else:
-            logging.info('Variable(name="{}"): "{}"'.format(self.name, value))
+            logger.info('Variable(name="{}"): "{}"'.format(self.name, value))
     
     def to_dict(self, for_logging: bool=False):
         final_value = ''
@@ -390,10 +405,10 @@ class VariableCache:
                 )
             )
         if variable_name not in self.values and raise_exception_on_not_found is True:
-            logging.debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to True'.format(variable_name))
+            logger.debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to True'.format(variable_name))
             raise Exception('Variable "{}" not found'.format(variable_name))
         elif variable_name not in self.values and raise_exception_on_not_found is False:
-            logging.debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to False - Returning default_value_if_not_found'.format(variable_name))
+            logger.debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to False - Returning default_value_if_not_found'.format(variable_name))
             return default_value_if_not_found
         return copy.deepcopy(self.values[variable_name].get_value(value_if_expired=value_if_expired, raise_exception_on_expired=raise_exception_on_expired, reset_timer_on_value_read=reset_timer_on_value_read, for_logging=for_logging))
 
@@ -463,7 +478,7 @@ class VariableCache:
 
     def delete_variable(self, variable_name: str):
         if variable_name in self.values:
-            logging.debug('[variable_name={}] Deleted'.format(variable_name))
+            logger.debug('[variable_name={}] Deleted'.format(variable_name))
             self.values.pop(variable_name)
 
     def to_dict(self, for_logging: bool=False):
@@ -629,9 +644,9 @@ class ManifestBase:
             name = self.metadata['name']
         if level.lower().startswith('d'):
             if self.debug:
-                logging.debug('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
+                logger.debug('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
         elif level.lower().startswith('i'):
-            logging.info('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
+            logger.info('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
         elif level.lower().startswith('w'):
             logging.warning('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
         elif level.lower().startswith('e'):
@@ -742,7 +757,7 @@ class ManifestBase:
         """
         return yaml.dump(self.to_dict())
 
-    def implemented_manifest_differ_from_this_manifest(self, target_environment: str='default')->bool:    # pragma: no cover
+    def implemented_manifest_differ_from_this_manifest(self)->bool:    # pragma: no cover
         """A helper method to determine if the current manifest is different from a potentially previously implemented
         version
 
@@ -789,13 +804,13 @@ class ManifestBase:
         """
         raise Exception('To be implemented by user')
 
-    def determine_actions(self, target_environment: str='default'):
+    def determine_actions(self):
         """
         TODO 
         """
         raise Exception('To be implemented by user')
 
-    def apply_manifest(self, target_environment: str='default'):  # pragma: no cover
+    def apply_manifest(self):  # pragma: no cover
         """A  method to Implement the state as defined in a manifest.
 
         The ManifestManager will typically call this method to apply the manifest. The ManifestManager will NOT make a
@@ -851,7 +866,7 @@ class ManifestBase:
         """
         raise Exception('To be implemented by user')
     
-    def delete_manifest(self, target_environment: str='default'):  # pragma: no cover
+    def delete_manifest(self):  # pragma: no cover
         """A  method to DELETE the current state as defined in a manifest.
 
         The ManifestManager will typically call this method to delete the manifest. The ManifestManager will NOT make a
