@@ -50,12 +50,12 @@ class Action:
         'APPLY_SKIP',
     )
 
-    def __init__(self, kind: str, name: str, action_name: str, action_status: str):
+    def __init__(self, manifest_kind: str, manifest_name: str, action_name: str, action_status: str):
         if action_status not in self._possible_actions:
             raise Exception('Unsupported Action Status "{}"'.format(action_status))
         self.current_status = action_status
-        self.kind = kind
-        self.name = name
+        self.kind = manifest_kind
+        self.name = manifest_name
         self.action_name = action_name
 
     def update_action_status(self, new_action_status: str):
@@ -95,7 +95,7 @@ class Actions:
     def _update_progress(self):
         if len(self.actions) > 0:
             done_count = 0
-            for action in self.actions:
+            for idx, action in self.actions.items():
                 for complete_action in self._actions_considered_completed:
                     if complete_action == action.current_status:
                         done_count += 1
@@ -104,32 +104,31 @@ class Actions:
             self.progress = 0.0
 
     def add_or_update_action(self, action: Action):
-        idx = '{}:{}'.format(action.kind, action.name)
+        idx = '{}:{}:{}'.format(action.kind, action.name, action.action_name)
         self.actions[idx] = action
         self._update_progress()
 
-    def get_action_names(self, kind: str, name: str)->tuple:
+    def get_action_names(self, manifest_kind: str, manifest_name: str)->tuple:
         action_names = list()
         for key in list(self.actions.keys()):
             a_kind, a_name, a_action_name = key.split(':')
-            if a_kind == kind and a_name == name:
+            if a_kind == manifest_kind and a_name == manifest_name:
                 action_names.append(a_action_name)
         return tuple(action_names)
     
-    def get_action_values_for_manifest(self, kind: str, name: str)->dict:
+    def get_action_values_for_manifest(self, manifest_kind: str, manifest_name: str)->dict:
         found_actions = dict()
-        for key in self.get_action_names(kind=kind, name=name):
-            a_kind, a_name, a_action_name = key.split(':')
+        for a_action_name in self.get_action_names(manifest_kind=manifest_kind, manifest_name=manifest_name):
             try:
-                found_actions[a_action_name] = self.get_action_status(kind=a_kind, name=a_name, action_name=a_action_name)
+                found_actions[a_action_name] = self.get_action_status(manifest_kind=manifest_kind, manifest_name=manifest_name, action_name=a_action_name)
             except:
                 found_actions[a_action_name] = Action.NO_ACTION
         return found_actions
 
-    def get_action_status(self, kind: str, name: str, action_name: str)->str:
-        idx = '{}:{}:{}'.format(kind, name, action_name)
+    def get_action_status(self, manifest_kind: str, manifest_name: str, action_name: str)->str:
+        idx = '{}:{}:{}'.format(manifest_kind, manifest_name, action_name)
         if idx not in self.actions:
-            raise Exception('No action status found for kind "{}" named "{}" for action name "{}"').format(kind, name, action_name)
+            raise Exception('No action status found for kind "{}" named "{}" for action name "{}"').format(manifest_kind, manifest_name, action_name)
         return self.actions[idx].current_status
     
     def get_progress(self)->float:
@@ -628,7 +627,7 @@ class ManifestBase:
           action_name: A String with a name for a action, for example "Create Some File"
           initial_status: String with the initial status as defined in the Action class
         """
-        actions.add_or_update_action(action=Action(kind=self.kind, name=self.metadata['name'], action_name=action_name, action_status=initial_status))
+        actions.add_or_update_action(action=Action(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name=action_name, action_status=initial_status))
 
     def log(self, message: str, level: str='info'): # pragma: no cover
         """During implementation, calls to `self.log()` can be made to log messages using the configure logger.

@@ -186,7 +186,7 @@ def parse_animus_formatted_yaml(raw_yaml_str: str, registered_extensions: dict={
     if 'kind' in manifest_data:
         if manifest_data['kind'] in registered_extensions:
             if manifest_data['kind'] not in IGNORED_KINDS:
-                extension_class = registered_extensions[manifest_data['kind']]
+                extension_class = registered_extensions[manifest_data['kind']]()
                 extension_class.parse_manifest(manifest_data=manifest_data, target_environments=[scope.value,])
                 return extension_class
             else:
