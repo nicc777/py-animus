@@ -28,16 +28,14 @@ class StreamHandlerLogging(ManifestBase):
     def __init__(self, post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):
         super().__init__(post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
 
-    def implemented_manifest_differ_from_this_manifest(self, target_environment: str='default')->bool:
-        actions = variable_cache.get_value(variable_name='ALL_ACTIONS')
-        if 'Configure StreamHandler Logging' in actions:
-            if actions['Configure StreamHandler Logging'] == Action.NO_ACTION:
-                return True
-        return False
+    def implemented_manifest_differ_from_this_manifest(self)->bool:
+        if actions.get_action_status(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Configure StreamHandler Logging') == Action.APPLY_DONE:
+            return False
+        return True
     
     def determine_actions(self)->list:
         self.register_action(action_name='Configure StreamHandler Logging', initial_status=Action.UNKNOWN)
-        if self.implemented_manifest_differ_from_this_manifest is True:
+        if self.implemented_manifest_differ_from_this_manifest() is True:
             self.register_action(action_name='Configure StreamHandler Logging', initial_status=Action.APPLY_PENDING)
         return actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name'])
 
@@ -62,7 +60,7 @@ class StreamHandlerLogging(ManifestBase):
         for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
             if action_name == 'Configure StreamHandler Logging' and expected_action == Action.APPLY_PENDING:
                 self._configure_logging()
-                actions.add_or_update_action(action=Action(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name=Action.APPLY_DONE))
+                actions.add_or_update_action(action=Action(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Configure StreamHandler Logging', action_status=Action.APPLY_DONE))
         logger.info('StreamHandlerLogging configuration done')
         return
     

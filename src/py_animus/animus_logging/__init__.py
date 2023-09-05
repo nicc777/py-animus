@@ -11,4 +11,7 @@ import logging
 
 logger = logging.getLogger('py-animus')
 if os.getenv('DEBUG', '0')[0].lower() in ('1','t','e'): # 1, or [t/T]rue or [e/E]nable(d)
+    print('DEBUG Level Logging Enabled')
     logger.setLevel(logging.DEBUG)
+else:
+    print('INFO Level Logging Enabled')
