@@ -7,11 +7,9 @@
 """
 
 from py_animus.models import all_scoped_values, variable_cache, Action, actions
-from py_animus.animus_logging import logger
+from py_animus.animus_logging import logger, add_handler
 from py_animus.models.extensions import ManifestBase
 import logging
-import traceback
-import copy
 import sys
 
 
@@ -51,10 +49,12 @@ class StreamHandlerLogging(ManifestBase):
                 log_level = logging.CRITICAL
         if 'loggingFormat' in self.spec:
             log_format = self.spec['loggingFormat']
+        formatter = logging.Formatter(log_format)
         h = logging.StreamHandler(sys.stdout)
-        h.setLevel(log_level)    
-        h.setFormatter(log_format)
-        logger.addHandler(h)
+        h.setLevel(log_level)
+        h.setFormatter(formatter)
+        add_handler(h)
+        # logger.addHandler(h)
 
     def apply_manifest(self): 
         for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
