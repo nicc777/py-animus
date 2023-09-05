@@ -80,6 +80,7 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
         self.assertTrue(result)
         self._verify_values()
 
+    @patch.dict('os.environ', {'DEBUG': 'e'})
     def test_basic_init_from_http_server(self):
         result = run_main(cli_parameter_overrides=['animus.py', 'apply', 'http://{}:{}/'.format(host_name_01, server_port_01), 'project', 'sandbox1'])
         self.assertIsNotNone(result)
