@@ -50,7 +50,7 @@ class StreamHandlerLogging(ManifestBase):
             if self.spec['level'].lower().startswith('c') is True:
                 log_level = logging.CRITICAL
         if 'loggingFormat' in self.spec:
-            log_format = self.spec('loggingFormat')
+            log_format = self.spec['loggingFormat']
         h = logging.StreamHandler(sys.stdout)
         h.setLevel(log_level)    
         h.setFormatter(log_format)

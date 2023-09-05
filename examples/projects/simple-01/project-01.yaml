@@ -31,6 +31,7 @@ metadata:
   name: StreamHandler
 spec:
   level: !Value project-1-log-level
+  loggingFormat: ' *** %(asctime)s %(levelname)s - %(message)s'
 ---
 kind: Values
 version: v1
