@@ -12,6 +12,7 @@ import json
 import tempfile
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import _thread as thread
+from unittest.mock import patch
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../src")
 print('sys.path={}'.format(sys.path))
 
@@ -72,6 +73,7 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
         self.assertIsInstance(value, str)
         self.assertTrue(value, 'debug')
 
+    @patch.dict('os.environ', {'DEBUG': 'e'})
     def test_basic_init_from_local_file(self):
         result = run_main(cli_parameter_overrides=['animus.py', 'apply', example_project_manifest_01, 'project', 'sandbox1'])
         self.assertIsNotNone(result)
@@ -86,7 +88,7 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
 
     def test_basic_init_with_invalid_project_fail_raises_Exception(self):
         with self.assertRaises(Exception):
-            run_main(cli_parameter_overrides=['animus.py', 'apply', '/path/to/emptiness/and/darkness', 'project', 'sandbox1'])
+            run_main(cli_parameter_overrides=['animus.py', 'apply', '/path/to/emptiness/and/darkness', 'project', 'sandbox1']) 
 
 
 if __name__ == '__main__':

@@ -6,7 +6,9 @@
     https://raw.githubusercontent.com/nicc777/verbacratis/main/LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt
 """
 
-from py_animus.models import ManifestBase, all_scoped_values, variable_cache, Action, actions, logger
+from py_animus.models import all_scoped_values, variable_cache, Action, actions
+from py_animus.animus_logging import logger
+from py_animus.models.extensions import ManifestBase
 import logging
 import traceback
 import copy

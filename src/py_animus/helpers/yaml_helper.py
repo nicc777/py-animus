@@ -7,7 +7,14 @@
 import yaml
 import traceback
 import copy
-from py_animus.models import VariableCache, AllScopedValues, all_scoped_values, variable_cache, scope, ManifestBase
+from py_animus.models import VariableCache, AllScopedValues, all_scoped_values, variable_cache, scope
+from py_animus.models.extensions import ManifestBase
+from py_animus.animus_logging import logger
+
+try:    # pragma: no cover
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError: # pragma: no cover
+    from yaml import Loader, Dumper
 
 
 #######################################################################################################################
@@ -196,3 +203,23 @@ def parse_animus_formatted_yaml(raw_yaml_str: str, registered_extensions: dict={
     else:
         raise Exception('Expected key "Kind", but not found.')
 
+
+def parse_raw_yaml_data_and_ignore_all_tags(yaml_data: str, use_custom_parser_for_custom_tags: bool=False)->dict:
+    if use_custom_parser_for_custom_tags is True:
+        return load_from_str(s=yaml_data)
+    configuration = dict()
+    current_part = 0
+    try:
+        for data in yaml.load_all(yaml_data, Loader=Loader):
+            current_part += 1
+            configuration['part_{}'.format(current_part)] = data
+    except: # pragma: no cover
+        try:
+            # Even though the use_custom_parser_for_custom_tags flag was False, let's try using the custom parser
+            parsed_data = load_from_str(s=yaml_data)
+            logger.warning('It seems the YAML contained custom tags !!! WARNING: This conversion only works ONE WAY. You will not be able to reconstruct the original YAML from the resulting dict')
+            return parsed_data
+        except:
+            traceback.print_exc()
+            raise Exception('Failed to parse configuration')
+    return configuration

@@ -16,8 +16,8 @@ print('sys.path={}'.format(sys.path))
 import unittest
 
 
-from py_animus.helpers.yaml_helper import *
-from py_animus.models import ScopedValues, Values, Value
+from py_animus.helpers.yaml_helper import * 
+from py_animus.models import ScopedValues, Value
 
 running_path = os.getcwd()
 print('Current Working Path: {}'.format(running_path))

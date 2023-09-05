@@ -9,7 +9,7 @@
 import json
 
 from py_animus import parse_command_line_arguments
-from py_animus.models import VariableCache, AllScopedValues, all_scoped_values, variable_cache, scope, ScopedValues, Value, actions
+from py_animus.models import all_scoped_values, variable_cache, scope, ScopedValues, Value, actions
 from py_animus.helpers.file_io import file_exists, read_text_file
 from py_animus.helpers.yaml_helper import spit_yaml_text_from_file_with_multiple_yaml_sections, load_from_str, parse_animus_formatted_yaml
 from py_animus.utils.http_requests_io import download_files

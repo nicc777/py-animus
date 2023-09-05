@@ -10,13 +10,6 @@
 import traceback
 import logging
 import sys
-from py_animus.helpers.yaml_helper import load_from_str
-
-import yaml
-try:    # pragma: no cover
-    from yaml import CLoader as Loader, CDumper as Dumper
-except ImportError: # pragma: no cover
-    from yaml import Loader, Dumper
 
 
 def get_logging_stream_handler(
@@ -31,27 +24,6 @@ def get_logging_stream_handler(
     except: # pragma: no cover
         traceback.print_exc()
     return None # pragma: no cover
-
-
-def parse_raw_yaml_data_and_ignore_all_tags(yaml_data: str, use_custom_parser_for_custom_tags: bool=False)->dict:
-    if use_custom_parser_for_custom_tags is True:
-        return load_from_str(s=yaml_data)
-    configuration = dict()
-    current_part = 0
-    try:
-        for data in yaml.load_all(yaml_data, Loader=Loader):
-            current_part += 1
-            configuration['part_{}'.format(current_part)] = data
-    except: # pragma: no cover
-        try:
-            # Even though the use_custom_parser_for_custom_tags flag was False, let's try using the custom parser
-            parsed_data = load_from_str(s=yaml_data)
-            logging.warning('It seems the YAML contained custom tags !!! WARNING: This conversion only works ONE WAY. You will not be able to reconstruct the original YAML from the resulting dict')
-            return parsed_data
-        except:
-            traceback.print_exc()
-            raise Exception('Failed to parse configuration')
-    return configuration
 
 
 def validate_list(input_list: list, min_length: int=0, max_length: int=999, can_be_none: bool=False, error_message: str='List validation failed'):
