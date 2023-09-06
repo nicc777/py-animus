@@ -150,16 +150,12 @@ def step_read_project_manifest(start_manifest: str):
         for value_manifest_section_text in start_manifest_yaml_sections['Values']:
             _parse_values_data(manifest_data=load_from_str(value_manifest_section_text)['part_1'])
     logging_actions = list()
-    if 'StreamHandlerLogging' in start_manifest_yaml_sections:
-        for value_manifest_section_text in start_manifest_yaml_sections['StreamHandlerLogging']:
-            stream_logging_instance = parse_animus_formatted_yaml(raw_yaml_str=value_manifest_section_text, registered_extensions={'StreamHandlerLogging': StreamHandlerLogging})
-            stream_logging_instance.determine_actions()
-            logging_actions.append(stream_logging_instance)
-    if 'FileHandlerLogging' in start_manifest_yaml_sections:
-        for value_manifest_section_text in start_manifest_yaml_sections['FileHandlerLogging']:
-            file_logging_instance = parse_animus_formatted_yaml(raw_yaml_str=value_manifest_section_text, registered_extensions={'FileHandlerLogging': FileHandlerLogging})
-            file_logging_instance.determine_actions()
-            logging_actions.append(file_logging_instance)
+    for logging_kind in ('StreamHandlerLogging', 'FileHandlerLogging',):
+        if logging_kind in start_manifest_yaml_sections:
+            for value_manifest_section_text in start_manifest_yaml_sections[logging_kind]:
+                stream_logging_instance = parse_animus_formatted_yaml(raw_yaml_str=value_manifest_section_text)
+                stream_logging_instance.determine_actions()
+                logging_actions.append(stream_logging_instance)
     for logging_extension in logging_actions:
         logging_extension.apply_manifest()
     logger.info('Logging ready')

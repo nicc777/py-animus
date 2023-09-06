@@ -10,6 +10,7 @@ import copy
 from py_animus.models import VariableCache, AllScopedValues, all_scoped_values, variable_cache, scope
 from py_animus.models.extensions import ManifestBase
 from py_animus.animus_logging import logger
+from py_animus.extensions import extensions
 
 try:    # pragma: no cover
     from yaml import CLoader as Loader, CDumper as Dumper
@@ -183,25 +184,22 @@ class ValueTag(yaml.YAMLObject):
         return dumper.represent_scalar(cls.yaml_tag, data.value_reference)
 
 
-def parse_animus_formatted_yaml(raw_yaml_str: str, registered_extensions: dict={'ManifestBase': ManifestBase()})->ManifestBase:
+def parse_animus_formatted_yaml(raw_yaml_str: str)->ManifestBase:
     IGNORED_KINDS = (
         'Values',   # These manifests should by now already be parsed...
     )
     yaml.SafeLoader.add_constructor('!Value', ValueTag.from_yaml)
     yaml.SafeDumper.add_multi_representer(ValueTag, ValueTag.to_yaml)
     manifest_data = yaml.safe_load(raw_yaml_str)
-    if 'kind' in manifest_data:
-        if manifest_data['kind'] in registered_extensions:
-            if manifest_data['kind'] not in IGNORED_KINDS:
-                extension_class = registered_extensions[manifest_data['kind']]()
-                extension_class.parse_manifest(manifest_data=manifest_data, target_environments=[scope.value,])
-                return extension_class
-            else:
-                return None # The processing side must ignore any IGNORED_KINDS
-        else:
-            raise Exception('Manifest kind "{}" was not found in registered extensions'.format(manifest_data['kind']))
+    converted_data = dict((k.lower(),v) for k,v in manifest_data.items()) # Convert keys to lowercase
+    if 'kind' in converted_data and 'version' in converted_data:
+        if converted_data['kind'] not in IGNORED_KINDS:
+            manifest_class = extensions.find_extension_that_supports_version(extension_kind=converted_data['kind'], version=converted_data['version'])
+            initialized_manifest_class = manifest_class()
+            initialized_manifest_class.parse_manifest(manifest_data=manifest_data, target_environments=[scope.value,])
+            return initialized_manifest_class
     else:
-        raise Exception('Expected key "Kind", but not found.')
+        raise Exception('Expected key "Kind" and "Version". One or both of these keys are missing')
 
 
 def parse_raw_yaml_data_and_ignore_all_tags(yaml_data: str, use_custom_parser_for_custom_tags: bool=False)->dict:
