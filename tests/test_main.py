@@ -52,6 +52,8 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
 
     def tearDown(self):
         os.rmdir(self.tmp_dir.name)
+        if os.path.exists('/tmp/test.log') is True:
+            os.unlink('/tmp/test.log')
 
     @classmethod
     def setUpClass(cls):
@@ -82,6 +84,7 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
         self.assertIsNotNone(result)
         self.assertTrue(result)
         self._verify_values()
+        self.assertTrue(os.path.exists('/tmp/test.log'))
 
     @patch.dict('os.environ', {'DEBUG': 'e'})
     def test_basic_init_from_http_server(self):
@@ -91,6 +94,7 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
         self.assertIsNotNone(result)
         self.assertTrue(result)
         self._verify_values()
+        self.assertTrue(os.path.exists('/tmp/test.log'))
 
     def test_basic_init_with_invalid_project_fail_raises_Exception(self):
         with self.assertRaises(Exception):

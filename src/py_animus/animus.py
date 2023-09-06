@@ -14,6 +14,7 @@ from py_animus.helpers.file_io import file_exists, read_text_file
 from py_animus.helpers.yaml_helper import spit_yaml_text_from_file_with_multiple_yaml_sections, load_from_str, parse_animus_formatted_yaml
 from py_animus.utils.http_requests_io import download_files
 from py_animus.extensions.stream_handler_logging_v1 import StreamHandlerLogging
+from py_animus.extensions.file_handler_logging_v1 import FileHandlerLogging
 from py_animus.animus_logging import logger
 
 from termcolor import colored, cprint
@@ -153,9 +154,14 @@ def step_read_project_manifest(start_manifest: str):
         for value_manifest_section_text in start_manifest_yaml_sections['StreamHandlerLogging']:
             stream_logging_instance = parse_animus_formatted_yaml(raw_yaml_str=value_manifest_section_text, registered_extensions={'StreamHandlerLogging': StreamHandlerLogging})
             stream_logging_instance.determine_actions()
-            stream_logging_instance.apply_manifest()
+            logging_actions.append(stream_logging_instance)
+    if 'FileHandlerLogging' in start_manifest_yaml_sections:
+        for value_manifest_section_text in start_manifest_yaml_sections['FileHandlerLogging']:
+            file_logging_instance = parse_animus_formatted_yaml(raw_yaml_str=value_manifest_section_text, registered_extensions={'FileHandlerLogging': FileHandlerLogging})
+            file_logging_instance.determine_actions()
+            logging_actions.append(file_logging_instance)
     for logging_extension in logging_actions:
-        logging_actions.apply_manifest()
+        logging_extension.apply_manifest()
     logger.info('Logging ready')
 
 
