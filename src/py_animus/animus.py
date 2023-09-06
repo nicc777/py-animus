@@ -148,11 +148,14 @@ def step_read_project_manifest(start_manifest: str):
     if 'Values' in start_manifest_yaml_sections:
         for value_manifest_section_text in start_manifest_yaml_sections['Values']:
             _parse_values_data(manifest_data=load_from_str(value_manifest_section_text)['part_1'])
+    logging_actions = list()
     if 'StreamHandlerLogging' in start_manifest_yaml_sections:
         for value_manifest_section_text in start_manifest_yaml_sections['StreamHandlerLogging']:
             stream_logging_instance = parse_animus_formatted_yaml(raw_yaml_str=value_manifest_section_text, registered_extensions={'StreamHandlerLogging': StreamHandlerLogging})
             stream_logging_instance.determine_actions()
             stream_logging_instance.apply_manifest()
+    for logging_extension in logging_actions:
+        logging_actions.apply_manifest()
     logger.info('Logging ready')
 
 
