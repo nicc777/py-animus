@@ -1,12 +1,19 @@
-| Name                                       |    Stmts |     Miss |   Cover |
-|------------------------------------------- | -------: | -------: | ------: |
-| src/py\_animus/\_\_init\_\_.py             |       53 |       14 |     74% |
-| src/py\_animus/animus.py                   |       70 |        2 |     97% |
-| src/py\_animus/helpers/\_\_init\_\_.py     |       25 |        0 |    100% |
-| src/py\_animus/helpers/file\_io.py         |      130 |        7 |     95% |
-| src/py\_animus/helpers/utils.py            |       40 |        0 |    100% |
-| src/py\_animus/helpers/yaml\_helper.py     |       89 |        6 |     93% |
-| src/py\_animus/models/\_\_init\_\_.py      |      266 |       30 |     89% |
-| src/py\_animus/utils/\_\_init\_\_.py       |        0 |        0 |    100% |
-| src/py\_animus/utils/http\_requests\_io.py |       18 |        0 |    100% |
-|                                  **TOTAL** |  **691** |   **59** | **91%** |
+| Name                                                        |    Stmts |     Miss |   Cover |
+|------------------------------------------------------------ | -------: | -------: | ------: |
+| src/py\_animus/\_\_init\_\_.py                              |       41 |       14 |     66% |
+| src/py\_animus/animus.py                                    |       83 |        2 |     98% |
+| src/py\_animus/animus\_logging/\_\_init\_\_.py              |       10 |        2 |     80% |
+| src/py\_animus/extensions/\_\_init\_\_.py                   |       41 |        9 |     78% |
+| src/py\_animus/extensions/datagram\_handler\_logging\_v1.py |       47 |       34 |     28% |
+| src/py\_animus/extensions/file\_handler\_logging\_v1.py     |       45 |        6 |     87% |
+| src/py\_animus/extensions/stream\_handler\_logging\_v1.py   |       43 |        4 |     91% |
+| src/py\_animus/extensions/syslog\_handler\_logging\_v1.py   |       73 |       58 |     21% |
+| src/py\_animus/helpers/\_\_init\_\_.py                      |       25 |        0 |    100% |
+| src/py\_animus/helpers/file\_io.py                          |      130 |        7 |     95% |
+| src/py\_animus/helpers/utils.py                             |       40 |        0 |    100% |
+| src/py\_animus/helpers/yaml\_helper.py                      |      101 |        4 |     96% |
+| src/py\_animus/models/\_\_init\_\_.py                       |      258 |       22 |     91% |
+| src/py\_animus/models/extensions.py                         |       94 |       19 |     80% |
+| src/py\_animus/utils/\_\_init\_\_.py                        |        0 |        0 |    100% |
+| src/py\_animus/utils/http\_requests\_io.py                  |       18 |        0 |    100% |
+|                                                   **TOTAL** | **1049** |  **181** | **83%** |
