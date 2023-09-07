@@ -18,6 +18,9 @@ import unittest
 
 from py_animus.helpers.yaml_helper import * 
 from py_animus.models import ScopedValues, Value
+from py_animus.models.extensions import ManifestBase
+from py_animus.models import all_scoped_values, variable_cache, Action, actions
+from py_animus.extensions import extensions
 
 running_path = os.getcwd()
 print('Current Working Path: {}'.format(running_path))
@@ -91,6 +94,30 @@ spec:
         self.assertEqual(len(yaml_sections['K2']), 1)
 
 
+class MockManifestExtension(ManifestBase):
+    
+    def __init__(self, post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):
+        super().__init__(post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
+
+    def implemented_manifest_differ_from_this_manifest(self)->bool:
+        return True
+    
+    def determine_actions(self)->list:
+        self.register_action(action_name='MockManifestExtension', initial_status=Action.UNKNOWN)
+        if self.implemented_manifest_differ_from_this_manifest() is True:
+            self.register_action(action_name='MockManifestExtension', initial_status=Action.APPLY_PENDING)
+        return actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name'])
+    
+    def apply_manifest(self): 
+        return
+    
+    def delete_manifest(self):
+        return
+    
+
+extensions.add_extension(extension=MockManifestExtension)
+
+
 class TestClassValueTag(unittest.TestCase):    # pragma: no cover
 
     def setUp(self):
@@ -99,7 +126,7 @@ class TestClassValueTag(unittest.TestCase):    # pragma: no cover
         scoped_values = ScopedValues(scope='test-scope')
         scoped_values.add_value(value=Value(name='test-value-1', initial_value='test-string-1'))
         all_scoped_values.add_scoped_values(scoped_values=scoped_values, replace=True)
-        self.test_yaml = '''kind: ManifestBase
+        self.test_yaml = '''kind: MockManifestExtension
 version: v1
 metadata:
   name: test
@@ -112,7 +139,7 @@ spec:
     def test_basic_parsing(self):
         test_extension_class = parse_animus_formatted_yaml(raw_yaml_str=self.test_yaml)
         self.assertIsNotNone(test_extension_class)
-        self.assertIsInstance(test_extension_class, ManifestBase)
+        self.assertIsInstance(test_extension_class, MockManifestExtension)
 
         print('Final Data:')
         print('-----------')

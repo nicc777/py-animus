@@ -16,6 +16,7 @@ import unittest
 
 
 from py_animus import *
+from py_animus.helpers.yaml_helper import parse_raw_yaml_data_and_ignore_all_tags
 
 running_path = os.getcwd()
 print('Current Working Path: {}'.format(running_path))
