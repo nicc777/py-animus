@@ -11,7 +11,7 @@ import json
 from py_animus import parse_command_line_arguments
 from py_animus.models import all_scoped_values, variable_cache, scope, ScopedValues, Value, actions
 from py_animus.helpers.file_io import file_exists, read_text_file
-from py_animus.helpers.yaml_helper import spit_yaml_text_from_file_with_multiple_yaml_sections, load_from_str, parse_animus_formatted_yaml
+from py_animus.helpers.yaml_helper import spit_yaml_text_from_file_with_multiple_yaml_sections, load_from_str_and_ignore_custom_tags, parse_animus_formatted_yaml
 from py_animus.utils.http_requests_io import download_files
 from py_animus.extensions.stream_handler_logging_v1 import StreamHandlerLogging
 from py_animus.extensions.file_handler_logging_v1 import FileHandlerLogging
@@ -148,7 +148,7 @@ def step_read_project_manifest(start_manifest: str):
     start_manifest_yaml_sections = spit_yaml_text_from_file_with_multiple_yaml_sections(yaml_text=start_manifest)
     if 'Values' in start_manifest_yaml_sections:
         for value_manifest_section_text in start_manifest_yaml_sections['Values']:
-            _parse_values_data(manifest_data=load_from_str(value_manifest_section_text)['part_1'])
+            _parse_values_data(manifest_data=load_from_str_and_ignore_custom_tags(value_manifest_section_text)['part_1'])
     logging_actions = list()
     for logging_kind in ('StreamHandlerLogging', 'FileHandlerLogging',):
         if logging_kind in start_manifest_yaml_sections:
