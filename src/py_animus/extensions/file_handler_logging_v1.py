@@ -13,7 +13,7 @@ import logging
 import sys
 
 
-class FileHandlerLogging(ManifestBase):
+class FileHandlerLogging(ManifestBase): # pragma: no cover
     """
         Spec fields:
 

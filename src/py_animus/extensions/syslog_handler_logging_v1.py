@@ -15,7 +15,7 @@ import sys
 import socket
 
 
-class SyslogHandlerLogging(ManifestBase):
+class SyslogHandlerLogging(ManifestBase):   # pragma: no cover
     """
         Spec fields:
 

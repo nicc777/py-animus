@@ -13,7 +13,7 @@ import logging
 import sys
 
 
-class StreamHandlerLogging(ManifestBase):
+class StreamHandlerLogging(ManifestBase):   # pragma: no cover
     """
         Spec fields:
 

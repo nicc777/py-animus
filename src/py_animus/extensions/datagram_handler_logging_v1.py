@@ -13,7 +13,7 @@ import logging
 import logging.handlers
 
 
-class DatagramHandlerLogging(ManifestBase):
+class DatagramHandlerLogging(ManifestBase): # pragma: no cover
     """
         Spec fields:
 
