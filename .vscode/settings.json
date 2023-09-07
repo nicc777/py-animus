@@ -3,6 +3,8 @@
         "chardet",
         "clazz",
         "cprint",
+        "datagram",
+        "DGRAM",
         "levelname",
         "plugable",
         "representer",
