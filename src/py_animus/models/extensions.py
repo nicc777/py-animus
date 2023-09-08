@@ -13,7 +13,7 @@ import yaml
 import os
 from py_animus.helpers import get_utc_timestamp, is_debug_set_in_environment
 from py_animus.animus_logging import logger
-from py_animus.models import actions, Action
+from py_animus.models import actions, Action, scope
 
 
 class ManifestBase:
@@ -122,6 +122,14 @@ class ManifestBase:
         self.target_environments = ['default',]
         self.original_manifest = dict()
         self.pending_action_description = 'No pending actions'
+
+    def _var_name(self, var_name: str):
+        return '{}:{}:{}:{}'.format(
+            self.__class__.__name__,
+            self.metadata['name'],
+            scope.value,
+            var_name
+        )
 
     def register_action(self, action_name: str, initial_status: str=Action.UNKNOWN):
         """

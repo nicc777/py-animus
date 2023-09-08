@@ -10,6 +10,7 @@ from py_animus.extensions.stream_handler_logging_v1 import StreamHandlerLogging 
 from py_animus.extensions.file_handler_logging_v1 import FileHandlerLogging as FileHandlerLoggingV1
 from py_animus.extensions.syslog_handler_logging_v1 import SyslogHandlerLogging as SyslogHandlerLoggingV1
 from py_animus.extensions.datagram_handler_logging_v1 import DatagramHandlerLogging as DatagramHandlerLoggingV1
+from py_animus.extensions.shell_script_v1 import ShellScript as ShellScriptV1
 from py_animus.animus_logging import logger
 from py_animus.models.extensions import ManifestBase
 import copy
@@ -57,4 +58,5 @@ extensions.add_extension(extension=StreamHandlerLoggingV1)
 extensions.add_extension(extension=FileHandlerLoggingV1)
 extensions.add_extension(extension=SyslogHandlerLoggingV1)
 extensions.add_extension(extension=DatagramHandlerLoggingV1)
+extensions.add_extension(extension=ShellScriptV1)
 
