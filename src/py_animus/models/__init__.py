@@ -485,14 +485,24 @@ class VariableCache:
         return json.dumps(self.to_dict(for_logging=True))
     
 
+variable_cache = VariableCache()
+
 
 class Scope:
 
     def __init__(self):
-        self.value = 'default'
+        self.value = None
+        self.set_scope(new_value='default')
 
     def set_scope(self, new_value: str):
         self.value = new_value
+        variable_cache.store_variable(
+            variable=Variable(
+                name='std::scope',
+                initial_value='{}'.format(copy.deepcopy(new_value))
+            ),
+            overwrite_existing=True
+        )
 
     def __repr__(self)->str:
         return self.value
@@ -502,6 +512,5 @@ class Scope:
 
 
 all_scoped_values = AllScopedValues()
-variable_cache = VariableCache()
 scope = Scope()
 

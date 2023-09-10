@@ -8,7 +8,9 @@
         "levelname",
         "plugable",
         "representer",
-        "termcolor"
+        "shabang",
+        "termcolor",
+        "Workdir"
     ],
     "python.testing.unittestArgs": [
         "-v",

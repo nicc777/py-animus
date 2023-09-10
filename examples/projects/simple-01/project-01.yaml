@@ -55,7 +55,11 @@ metadata:
 spec:
   source:
     type: inline
-    value: !Sub 
-    - echo "Action: ${action}"
-    - action: !Variable std::action
+
+    test: !Variable std::action
+    
+    # value: !Sub 
+    # - echo "Action: ${action}"
+    # - action: !Variable std::action
+
     # Alternative: value: !Sub "Action: ${std::action}" 

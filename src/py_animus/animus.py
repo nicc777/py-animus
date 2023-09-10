@@ -7,15 +7,15 @@
 """
 
 import json
+import copy
 
 from py_animus import parse_command_line_arguments
-from py_animus.models import all_scoped_values, variable_cache, scope, ScopedValues, Value, actions
+from py_animus.models import all_scoped_values, variable_cache, scope, ScopedValues, Value, actions, Variable
 from py_animus.helpers.file_io import file_exists, read_text_file
 from py_animus.helpers.yaml_helper import spit_yaml_text_from_file_with_multiple_yaml_sections, load_from_str_and_ignore_custom_tags, parse_animus_formatted_yaml
 from py_animus.utils.http_requests_io import download_files
-from py_animus.extensions.stream_handler_logging_v1 import StreamHandlerLogging
-from py_animus.extensions.file_handler_logging_v1 import FileHandlerLogging
 from py_animus.animus_logging import logger
+from py_animus.extensions import UnitOfWork, execution_plan
 
 from termcolor import colored, cprint
 
@@ -138,7 +138,7 @@ def _parse_values_data(manifest_data: dict):
     all_scoped_values.add_scoped_values(scoped_values=scoped_values)
 
 
-def step_read_project_manifest(start_manifest: str):
+def step_read_project_manifest(start_manifest: str)->dict:
     print_console_feedback_line(
         leader='STEP: ',
         leader_bold=True,
@@ -149,6 +149,7 @@ def step_read_project_manifest(start_manifest: str):
     if 'Values' in start_manifest_yaml_sections:
         for value_manifest_section_text in start_manifest_yaml_sections['Values']:
             _parse_values_data(manifest_data=load_from_str_and_ignore_custom_tags(value_manifest_section_text)['part_1'])
+        start_manifest_yaml_sections.pop('Values')
     logging_actions = list()
     for logging_kind in ('StreamHandlerLogging', 'FileHandlerLogging',):
         if logging_kind in start_manifest_yaml_sections:
@@ -156,14 +157,44 @@ def step_read_project_manifest(start_manifest: str):
                 stream_logging_instance = parse_animus_formatted_yaml(raw_yaml_str=value_manifest_section_text)
                 stream_logging_instance.determine_actions()
                 logging_actions.append(stream_logging_instance)
+            start_manifest_yaml_sections.pop(logging_kind)
     for logging_extension in logging_actions:
         logging_extension.apply_manifest()
     logger.info('Logging ready')
+    return start_manifest_yaml_sections
+
+
+def parse_project_manifest_items(yaml_sections: dict):
+    for manifest_kind, manifest_yaml_string in yaml_sections.items():
+        if manifest_kind != 'Project': # We process this last...
+            for yaml_section in manifest_yaml_string:
+                work_instance = parse_animus_formatted_yaml(raw_yaml_str=yaml_section)
+                execution_plan.all_work.add_unit_of_work(
+                    unit_of_work=UnitOfWork(
+                        work_instance=work_instance
+                    )
+                )
+    # TODO - now parse Project and execute... If project has other project dependencies, parse those now first...
+
 
 
 def run_main(cli_parameter_overrides: list=list()):
     print('Nothing to do yet...')
     cli_arguments = parse_command_line_arguments(overrides=cli_parameter_overrides, action_handlers=ACTION_HANDLERS)
+
+    actions.set_command(command='{}'.format(cli_arguments[1]))
+    start_manifest = cli_arguments[2]
+    project_name = cli_arguments[3]
+    scope.set_scope(new_value=cli_arguments[4])
+
+    variable_cache.store_variable(
+        variable=Variable(
+            name='std::action',
+            initial_value='{}'.format(copy.deepcopy(actions.command))
+        ),
+        overwrite_existing=True
+    )
+
     print_console_feedback_line(
         leader='STARTING: ',
         leader_bold=True,
@@ -172,11 +203,7 @@ def run_main(cli_parameter_overrides: list=list()):
         variables_heading_text='  Command Line Arguments:',
         variables=[cli_arguments,]
     )
-    actions.set_command(command='{}'.format(cli_arguments[1]))
-    start_manifest = cli_arguments[2]
-    project_name = cli_arguments[3]
-    scope.set_scope(new_value=cli_arguments[4])
-
+    
     if start_manifest.lower().startswith('http'):
         files = download_files(urls=[start_manifest,])
         if len(files) > 0:
@@ -185,7 +212,10 @@ def run_main(cli_parameter_overrides: list=list()):
     if file_exists(start_manifest) is False:
         raise Exception('Manifest file "{}" does not exist!'.format(start_manifest))
 
-    step_read_project_manifest(start_manifest=start_manifest)
+    yaml_sections = step_read_project_manifest(start_manifest=start_manifest)
+    logger.info('yaml_sections calculated: {} section(s)'.format(len(yaml_sections)))
+    parse_project_manifest_items(yaml_sections=yaml_sections)
+    logger.info('Ready to rumble!')
 
     return True
 

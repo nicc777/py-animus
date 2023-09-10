@@ -7,6 +7,7 @@
 import yaml
 import traceback
 import copy
+import json
 from py_animus.models import VariableCache, AllScopedValues, all_scoped_values, variable_cache, scope
 from py_animus.models.extensions import ManifestBase
 from py_animus.animus_logging import logger
@@ -184,12 +185,53 @@ class ValueTag(yaml.YAMLObject):
         return dumper.represent_scalar(cls.yaml_tag, data.value_reference)
 
 
+class VariableTag(yaml.YAMLObject):
+    yaml_tag = u'!Variable'
+
+    def __init__(self, variable_reference):
+        self.variable_reference = variable_reference
+        self.resolved_value = copy.deepcopy(
+            variable_cache.get_value(
+                variable_name='{}'.format(copy.deepcopy(variable_reference)),
+                value_if_expired=None,
+                raise_exception_on_expired=True,
+                raise_exception_on_not_found=True,
+                default_value_if_not_found=None,
+                init_with_default_value_if_not_found=False,
+                for_logging=False
+            )
+        )
+        if isinstance(self.resolved_value, str):
+            self.resolved_value = "'{}'".format(self.resolved_value)
+
+    def __repr__(self):
+        return self.resolved_value
+    
+    def __str__(self):
+        return self.resolved_value
+    
+    @classmethod
+    def from_yaml(cls, loader, node):
+        return VariableTag(node.value)
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        return dumper.represent_scalar(cls.yaml_tag, data.variable_reference)
+
+
 def parse_animus_formatted_yaml(raw_yaml_str: str)->ManifestBase:
     IGNORED_KINDS = (
         'Values',   # These manifests should by now already be parsed...
     )
-    yaml.SafeLoader.add_constructor('!Value', ValueTag.from_yaml)
-    yaml.SafeDumper.add_multi_representer(ValueTag, ValueTag.to_yaml)
+
+    logger.info('Parsing input YAML: {}'.format(raw_yaml_str))
+
+    yaml.SafeLoader.add_constructor(        '!Value',       ValueTag.from_yaml      )
+    yaml.SafeLoader.add_constructor(        '!Variable',    VariableTag.from_yaml   )
+    
+    yaml.SafeDumper.add_multi_representer(  ValueTag,       ValueTag.to_yaml        )
+    yaml.SafeDumper.add_multi_representer(  VariableTag,    VariableTag.to_yaml     )
+    
     manifest_data = yaml.safe_load(raw_yaml_str)
     converted_data = dict((k.lower(),v) for k,v in manifest_data.items()) # Convert keys to lowercase
     if 'kind' in converted_data and 'version' in converted_data:

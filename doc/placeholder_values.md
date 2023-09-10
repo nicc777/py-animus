@@ -4,6 +4,7 @@
   - [Syntax for the Placeholder](#syntax-for-the-placeholder)
   - [Environments](#environments)
   - [Variables and Manifest Dependencies](#variables-and-manifest-dependencies)
+  - [Standards Variables](#standards-variables)
 
 
 # Placeholder Values
@@ -171,3 +172,13 @@ spec:
 > In the unittest file `tests/test_manifest_management.py` in test class `TestManifestBaseVariableSubstitutionDemo` this exact scenario is tested.
 
 The result is that in the variable named `MyServiceY:service-y:default:VAL_Y`, the final calculated value would be `I say: Hello world!`
+
+## Standards Variables
+
+The following standard variables are available:
+
+| Variable name  | Example Use                          | Description                                                                                  |
+|----------------|--------------------------------------|----------------------------------------------------------------------------------------------|
+| `std::action`  | `myAction: !Variable std::action`    | Will have the value of `apply` or `delete` depending on how the animus processing is started |
+| `std::scope`   | `myScope: !Variable std::scope`      | The cope name used in `metadata.environment` settings.                                       |
+
