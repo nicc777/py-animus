@@ -209,7 +209,7 @@ class VariableTag(yaml.YAMLObject):
     
     def __str__(self):
         return self.resolved_value
-    
+
     @classmethod
     def from_yaml(cls, loader, node):
         return VariableTag(node.value)
@@ -238,7 +238,7 @@ def parse_animus_formatted_yaml(raw_yaml_str: str)->ManifestBase:
         if converted_data['kind'] not in IGNORED_KINDS:
             manifest_class = extensions.find_extension_that_supports_version(extension_kind=converted_data['kind'], version=converted_data['version'])
             initialized_manifest_class = manifest_class()
-            initialized_manifest_class.parse_manifest(manifest_data=manifest_data, target_environments=[scope.value,])
+            initialized_manifest_class.parse_manifest(manifest_data=manifest_data)
             return initialized_manifest_class
     else:
         raise Exception('Expected key "Kind" and "Version". One or both of these keys are missing')

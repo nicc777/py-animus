@@ -16,6 +16,43 @@ from py_animus.animus_logging import logger
 from py_animus.models import actions, Action, scope
 
 
+SUPPORTED_TYPES = (
+    str,
+    int,
+    float,
+    list,
+    dict
+)
+
+
+def convert_list_items_to_serializable_objects(data: list, dict_conversion_function: object)->list:
+    converted = list()
+    for v in data:
+        if isinstance(v,dict) is True:
+            converted.append(dict_conversion_function(data=v))
+        elif isinstance(v, list) is True or isinstance(v, tuple) is True:
+            converted.append(convert_list_items_to_serializable_objects(data=v, dict_conversion_function=convert_dict_items_to_serializable_objects))
+        elif type(v) not in SUPPORTED_TYPES:
+            converted.append(str(v))
+        else:
+            converted.append(v)
+    return converted
+
+
+def convert_dict_items_to_serializable_objects(data: dict)->dict:
+    converted = dict()
+    for k,v in data.items():
+        if isinstance(v,dict) is True:
+            converted[k] = convert_dict_items_to_serializable_objects(data=v)
+        elif isinstance(v, list) is True or isinstance(v, tuple) is True:
+            converted[k] = convert_list_items_to_serializable_objects(data=v, dict_conversion_function=convert_dict_items_to_serializable_objects)
+        elif type(v) not in SUPPORTED_TYPES:
+            converted[k] = str(v)
+        else:
+            converted[k] = v
+    return converted
+
+
 class ManifestBase:
     """ManifestBase needs to be extended by a user to implement a class that can handle the implementation logic of 
     applying a manifest during runtime.
@@ -163,7 +200,7 @@ class ManifestBase:
         elif level.lower().startswith('e'):
             logger.error('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
 
-    def parse_manifest(self, manifest_data: dict, target_environments: list=['default',]):
+    def parse_manifest(self, manifest_data: dict):
         """Called via the ManifestManager when manifests files are parsed and one is found to belong to a class of this implementation.
 
         The user does not have to override this implementation.
@@ -171,7 +208,7 @@ class ManifestBase:
         Args:
           manifest_data: A Dictionary of data from teh parsed Manifest file
         """
-        self.target_environments = target_environments
+        self.target_environments = ['default',]
         self.original_manifest = copy.deepcopy(manifest_data)
         converted_data = dict((k.lower(),v) for k,v in manifest_data.items()) # Convert keys to lowercase
         if 'kind' in converted_data:
@@ -199,12 +236,13 @@ class ManifestBase:
         if 'metadata' in converted_data:
             if isinstance(converted_data['metadata'], dict):
                 self.metadata = converted_data['metadata']
+            if 'environments' in self.metadata:
+                self.target_environments = self.metadata['environments']
         if 'name' not in self.metadata:
             self.metadata['name'] = self.kind
             self.log(message='MetaData not supplied - using class Kind as name', level='warning')
         if 'spec' in converted_data:
-            if isinstance(converted_data['spec'], dict) or isinstance(converted_data['spec'], list) or isinstance(converted_data['spec'], tuple):
-                self.spec = converted_data['spec']
+            self.spec = convert_dict_items_to_serializable_objects(data=converted_data['spec'])
         self.initialized = True
         if self.post_parsing_method is not None:
             try:
@@ -212,25 +250,7 @@ class ManifestBase:
             except:
                 self.log(message='post_parsing_method failed with EXCEPTION: {}'.format(traceback.format_exc()), level='error')
 
-        final_spec = dict()
-        SUPPORTED_TYPES = (
-            str,
-            int,
-            float,
-            list,
-            dict
-        )
-        for key, value in self.spec.items():
-            final_spec[key] = copy.deepcopy(value)
-            if value is not None:
-                supported_type_found = False
-                for supported_type in SUPPORTED_TYPES:
-                    if isinstance(value, supported_type):
-                        supported_type_found = True
-                if supported_type_found is False:
-                    final_spec[key] = copy.deepcopy(str(value))
-        self.spec = copy.deepcopy(final_spec)
-        converted_data['spec'] = copy.deepcopy(final_spec)
+        converted_data = convert_dict_items_to_serializable_objects(data=converted_data)
 
         self.checksum = hashlib.sha256(json.dumps(converted_data, sort_keys=True, ensure_ascii=True).encode('utf-8')).hexdigest() # Credit to https://stackoverflow.com/users/2082964/chris-maes for his hint on https://stackoverflow.com/questions/6923780/python-checksum-of-a-dict
         self.log(
@@ -238,7 +258,7 @@ class ManifestBase:
                 self.kind,
                 self.metadata['name'],
                 json.dumps(self.metadata),
-                json.dumps(self.spec)
+                json.dumps(converted_data)
             ),
             level='debug'
         )

@@ -36,22 +36,25 @@ spec:
 kind: Values
 version: v1
 metadata:
-    name: project-1-values
+  name: project-1-values
 spec:
-    values:
-    - valueName: project-1-log-level
-      defaultValue: trace
-      environmentOverrides:
-      - environmentName: sandbox1
-        value: debug
-      - environmentName: sandbox2
-        value: info
+  values:
+  - valueName: project-1-log-level
+    defaultValue: trace
+    environmentOverrides:
+    - environmentName: sandbox1
+      value: debug
+    - environmentName: sandbox2
+      value: info
 ---
 kind: ShellScript
 version: v1
 metadata:
   name: shell-script-v1-minimal
   skipDeleteAll: true
+  environments:
+  - sandbox1
+  - sandbox2
 spec:
   source:
     type: inline
