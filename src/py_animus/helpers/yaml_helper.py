@@ -219,6 +219,30 @@ class VariableTag(yaml.YAMLObject):
         return dumper.represent_scalar(cls.yaml_tag, data.variable_reference)
 
 
+class SubTag(yaml.YAMLObject):
+    yaml_tag = u'!Sub'
+
+    def __init__(self, value_reference):
+        if isinstance(value_reference, list) is False:
+            raise Exception('!Sub tag only accepts lists at this time. The first item is a string and subsequent list items are key/value pairs of variables to replace in the string.')
+        self.value_reference = value_reference
+        self.resolved_value = '{}'.format(value_reference)
+
+    def __repr__(self):
+        return self.resolved_value
+    
+    def __str__(self):
+        return self.resolved_value
+    
+    @classmethod
+    def from_yaml(cls, loader, node):
+        return SubTag(node.value)
+
+    @classmethod
+    def to_yaml(cls, dumper, data):
+        return dumper.represent_scalar(cls.yaml_tag, data.value_reference)
+
+
 def parse_animus_formatted_yaml(raw_yaml_str: str)->ManifestBase:
     IGNORED_KINDS = (
         'Values',   # These manifests should by now already be parsed...
