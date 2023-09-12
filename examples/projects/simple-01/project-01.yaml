@@ -61,7 +61,8 @@ spec:
 
     # test: !Variable std::action
     
-    value: !Sub 
-    - echo "Action: ${action}"
+    value: !Sub
+    - 'echo "Action: ${action}" for ${name}'
     - action: !Variable std::action
+      name: 'AnyName'
 

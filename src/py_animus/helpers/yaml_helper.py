@@ -7,7 +7,7 @@
 import yaml
 import traceback
 import copy
-import json
+import re
 from py_animus.models import VariableCache, AllScopedValues, all_scoped_values, variable_cache, scope
 from py_animus.models.extensions import ManifestBase
 from py_animus.animus_logging import logger
@@ -163,6 +163,97 @@ def spit_yaml_text_from_file_with_multiple_yaml_sections(yaml_text: str)->dict:
 #######################################################################################################################
 
 
+class ValuePlaceholder:
+
+    def __init__(self, placeholder_name: str):
+        self.placeholder_name = placeholder_name
+        self.per_environment_values = dict()
+
+    def add_environment_value(self, value: object):
+        if value is not None:
+            if isinstance(value, str):
+                value = value.replace('\n', '')
+                value = value.replace('\r', '')
+        self.per_environment_values[scope.value] = value
+
+    def get_environment_value(self, default_value_when_not_found: object=None, raise_exception_when_not_found: bool=True):
+        if scope.value not in self.per_environment_values:
+            if raise_exception_when_not_found is True:
+                raise Exception('No value for environment "{}" for value placeholder "{}" found'.format(scope.value, self.placeholder_name))
+            return default_value_when_not_found
+        return copy.deepcopy(self.per_environment_values[scope.value])
+    
+    def to_dict(self):
+        data = dict()
+        data['name'] = self.placeholder_name
+        data['environments'] = list()
+        for env_name, env_val in self.per_environment_values.items():
+            pev = dict()
+            pev['environmentName'] = env_name
+            pev['value'] = env_val
+            data['environments'].append(copy.deepcopy(pev))
+        return data
+
+
+class ValuePlaceHolders:
+
+    def __init__(self):
+        self.value_placeholder_names = dict()
+
+    def value_placeholder_exists(self, placeholder_name: str)->bool:
+        if placeholder_name in self.value_placeholder_names:
+            return True
+        return False
+
+    def get_value_placeholder(self, placeholder_name: str, create_in_not_exists: bool=True)->ValuePlaceholder:
+        if self.value_placeholder_exists(placeholder_name=placeholder_name) is False and create_in_not_exists is True:
+            return self.create_new_value_placeholder(placeholder_name=placeholder_name)
+        elif self.value_placeholder_exists(placeholder_name=placeholder_name) is False and create_in_not_exists is False:
+            raise Exception('ValuePlaceholder named "{}" not found'.format(placeholder_name))
+        return copy.deepcopy(self.value_placeholder_names[placeholder_name])
+
+    def create_new_value_placeholder(self, placeholder_name: str)->ValuePlaceholder:
+        vp = ValuePlaceholder(placeholder_name=placeholder_name)
+        self.value_placeholder_names[placeholder_name] = copy.deepcopy(vp)
+        return copy.deepcopy(vp)
+    
+    def add_environment_value(self, placeholder_name: str, value: object):
+        vp = self.get_value_placeholder(placeholder_name=placeholder_name, create_in_not_exists=True)
+        vp.add_environment_value(value=value)
+        self.value_placeholder_names[placeholder_name] = copy.deepcopy(vp)
+
+    def to_dict(self):
+        data = dict()
+        data['values'] = list()
+        for vp_name in list(self.value_placeholder_names.keys()):
+            vp = self.get_value_placeholder(placeholder_name=vp_name)
+            data['values'].append(vp.to_dict())
+        return data
+
+    def parse_and_replace_placeholders_in_string(
+            self,
+            input_str: str,
+            default_value_when_not_found: object='',
+            raise_exception_when_not_found: bool=False
+        ):
+        logger.debug('Parsing for placeholders. input_str="{}"'.format(input_str))
+        return_str = copy.deepcopy(input_str)
+        if input_str.find('{}{}'.format('$', '{')) >= 0:
+            for matched_placeholder in re.findall('\$\{([\w|\s|\-|\_|\.|\:]+)\}', input_str):
+                return_str = return_str.replace(
+                    '{}{}{}{}'.format('$', '{', matched_placeholder, '}'),
+                    self.get_value_placeholder(
+                        placeholder_name=matched_placeholder,
+                        create_in_not_exists=True
+                    ).get_environment_value(
+                        default_value_when_not_found=default_value_when_not_found,
+                        raise_exception_when_not_found=raise_exception_when_not_found
+                    )
+                )
+        logger.debug('   return_str="{}'.format(return_str))
+        return return_str
+
+
 class ValueTag(yaml.YAMLObject):
     yaml_tag = u'!Value'
 
@@ -225,8 +316,36 @@ class SubTag(yaml.YAMLObject):
     def __init__(self, value_reference):
         if isinstance(value_reference, list) is False:
             raise Exception('!Sub tag only accepts lists at this time. The first item is a string and subsequent list items are key/value pairs of variables to replace in the string.')
+        value_placeholders = ValuePlaceHolders()
         self.value_reference = value_reference
-        self.resolved_value = '{}'.format(value_reference)
+
+        main_line = ''
+        variable_mappings = dict()
+        for sub_node in value_reference:
+            if isinstance(sub_node, yaml.ScalarNode):
+                main_line = sub_node.value
+                print('*** Processing ScalerNode: {}'.format(sub_node.value))
+                print('                main_line: {}'.format(main_line))
+            elif isinstance(sub_node, yaml.MappingNode):
+                print('*** Processing MappingNode: {}'.format(sub_node.value))
+
+                for key_value_pair in sub_node.value:
+                    key = key_value_pair[0].value
+                    key_tag = key_value_pair[0].tag
+                    value = key_value_pair[1].value
+                    value_tag = key_value_pair[1].tag
+                    print('       key     : {}   (tag={})'.format(key, key_tag))
+                    print('         value : {}   (tag={})'.format(value, value_tag))
+
+                    # TODO build interim YAML and call parse_animus_formatted_yaml() again...
+                    parse_animus_formatted_yaml(raw_yaml_str='test: 1')
+
+                    variable_mappings[key] = value
+                    value_placeholders.create_new_value_placeholder(placeholder_name=key)
+                    value_placeholders.add_environment_value(placeholder_name=key, value=value)
+        print('*** Final variable_mappings: {}'.format(variable_mappings))
+        self.resolved_value = value_placeholders.parse_and_replace_placeholders_in_string(input_str=main_line, default_value_when_not_found=None, raise_exception_when_not_found=True)
+        
 
     def __repr__(self):
         return self.resolved_value
@@ -252,9 +371,11 @@ def parse_animus_formatted_yaml(raw_yaml_str: str)->ManifestBase:
 
     yaml.SafeLoader.add_constructor(        '!Value',       ValueTag.from_yaml      )
     yaml.SafeLoader.add_constructor(        '!Variable',    VariableTag.from_yaml   )
+    yaml.SafeLoader.add_constructor(        '!Sub',         SubTag.from_yaml        )
     
     yaml.SafeDumper.add_multi_representer(  ValueTag,       ValueTag.to_yaml        )
     yaml.SafeDumper.add_multi_representer(  VariableTag,    VariableTag.to_yaml     )
+    yaml.SafeDumper.add_multi_representer(  SubTag,         SubTag.to_yaml          )
     
     manifest_data = yaml.safe_load(raw_yaml_str)
     converted_data = dict((k.lower(),v) for k,v in manifest_data.items()) # Convert keys to lowercase
