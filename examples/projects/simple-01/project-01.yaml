@@ -58,11 +58,8 @@ metadata:
 spec:
   source:
     type: inline
-
-    # test: !Variable std::action
-    
     value: !Sub
-    - 'echo "Action: ${action}" for ${name}'
+    - 'echo "Action: ${action} with logging level set to ${debugLevel}"'
     - action: !Variable std::action
-      name: 'AnyName'
+      debugLevel: !Value project-1-log-level
 

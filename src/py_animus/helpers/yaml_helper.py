@@ -218,6 +218,11 @@ class ValuePlaceHolders:
         return copy.deepcopy(vp)
     
     def add_environment_value(self, placeholder_name: str, value: object):
+        if isinstance(value, str) is False:
+            try:
+                value = str(value)
+            except:
+                logger.error('Failed to get resolved value for placeholder_name "{}"'.format(placeholder_name))
         vp = self.get_value_placeholder(placeholder_name=placeholder_name, create_in_not_exists=True)
         vp.add_environment_value(value=value)
         self.value_placeholder_names[placeholder_name] = copy.deepcopy(vp)
@@ -293,7 +298,7 @@ class VariableTag(yaml.YAMLObject):
             )
         )
         if isinstance(self.resolved_value, str):
-            self.resolved_value = "'{}'".format(self.resolved_value)
+            self.resolved_value = "{}".format(self.resolved_value)
 
     def __repr__(self):
         return self.resolved_value
@@ -310,6 +315,17 @@ class VariableTag(yaml.YAMLObject):
         return dumper.represent_scalar(cls.yaml_tag, data.variable_reference)
 
 
+def parse_sub_yaml(raw_yaml_str: str)->dict:
+    logger.info('Parsing input YAML: {}'.format(raw_yaml_str))
+    yaml.SafeLoader.add_constructor(        '!Value',       ValueTag.from_yaml      )
+    yaml.SafeLoader.add_constructor(        '!Variable',    VariableTag.from_yaml   )
+    yaml.SafeDumper.add_multi_representer(  ValueTag,       ValueTag.to_yaml        )
+    yaml.SafeDumper.add_multi_representer(  VariableTag,    VariableTag.to_yaml     )
+    manifest_data = yaml.safe_load(raw_yaml_str)
+    # converted_data = dict((k.lower(),v) for k,v in manifest_data.items()) # Convert keys to lowercase
+    return manifest_data
+
+
 class SubTag(yaml.YAMLObject):
     yaml_tag = u'!Sub'
 
@@ -320,31 +336,32 @@ class SubTag(yaml.YAMLObject):
         self.value_reference = value_reference
 
         main_line = ''
-        variable_mappings = dict()
         for sub_node in value_reference:
             if isinstance(sub_node, yaml.ScalarNode):
                 main_line = sub_node.value
-                print('*** Processing ScalerNode: {}'.format(sub_node.value))
-                print('                main_line: {}'.format(main_line))
             elif isinstance(sub_node, yaml.MappingNode):
-                print('*** Processing MappingNode: {}'.format(sub_node.value))
-
                 for key_value_pair in sub_node.value:
-                    key = key_value_pair[0].value
+                    yaml_key = key_value_pair[0].value
                     key_tag = key_value_pair[0].tag
-                    value = key_value_pair[1].value
+                    yaml_value = key_value_pair[1].value
                     value_tag = key_value_pair[1].tag
-                    print('       key     : {}   (tag={})'.format(key, key_tag))
-                    print('         value : {}   (tag={})'.format(value, value_tag))
+                    if '!Variable' in value_tag:
+                        yaml_value = '!Variable {}'.format(yaml_value)
+                    elif '!Value' in value_tag:
+                        yaml_value = '!Value {}'.format(yaml_value)
 
                     # TODO build interim YAML and call parse_animus_formatted_yaml() again...
-                    parse_animus_formatted_yaml(raw_yaml_str='test: 1')
+                    
+                    parsed_tag_data = parse_sub_yaml(raw_yaml_str='{}: {}'.format(yaml_key, yaml_value))
+                    parsed_value = parsed_tag_data[yaml_key]
 
-                    variable_mappings[key] = value
-                    value_placeholders.create_new_value_placeholder(placeholder_name=key)
-                    value_placeholders.add_environment_value(placeholder_name=key, value=value)
-        print('*** Final variable_mappings: {}'.format(variable_mappings))
+                    # if isinstance(parsed_value, str) and parsed_value.startswith('!V') is False:
+                    #     parsed_value = "'{}'".format(parsed_value)
+
+                    value_placeholders.create_new_value_placeholder(placeholder_name=yaml_key)
+                    value_placeholders.add_environment_value(placeholder_name=yaml_key, value=parsed_value)
         self.resolved_value = value_placeholders.parse_and_replace_placeholders_in_string(input_str=main_line, default_value_when_not_found=None, raise_exception_when_not_found=True)
+        logger.info('resolved_value={}'.format(self.resolved_value))
         
 
     def __repr__(self):
