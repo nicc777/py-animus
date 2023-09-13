@@ -13,6 +13,7 @@ from py_animus.extensions.file_handler_logging_v1 import FileHandlerLogging as F
 from py_animus.extensions.syslog_handler_logging_v1 import SyslogHandlerLogging as SyslogHandlerLoggingV1
 from py_animus.extensions.datagram_handler_logging_v1 import DatagramHandlerLogging as DatagramHandlerLoggingV1
 from py_animus.extensions.shell_script_v1 import ShellScript as ShellScriptV1
+from py_animus.extensions.project_v1 import Project as ProjectV1
 from py_animus.animus_logging import logger
 from py_animus.models.extensions import ManifestBase
 
@@ -61,6 +62,7 @@ extensions.add_extension(extension=FileHandlerLoggingV1)
 extensions.add_extension(extension=SyslogHandlerLoggingV1)
 extensions.add_extension(extension=DatagramHandlerLoggingV1)
 extensions.add_extension(extension=ShellScriptV1)
+extensions.add_extension(extension=ProjectV1)
 
 
 
@@ -155,14 +157,28 @@ class ExecutionPlan:
         self.execution_order['apply'] = list()
         self.execution_order['delete'] = list()
 
+    def _unit_of_work_contains_skip_action_exclusion(self, uow: UnitOfWork, action: str):
+        add_for_action = True
+        skip_name = 'skip{}All'.format(action.capitalize())
+        if skip_name in uow.work_instance.metadata:
+            if uow.work_instance.metadata[skip_name] is True:
+                add_for_action = False
+        return add_for_action
+
     def add_unit_of_work_to_execution_order(self, uow: UnitOfWork):
         for a_action, parent_uow_id in uow.dependencies.items():
-            if a_action not in self.execution_order:
-                self.execution_order[a_action] = list()
-            if parent_uow_id not in self.execution_order[a_action]:
-                self.add_unit_of_work_to_execution_order(uow=self.all_work.get_unit_of_work_by_id(id=parent_uow_id))
-        if uow.id not in self.execution_order[a_action]:
-            self.execution_order[a_action].append(uow.id)
+            add_for_action = self._unit_of_work_contains_skip_action_exclusion(uow=uow, action=a_action)
+            if add_for_action is True:
+                if a_action not in self.execution_order:
+                    self.execution_order[a_action] = list()
+                if parent_uow_id not in self.execution_order[a_action]:
+                    self.add_unit_of_work_to_execution_order(uow=self.all_work.get_unit_of_work_by_id(id=parent_uow_id))
+        for a_action in ('apply', 'delete'):
+            add_for_action = self._unit_of_work_contains_skip_action_exclusion(uow=uow, action=a_action)
+            if add_for_action is True:
+                if a_action not in self.execution_order:
+                    self.execution_order[a_action] = list()
+                self.execution_order[a_action].append(uow.id)
 
     def calculate_execution_plan(self):
         for uow in self.all_work.all_work_list:

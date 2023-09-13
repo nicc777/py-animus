@@ -6,16 +6,11 @@ metadata:
   environments:
   - sandbox1
   - sandbox2
-spec:
-  actions:
+  dependencies:
     apply:
-    - FileHandler
-    - StreamHandler
-    - shell-script-v1-minimal
-    delete:
-    - FileHandler
-    - StreamHandler
-    - shell-script-v1-minimal
+    - shell-script-v1-minimal   # This would typically be where additional manifests are obtained - perhaps from Git
+spec:
+  manifestPaths: []             # Additional path to YAML manifests to parse for work
 ---
 kind: FileHandlerLogging
 version: v1

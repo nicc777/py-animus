@@ -174,7 +174,21 @@ def parse_project_manifest_items(yaml_sections: dict):
                         work_instance=work_instance
                     )
                 )
+    execution_plan.calculate_execution_plan()
+    calculated_execution_plan = execution_plan.execution_order
+    logger.info('Current calculated execution plan: {}'.format(calculated_execution_plan))
+    variable_cache.store_variable(
+        variable=Variable(
+            name='EXECUTION_PLAN',
+            initial_value=calculated_execution_plan
+        )
+    )
     # TODO - now parse Project and execute... If project has other project dependencies, parse those now first...
+    for manifest_kind, manifest_yaml_string in yaml_sections.items():
+        if manifest_kind == 'Project': # We process this last...
+            for yaml_section in manifest_yaml_string:
+                work_instance = parse_animus_formatted_yaml(raw_yaml_str=yaml_section)
+                pass
 
 
 
