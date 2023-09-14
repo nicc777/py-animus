@@ -10,7 +10,9 @@ metadata:
     apply:
     - shell-script-v1-minimal   # This would typically be where additional manifests are obtained - perhaps from Git
 spec:
-  manifestPaths: []             # Additional path to YAML manifests to parse for work
+  extensionPaths: []            # Additional third party extensions
+  manifestFiles: []             # Additional path to YAML manifests to parse for work
+  skipConfirmation: false       # If true, no confirmation on the execution plan will be asked for (Console).
 ---
 kind: FileHandlerLogging
 version: v1
