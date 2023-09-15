@@ -28,7 +28,8 @@ metadata:
   name: StreamHandler
 spec:
   level: !Value project-1-log-level
-  loggingFormat: ' *** %(asctime)s %(levelname)s - %(message)s'
+  # see https://docs.python.org/3/library/logging.html#logrecord-attributes
+  loggingFormat: ' *** %(asctime)s %(levelname)s - %(filename)s:%(funcName)s:%(lineno)d - %(message)s'
 ---
 kind: Values
 version: v1

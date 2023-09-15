@@ -87,7 +87,7 @@ class UnitOfWork:
 
     def run(self, action: str, scope: str):
         if scope in self.scopes:
-            logger.warning(
+            logger.info(
                 'UnitOfWork: "{}:{}" marked for executed for scope named "{}"'.format(
                     self.work_instance.kind,
                     self.work_instance.metadata['name'],
@@ -147,6 +147,14 @@ class AllWork:
         for uow in self.all_work_list:
             if uow.id == id:
                 return uow
+        return None
+            
+    def remove_unit_of_work(self, id: str):
+        new_all_work_list = list()
+        for uow in self.all_work_list:
+            if uow.id != id:
+                new_all_work_list.append(uow)
+        self.all_work_list = new_all_work_list
 
 
 class ExecutionPlan:
@@ -174,13 +182,21 @@ class ExecutionPlan:
                         if a_action not in self.execution_order:
                             self.execution_order[a_action] = list()
                         if parent_uow_id not in self.execution_order[a_action]:
-                            self.add_unit_of_work_to_execution_order(uow=self.all_work.get_unit_of_work_by_id(id=parent_uow_id))
+                            retrieved_uow = self.all_work.get_unit_of_work_by_id(id=parent_uow_id)
+                            if retrieved_uow is not None:
+                                self.add_unit_of_work_to_execution_order(uow=retrieved_uow)
+                            else:
+                                logger.warning('UnitOfWork with id "{}" not found - skipping'.format(parent_uow_id))
         for a_action in ('apply', 'delete'):
             add_for_action = self._unit_of_work_contains_skip_action_exclusion(uow=uow, action=a_action)
             if add_for_action is True:
                 if a_action not in self.execution_order:
                     self.execution_order[a_action] = list()
                 self.execution_order[a_action].append(uow.id)
+
+    def remove_unit_of_work(self, unit_of_work_id: str):
+        self.all_work.remove_unit_of_work(id=unit_of_work_id)
+
 
     def calculate_execution_plan(self):
         for uow in self.all_work.all_work_list:
@@ -196,6 +212,7 @@ class ExecutionPlan:
             if scope in uow.scopes:
                 logger.info('ExecutionPlan: Calling run action for UnitOfWork named "{}"'.format(uow.id))
                 uow.run(action=action, scope=scope)
+                self.remove_unit_of_work(unit_of_work_id=uof_id)
         self.execution_order[action] = list()
 
 

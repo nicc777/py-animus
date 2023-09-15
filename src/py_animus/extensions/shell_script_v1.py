@@ -10,7 +10,7 @@ import chardet
 import os
 
 
-class ShellScript(ManifestBase):
+class ShellScript(ManifestBase):    # pragma: no cover
     """Executes a shell script.
 
 Output from STDOUT will be stored in a `Variable` with `:STDOUT` appended to the

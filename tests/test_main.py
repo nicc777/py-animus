@@ -78,7 +78,7 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
 
     @patch.dict('os.environ', {'DEBUG': 'e'})
     def test_basic_init_from_local_file(self):
-        result = run_main(cli_parameter_overrides=['animus.py', 'apply', example_project_manifest_01, 'project', 'sandbox1'])
+        result = run_main(cli_parameter_overrides=['animus.py', 'apply', example_project_manifest_01, 'project-1', 'sandbox1'])
         logger.info('TEST INFO')
         logger.info('TEST DEBUG')
         self.assertIsNotNone(result)

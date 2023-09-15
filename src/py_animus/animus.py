@@ -164,7 +164,7 @@ def step_read_project_manifest(start_manifest: str)->dict:
     return start_manifest_yaml_sections
 
 
-def parse_project_manifest_items(yaml_sections: dict):
+def parse_project_manifest_items(yaml_sections: dict, project_name: str):
     ###
     ### First, do all the work of the manifests in the supplied file
     ###
@@ -197,11 +197,26 @@ def parse_project_manifest_items(yaml_sections: dict):
         if manifest_kind == 'Project': 
             for yaml_section in manifest_yaml_string:
                 work_instance = parse_animus_formatted_yaml(raw_yaml_str=yaml_section)
-                execution_plan.all_work.add_unit_of_work(
-                    unit_of_work=UnitOfWork(
-                        work_instance=work_instance
-                    )
-                )
+                in_scope = True
+                if 'environments' in work_instance.metadata:
+                    if scope.value not in work_instance.metadata['environments']:
+                        in_scope = False
+                        logger.info('Project "{}" not in scope (scope not found in environments)'.format(work_instance.metadata['name']))
+                elif scope.value != 'default':
+                    logger.info('Project "{}" not in scope (non-default scope with no environments defined in project manifest)'.format(work_instance.metadata['name']))
+                    in_scope = False
+                if in_scope:
+                    if work_instance.metadata['name'] == project_name:
+                        logger.info('Project "{}" selected for processing'.format(work_instance.metadata['name']))
+                        execution_plan.all_work.add_unit_of_work(
+                            unit_of_work=UnitOfWork(
+                                work_instance=work_instance
+                            )
+                        )
+                    else:
+                        logger.info('Project "{}" not selected for processing (project name mismatch)'.format(work_instance.metadata['name']))
+                else:
+                    logger.info('Project "{}" not selected for processing (scope/environment mismatch)'.format(work_instance.metadata['name']))
     execution_plan.calculate_execution_plan()
     calculated_execution_plan = execution_plan.execution_order
     logger.info('Current calculated execution plan: {}'.format(calculated_execution_plan))
@@ -245,7 +260,7 @@ def run_main(cli_parameter_overrides: list=list()):
 
     yaml_sections = step_read_project_manifest(start_manifest=start_manifest)
     logger.info('yaml_sections calculated: {} section(s)'.format(len(yaml_sections)))
-    parse_project_manifest_items(yaml_sections=yaml_sections)
+    parse_project_manifest_items(yaml_sections=yaml_sections, project_name=project_name)
     logger.info('Ready to rumble!')
 
     return True
