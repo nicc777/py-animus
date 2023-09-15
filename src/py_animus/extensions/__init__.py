@@ -77,7 +77,7 @@ class UnitOfWork:
         self.work_instance = work_instance
 
         if 'dependencies' in work_instance.metadata:
-            for a_action, action_dependencies in work_instance.metadata['dependencies']:
+            for a_action, action_dependencies in work_instance.metadata['dependencies'].items():
                 self.dependencies[a_action] = action_dependencies
 
         if 'environments' in self.work_instance.metadata:
@@ -86,7 +86,7 @@ class UnitOfWork:
         logger.info('UnitOfWork: Manifest named "{}" registered as a UnitOfWork'.format(self.id))
 
     def run(self, action: str, scope: str):
-        if scope in self.scopes is True:
+        if scope in self.scopes:
             logger.warning(
                 'UnitOfWork: "{}:{}" marked for executed for scope named "{}"'.format(
                     self.work_instance.kind,
@@ -166,13 +166,15 @@ class ExecutionPlan:
         return add_for_action
 
     def add_unit_of_work_to_execution_order(self, uow: UnitOfWork):
-        for a_action, parent_uow_id in uow.dependencies.items():
-            add_for_action = self._unit_of_work_contains_skip_action_exclusion(uow=uow, action=a_action)
-            if add_for_action is True:
-                if a_action not in self.execution_order:
-                    self.execution_order[a_action] = list()
-                if parent_uow_id not in self.execution_order[a_action]:
-                    self.add_unit_of_work_to_execution_order(uow=self.all_work.get_unit_of_work_by_id(id=parent_uow_id))
+        if uow.dependencies is not None:
+            for a_action, parent_uow_ids in uow.dependencies.items():
+                for parent_uow_id in parent_uow_ids:
+                    add_for_action = self._unit_of_work_contains_skip_action_exclusion(uow=uow, action=a_action)
+                    if add_for_action is True:
+                        if a_action not in self.execution_order:
+                            self.execution_order[a_action] = list()
+                        if parent_uow_id not in self.execution_order[a_action]:
+                            self.add_unit_of_work_to_execution_order(uow=self.all_work.get_unit_of_work_by_id(id=parent_uow_id))
         for a_action in ('apply', 'delete'):
             add_for_action = self._unit_of_work_contains_skip_action_exclusion(uow=uow, action=a_action)
             if add_for_action is True:
@@ -193,7 +195,7 @@ class ExecutionPlan:
             uow = self.all_work.get_unit_of_work_by_id(id=uof_id)
             if scope in uow.scopes:
                 logger.info('ExecutionPlan: Calling run action for UnitOfWork named "{}"'.format(uow.id))
-                uow.run()
+                uow.run(action=action, scope=scope)
         self.execution_order[action] = list()
 
 

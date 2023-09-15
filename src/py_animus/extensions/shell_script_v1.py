@@ -204,8 +204,7 @@ variable name
                 variable_cache.store_variable(
                     variable=Variable(
                         name=self._var_name(var_name='EXIT_CODE'),
-                        initial_value=result.returncode,
-                        logger=self.logger
+                        initial_value=result.returncode
                     ),
                     overwrite_existing=True
                 )
@@ -256,8 +255,7 @@ variable name
                 variable_cache.store_variable(
                     variable=Variable(
                         name=self._var_name(var_name='STDOUT'),
-                        initial_value=value_stdout_final,
-                        logger=self.logger
+                        initial_value=value_stdout_final
                     ),
                     overwrite_existing=True
                 )
@@ -265,8 +263,7 @@ variable name
                 variable_cache.store_variable(
                     variable=Variable(
                         name=self._var_name(var_name='STDERR'),
-                        initial_value=value_stderr_final,
-                        logger=self.logger
+                        initial_value=value_stderr_final
                     ),
                     overwrite_existing=True
                 )

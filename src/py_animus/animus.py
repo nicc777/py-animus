@@ -178,7 +178,7 @@ def parse_project_manifest_items(yaml_sections: dict):
                     )
                 )
     execution_plan.calculate_execution_plan()
-    calculated_execution_plan = execution_plan.execution_order
+    calculated_execution_plan = execution_plan.execution_order[actions.command]
     logger.info('Current calculated execution plan: {}'.format(calculated_execution_plan))
     execution_plan.do_work(scope=scope.value, action=actions.command)
 
