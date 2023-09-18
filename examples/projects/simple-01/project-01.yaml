@@ -9,6 +9,8 @@ metadata:
   dependencies:
     apply:
     - shell-script-v1-minimal   # This would typically be where additional manifests are obtained - perhaps from Git
+    delete:
+    - shell-script-v1-minimal   # This would typically be where additional manifests are obtained - perhaps from Git
 spec:
   extensionPaths: []            # Additional third party extensions
   manifestFiles: []             # Additional path to YAML manifests to parse for work

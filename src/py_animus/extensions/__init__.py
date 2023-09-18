@@ -164,6 +164,7 @@ class ExecutionPlan:
         self.execution_order = dict()
         self.execution_order['apply'] = list()
         self.execution_order['delete'] = list()
+        self.completed_work_ids = list()
 
     def _unit_of_work_contains_skip_action_exclusion(self, uow: UnitOfWork, action: str):
         add_for_action = True
@@ -177,22 +178,24 @@ class ExecutionPlan:
         if uow.dependencies is not None:
             for a_action, parent_uow_ids in uow.dependencies.items():
                 for parent_uow_id in parent_uow_ids:
-                    add_for_action = self._unit_of_work_contains_skip_action_exclusion(uow=uow, action=a_action)
-                    if add_for_action is True:
+                    if self._unit_of_work_contains_skip_action_exclusion(uow=uow, action=a_action) is True:
                         if a_action not in self.execution_order:
                             self.execution_order[a_action] = list()
                         if parent_uow_id not in self.execution_order[a_action]:
+                            logger.info('Parent UnitOfWork "{}" not yet marked for execution. Attempting to add...'.format(parent_uow_id))
                             retrieved_uow = self.all_work.get_unit_of_work_by_id(id=parent_uow_id)
                             if retrieved_uow is not None:
                                 self.add_unit_of_work_to_execution_order(uow=retrieved_uow)
                             else:
                                 logger.warning('UnitOfWork with id "{}" not found - skipping'.format(parent_uow_id))
+                        else:
+                            logger.info('Parent UnitOfWork "{}" already marked for execution.'.format(parent_uow_id))
         for a_action in ('apply', 'delete'):
-            add_for_action = self._unit_of_work_contains_skip_action_exclusion(uow=uow, action=a_action)
-            if add_for_action is True:
+            if self._unit_of_work_contains_skip_action_exclusion(uow=uow, action=a_action) is True:
                 if a_action not in self.execution_order:
                     self.execution_order[a_action] = list()
-                self.execution_order[a_action].append(uow.id)
+                if uow.id not in self.execution_order[a_action]:
+                    self.execution_order[a_action].append(uow.id)
 
     def remove_unit_of_work(self, unit_of_work_id: str):
         self.all_work.remove_unit_of_work(id=unit_of_work_id)
@@ -210,9 +213,13 @@ class ExecutionPlan:
         for uof_id in self.execution_order[action]:
             uow = self.all_work.get_unit_of_work_by_id(id=uof_id)
             if scope in uow.scopes:
-                logger.info('ExecutionPlan: Calling run action for UnitOfWork named "{}"'.format(uow.id))
-                uow.run(action=action, scope=scope)
-                self.remove_unit_of_work(unit_of_work_id=uof_id)
+                if uow.id not in self.completed_work_ids:
+                    logger.info('ExecutionPlan: Calling run action for UnitOfWork named "{}"'.format(uow.id))
+                    uow.run(action=action, scope=scope)
+                    # self.remove_unit_of_work(unit_of_work_id=uof_id)
+                    self.completed_work_ids.append(uow.id)
+                else:
+                    logger.info('ExecutionPlan: UnitOfWork "{}" already run. Skipping.'.format(uow.id))
         self.execution_order[action] = list()
 
 

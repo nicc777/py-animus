@@ -168,32 +168,33 @@ def parse_project_manifest_items(yaml_sections: dict, project_name: str):
     ###
     ### First, do all the work of the manifests in the supplied file
     ###
-    for manifest_kind, manifest_yaml_string in yaml_sections.items():
-        if manifest_kind != 'Project': # We process this last...
-            for yaml_section in manifest_yaml_string:
-                work_instance = parse_animus_formatted_yaml(raw_yaml_str=yaml_section)
-                execution_plan.all_work.add_unit_of_work(
-                    unit_of_work=UnitOfWork(
-                        work_instance=work_instance
-                    )
-                )
-    execution_plan.calculate_execution_plan()
-    calculated_execution_plan = execution_plan.execution_order[actions.command]
-    logger.info('Current calculated execution plan: {}'.format(calculated_execution_plan))
-    execution_plan.do_work(scope=scope.value, action=actions.command)
+    # for manifest_kind, manifest_yaml_string in yaml_sections.items():
+    #     if manifest_kind != 'Project': # We process this last...
+    #         for yaml_section in manifest_yaml_string:
+    #             work_instance = parse_animus_formatted_yaml(raw_yaml_str=yaml_section)
+    #             execution_plan.all_work.add_unit_of_work(
+    #                 unit_of_work=UnitOfWork(
+    #                     work_instance=work_instance
+    #                 )
+    #             )
+    # execution_plan.calculate_execution_plan()
+    # calculated_execution_plan = execution_plan.execution_order[actions.command]
+    # logger.info('Current calculated execution plan: {}'.format(calculated_execution_plan))
+    # execution_plan.do_work(scope=scope.value, action=actions.command)
 
-    variable_cache.store_variable(
-        variable=Variable(
-            name='EXECUTION_PLAN',
-            initial_value=calculated_execution_plan
-        )
-    )
+    # variable_cache.store_variable(
+    #     variable=Variable(
+    #         name='EXECUTION_PLAN',
+    #         initial_value=calculated_execution_plan
+    #     )
+    # )
     
     ###
     ### No process any addition al Projects defined within the scope
     ###
     # TODO - now parse Project and execute... If project has other project dependencies, parse those now first...
     for manifest_kind, manifest_yaml_string in yaml_sections.items():
+        logger.info('Processing raw yaml with kind "{}"'.format(manifest_kind))
         if manifest_kind == 'Project': 
             for yaml_section in manifest_yaml_string:
                 work_instance = parse_animus_formatted_yaml(raw_yaml_str=yaml_section)
@@ -217,6 +218,25 @@ def parse_project_manifest_items(yaml_sections: dict, project_name: str):
                         logger.info('Project "{}" not selected for processing (project name mismatch)'.format(work_instance.metadata['name']))
                 else:
                     logger.info('Project "{}" not selected for processing (scope/environment mismatch)'.format(work_instance.metadata['name']))
+        else:
+            # for manifest_kind, manifest_yaml_string in yaml_sections.items():
+            if manifest_kind != 'Project': # We process this last...
+                for yaml_section in manifest_yaml_string:
+                    work_instance = parse_animus_formatted_yaml(raw_yaml_str=yaml_section)
+                    in_scope = True
+                    if 'environments' in work_instance.metadata:
+                        if scope.value not in work_instance.metadata['environments']:
+                            in_scope = False
+                            logger.info('Manifest "{}" not in scope (scope not found in environments)'.format(work_instance.metadata['name']))
+                    elif scope.value != 'default':
+                        logger.info('Manifest "{}" not in scope (non-default scope with no environments defined in project manifest)'.format(work_instance.metadata['name']))
+                        in_scope = False
+                    if in_scope:
+                        execution_plan.all_work.add_unit_of_work(
+                            unit_of_work=UnitOfWork(
+                                work_instance=work_instance
+                            )
+                        )
     execution_plan.calculate_execution_plan()
     calculated_execution_plan = execution_plan.execution_order
     logger.info('Current calculated execution plan: {}'.format(calculated_execution_plan))
