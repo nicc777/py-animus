@@ -6,11 +6,9 @@
     https://raw.githubusercontent.com/nicc777/verbacratis/main/LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt
 """
 
-from py_animus.models import all_scoped_values, variable_cache, Action, actions
-from py_animus.animus_logging import logger, add_handler
+from py_animus.animus_logging import logger
+from py_animus.models import Action, actions, variable_cache, Variable
 from py_animus.models.extensions import ManifestBase
-import logging
-import sys
 
 
 class Project(ManifestBase):   # pragma: no cover
@@ -45,44 +43,78 @@ class Project(ManifestBase):   # pragma: no cover
         return actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name'])
 
     def _process_action(self):
-        action = actions.command
-        execution_plan = variable_cache.get_value(
-            variable_name='EXECUTION_PLAN',
-            value_if_expired=None,
-            default_value_if_not_found=None,
-            raise_exception_on_expired=True,
-            raise_exception_on_not_found=True
+        ###
+        ### Process "skipConfirmation" in Spec
+        ###
+        skip_confirmation = variable_cache.get_value(
+            variable_name='PROJECT_ACTION_SKIP_CONFIRMATION',
+            value_if_expired=False,
+            default_value_if_not_found=False,
+            raise_exception_on_expired=False,
+            raise_exception_on_not_found=False
         )
-        skip_confirmation = False
-        can_continue = False
         if 'skipConfirmation' in self.spec:
             if isinstance(self.spec['skipConfirmation'], bool) is True:
                 skip_confirmation = self.spec['skipConfirmation']
-        if skip_confirmation is False:
-            logger.info('Printing execution plan and waiting for confirmation')
+        variable_cache.store_variable(
+            variable=Variable(
+                name='PROJECT_ACTION_SKIP_CONFIRMATION',
+                initial_value=skip_confirmation
+            ),
+            overwrite_existing=True
+        )
 
-            # TODO implement printing of execution plan and prompting to continue
-            
-            can_continue = True
-        if can_continue is False:
-            logger.info('Execution plan rejected by user. Aborting.')
-            abort_action = Action.APPLY_SKIP
-            if action == 'delete':
-                abort_action = Action.DELETE_SKIP
-            actions.add_or_update_action(action=Action(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Project Action', action_status=abort_action))
-            return
-        logger.info('Proceeding with implementation of execution plan...')
-        action_state = Action.APPLY_ABORTED_WITH_ERRORS
-        if action == 'delete':
-            action_state = Action.DELETE_ABORTED_WITH_ERRORS
+        ###
+        ### Process "manifestFiles" in Spec
+        ###
+        manifest_files = variable_cache.get_value(
+            variable_name='PROJECT_MANIFEST_FILES',
+            value_if_expired=list(),
+            default_value_if_not_found=list(),
+            raise_exception_on_expired=False,
+            raise_exception_on_not_found=False
+        )
+        if 'manifestFiles' in self.spec:
+            if isinstance(self.spec['manifestFiles'], list):
+                for file in self.spec['manifestFiles']:
+                    if file not in manifest_files:
+                        manifest_files.append(file)
+        variable_cache.store_variable(
+            variable=Variable(
+                name='PROJECT_MANIFEST_FILES',
+                initial_value=manifest_files
+            ),
+            overwrite_existing=True
+        )
+
+        ###
+        ### Process "extension_paths" in Spec
+        ###
+        extension_paths = variable_cache.get_value(
+            variable_name='PROJECT_EXTENSION_PATHS',
+            value_if_expired=list(),
+            default_value_if_not_found=list(),
+            raise_exception_on_expired=False,
+            raise_exception_on_not_found=False
+        )
+        if 'extensionPaths' in self.spec:
+            if isinstance(self.spec['extensionPaths'], list):
+                for path in self.spec['extensionPaths']:
+                    if path not in extension_paths:
+                        extension_paths.append(path)
+        variable_cache.store_variable(
+            variable=Variable(
+                name='PROJECT_EXTENSION_PATHS',
+                initial_value=extension_paths
+            ),
+            overwrite_existing=True
+        )
         
-        # TODO implement actions...
-
-
-        # If we reach this point, we have been successful 
         action_state = Action.APPLY_DONE
-        if action == 'delete':
+        if actions.command == 'delete':
             action_state = Action.DELETE_DONE
+
+        # If we reach this point, we are done
         actions.add_or_update_action(action=Action(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Project Action', action_status=action_state))
         return 
 
