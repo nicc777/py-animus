@@ -1,0 +1,20 @@
+---
+kind: Project
+version: v1
+metadata:
+  name: project-child
+  environments:
+  - sandbox1
+  - sandbox2
+spec:
+  parentProjects:
+  - name: project-root
+    path: https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-02/001-parent/demo-project-root.yaml
+  loggingConfig: https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-02/logging/demo-project--logging,yaml
+  valuesConfig:
+  - https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-02/values/demo-project-values.yaml
+  extensionPaths: []            # Additional third party extensions
+  manifestFiles:                # Additional path to YAML manifests to parse for work
+  - https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-02/manifests/common-manifests.yaml
+  - https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-02/manifests/child-manifests.yaml
+  skipConfirmation: false       # If true, no confirmation on the execution plan will be asked for (Console).

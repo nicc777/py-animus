@@ -1,0 +1,20 @@
+---
+kind: ShellScript
+version: v1
+metadata:
+  name: child-shellscript
+  skipDeleteAll: true
+  environments:
+  - sandbox1
+  - sandbox2
+spec:
+  source:
+    type: inline
+    value: !Sub
+    - 'echo "CHILD SHELLSCRIPT EXECUTED - Action: ${action} with logging level set to ${debugLevel}"'
+    - action: !Variable std::action
+      debugLevel: !Value demo-project-log-level
+    convertOutputToText: true
+    stripNewline: True
+    convertRepeatingSpaces: true
+    stripLeadingTrailingSpaces: true

@@ -1,0 +1,18 @@
+---
+kind: FileHandlerLogging
+version: v1
+metadata:
+  name: FileHandler
+spec:
+  filename: /tmp/demo-test.log
+  level: !Value demo-project-log-level
+  loggingFormat: ' *** %(asctime)s %(levelname)s - %(filename)s:%(funcName)s:%(lineno)d - %(message)s'
+---
+kind: StreamHandlerLogging
+version: v1
+metadata:
+  name: StreamHandler
+spec:
+  level: !Value demo-project-log-level
+  # see https://docs.python.org/3/library/logging.html#logrecord-attributes
+  loggingFormat: ' *** %(levelname)s - %(filename)s:%(funcName)s:%(lineno)d - %(message)s'

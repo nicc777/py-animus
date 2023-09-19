@@ -1,0 +1,14 @@
+---
+kind: Values
+version: v1
+metadata:
+  name: demo-project-values
+spec:
+  values:
+  - valueName: demo-project-log-level
+    defaultValue: trace
+    environmentOverrides:
+    - environmentName: sandbox1
+      value: debug
+    - environmentName: sandbox2
+      value: info
