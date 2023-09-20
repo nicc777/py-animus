@@ -12,6 +12,12 @@ import logging
 import sys
 
 
+SUPPORTED_COMMANDS = (
+    'apply',
+    'delete',
+)
+
+
 def get_logging_stream_handler(
     level=logging.INFO,
     formatter: logging.Formatter=logging.Formatter('%(asctime)s %(levelname)s - %(message)s')
@@ -53,17 +59,17 @@ def validate_word_in_list_of_possible_values(input_string: str, possible_values:
         raise Exception(error_message)
 
 
-def _validate_command_line_arguments(cli_parameters:list, action_handlers: dict):
+def _validate_command_line_arguments(cli_parameters:list):
     validate_list(input_list=cli_parameters, min_length=5, max_length=5, error_message='Command line argument validation failed. Required: <<action>> <<path-to-project-manifest>> <<project-name>> <<environment-or-scope>>')
     for param in cli_parameters[1:]:
         validate_string_value(input_string=param, can_be_empty=False, min_length=3, max_length=1024, error_message='Every command line argument must be a valid string: <<action>> <<path-to-project-yaml>> <<project-name>>')
-    validate_word_in_list_of_possible_values(input_string=cli_parameters[1], possible_values=list(action_handlers.keys()), error_message='action parameter must be one of: {}'.format(list(action_handlers.keys())))
+    validate_word_in_list_of_possible_values(input_string=cli_parameters[1], possible_values=SUPPORTED_COMMANDS, error_message='action parameter must be one of: {}'.format(SUPPORTED_COMMANDS))
 
 
-def parse_command_line_arguments(overrides: list=list(), action_handlers: dict=dict())->tuple:
+def parse_command_line_arguments(overrides: list=list())->tuple:
     cli_parameters = overrides
     if len(sys.argv) > 1 and len(overrides) == 0:
         cli_parameters = list(sys.argv)
-    _validate_command_line_arguments(cli_parameters=cli_parameters, action_handlers=action_handlers)
+    _validate_command_line_arguments(cli_parameters=cli_parameters)
     return tuple(cli_parameters)
 
