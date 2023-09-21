@@ -116,6 +116,14 @@ def run_main(cli_parameter_overrides: list=list()):
         overwrite_existing=True
     )
 
+    variable_cache.store_variable(
+        variable=Variable(
+            name='std::project-name',
+            initial_value='{}'.format(project_name)
+        ),
+        overwrite_existing=True
+    )
+
     print_console_feedback_line(
         leader='STARTING: ',
         leader_bold=True,
@@ -132,10 +140,28 @@ def run_main(cli_parameter_overrides: list=list()):
 
     if file_exists(start_manifest) is False:
         raise Exception('Manifest file "{}" does not exist!'.format(start_manifest))
+    
+    variable_cache.store_variable(
+        variable=Variable(
+            name='std::start-manifest',
+            initial_value='{}'.format(start_manifest)
+        ),
+        overwrite_existing=True
+    )
 
-    yaml_sections = read_manifest_and_extract_individual_yaml_sections(start_manifest=start_manifest)
-    logger.info('yaml_sections calculated: {} section(s)'.format(len(yaml_sections)))
-    parse_project_manifest_items(yaml_sections=yaml_sections, project_name=project_name)
+    yaml_sections = read_manifest_and_extract_individual_yaml_sections(start_manifest=start_manifest, process_logging=False, process_values=False)
+    logger.info('Initial yaml_sections calculated: {} section(s)'.format(len(yaml_sections)))
+    
+    variable_cache.store_variable(
+        variable=Variable(
+            name='std::all-yaml-sections',
+            initial_value='{}'.format(yaml_sections)
+        ),
+        overwrite_existing=True
+    )
+
+    # yaml_sections = parse_project_manifest_items(yaml_sections=yaml_sections, project_name=project_name)
+
     logger.info('Ready to rumble!')
 
     return True
