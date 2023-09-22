@@ -160,34 +160,7 @@ def run_main(cli_parameter_overrides: list=list()):
         overwrite_existing=True
     )
 
-    ###
-    ### Store function variables to be used inside of Project processing
-    ###
-    variable_cache.store_variable(
-        variable=Variable(
-            name='function::convert_yaml_to_extension_instances',
-            initial_value=convert_yaml_to_extension_instances
-        ),
-        overwrite_existing=False
-    )
-    variable_cache.store_variable(
-        variable=Variable(
-            name='function::read_manifest_and_extract_individual_yaml_sections',
-            initial_value=read_manifest_and_extract_individual_yaml_sections
-        ),
-        overwrite_existing=False
-    )
-    variable_cache.store_variable(
-        variable=Variable(
-            name='function::process_selected_project',
-            initial_value=process_selected_project
-        ),
-        overwrite_existing=False
-    )
-
     process_selected_project()
-
-    # yaml_sections = parse_project_manifest_items(yaml_sections=yaml_sections, project_name=project_name)
 
     logger.info('Ready to rumble!')
 

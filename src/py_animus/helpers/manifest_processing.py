@@ -147,6 +147,24 @@ def process_selected_project(project_name_override: str=None, yaml_sections_over
             logger.info('Project "{}" not selected as name does not match the selected project name "{}"'.format(work_instance.metadata['name'], project_name))
             in_scope = False
         if in_scope:
+
+            if 'parentProjects' in work_instance.spec:
+                if isinstance(work_instance.spec['parentProjects'], list):
+                    for parent_project_data in work_instance.spec['parentProjects']:
+                        if 'name' in parent_project_data and 'path' in parent_project_data:
+
+                            parent_start_manifest = parent_project_data['path']
+                            if parent_start_manifest.lower().startswith('http'):
+                                files = download_files(urls=[parent_start_manifest,])
+                                if len(files) > 0:
+                                    parent_start_manifest = files[0]
+
+                            if file_exists(parent_start_manifest) is False:
+                                raise Exception('Manifest file "{}" does not exist!'.format(parent_start_manifest))
+
+                            parent_project_yaml_sections = read_manifest_and_extract_individual_yaml_sections(start_manifest=parent_start_manifest, process_logging=False, process_values=False)
+                            process_selected_project(project_name_override=parent_project_data['name'], yaml_sections_override=parent_project_yaml_sections)
+
             logger.info('Project "{}" selected for processing'.format(work_instance.metadata['name']))
             execution_plan.all_work.add_unit_of_work(
                 unit_of_work=UnitOfWork(
