@@ -15,11 +15,21 @@ class Project(ManifestBase):   # pragma: no cover
     """
         Spec fields:
 
-        | Field                       | Type    | Required | Default Value                               | Description                                                                               |
-        |-----------------------------|---------|----------|---------------------------------------------|-------------------------------------------------------------------------------------------|
-        | manifestFiles               | list    | No       | Empty list                                  | Local YAML files containing more manifests to ingest. The value can be an empty list      |
-        | extensionPaths              | list    | No       | Empty list                                  | Directories containing third party extensions to ingest                                   |
-        | skipConfirmation            | bool    | No       | False                                       | If `False`, print the execution plan and prompt user to proceed.                          |
+        | Field                       | Type    | Required | Default Value                               | Description                                                                                                 |
+        |-----------------------------|---------|----------|---------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+        | workDirectory               | str     | Yes      | No Default                                  | A directory that will be created to store all temporary artifacts. The directory will be deleted once done. |
+        | parentProjects              | list    | No       | Empty dict                                  | Any additional projects referenced here will be processed first.                                            |
+        | parentProjects.[n].name     | str     | Yes (1)  | No Default                                  | The project name                                                                                            |
+        | parentProjects.[n].path     | str     | Yes (1)  | No Default                                  | Te path to the file containing the project manifest.                                                        |
+        | loggingConfig               | str     | No       | No Default                                  | Path to the manifest containing any "*Logging" type manifests                                               |
+        | valuesConfig                | str     | No       | No Default                                  | Path to the manifest containing any "Values" type manifests                                                 |
+        | manifestFiles               | list    | No       | Empty list                                  | Local YAML files containing more manifests to ingest. The value can be an empty list                        |
+        | extensionPaths              | list    | No       | Empty list                                  | Directories containing third party extensions to ingest                                                     |
+        | skipConfirmation            | bool    | No       | False                                       | If `False`, print the execution plan and prompt user to proceed.                                            |
+
+        Notes:
+
+        1. Required in the list of dict objects when `parentProjects` is not an empty list.
     """
 
     def __init__(self, post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):

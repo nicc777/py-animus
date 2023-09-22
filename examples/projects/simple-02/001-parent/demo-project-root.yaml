@@ -12,6 +12,7 @@ metadata:
     delete:
     - shell-script-v1-minimal   # This would typically be where additional manifests are obtained - perhaps from Git
 spec:
+  workDirectory: '/tmp/sample-02'
   loggingConfig: https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-02/logging/demo-project-logging,yaml
   valuesConfig:
   - https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-02/values/demo-project-values.yaml
