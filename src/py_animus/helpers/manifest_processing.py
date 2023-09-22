@@ -125,6 +125,8 @@ def process_selected_project():
         raise Exception('The named project manifest was not found in the supplied manifest file. Cannot continue.')
     if 'Project' not in yaml_sections:
         raise Exception('No projects found in the supplied Manifest file')
+    if len(yaml_sections) == 0:
+        raise Exception('No manifests present')
     for yaml_section in yaml_sections['Project']:
         work_instance = parse_animus_formatted_yaml(raw_yaml_str=yaml_section)
         in_scope = True
@@ -152,7 +154,8 @@ def process_selected_project():
                     work_instance=work_instance
                 )
             )
-            # TODO execute project action
+            execution_plan.calculate_execution_plan()
+            logger.info('Current Execution Order: '.format(execution_plan.execution_order))
 
 
 def parse_project_manifest_items(yaml_sections: dict, project_name: str):

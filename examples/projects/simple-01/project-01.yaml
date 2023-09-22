@@ -6,14 +6,14 @@ metadata:
   environments:
   - sandbox1
   - sandbox2
-  dependencies:
-    apply:
-    - shell-script-v1-minimal   # This would typically be where additional manifests are obtained - perhaps from Git
-    delete:
-    - shell-script-v1-minimal   # This would typically be where additional manifests are obtained - perhaps from Git
 spec:
+  workDirectory: '/tmp/sample-01'
+  loggingConfig: /tmp/sample-01/project-01.yaml
+  valuesConfig:
+  - /tmp/sample-01/project-01.yaml
   extensionPaths: []            # Additional third party extensions
-  manifestFiles: []             # Additional path to YAML manifests to parse for work
+  manifestFiles:                # Additional path to YAML manifests to parse for work
+  - /tmp/sample-01/project-01.yaml
   skipConfirmation: false       # If true, no confirmation on the execution plan will be asked for (Console).
 ---
 kind: FileHandlerLogging

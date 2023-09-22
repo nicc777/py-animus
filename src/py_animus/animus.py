@@ -13,7 +13,7 @@ from py_animus import parse_command_line_arguments
 from py_animus.models import all_scoped_values, variable_cache, scope, ScopedValues, Value, actions, Variable
 from py_animus.helpers.file_io import file_exists, read_text_file
 from py_animus.helpers.yaml_helper import spit_yaml_text_from_file_with_multiple_yaml_sections, load_from_str_and_ignore_custom_tags, parse_animus_formatted_yaml
-from py_animus.helpers.manifest_processing import read_manifest_and_extract_individual_yaml_sections, parse_project_manifest_items
+from py_animus.helpers.manifest_processing import read_manifest_and_extract_individual_yaml_sections, parse_project_manifest_items, process_selected_project
 from py_animus.utils.http_requests_io import download_files
 from py_animus.animus_logging import logger
 from py_animus.extensions import UnitOfWork, execution_plan
@@ -155,10 +155,12 @@ def run_main(cli_parameter_overrides: list=list()):
     variable_cache.store_variable(
         variable=Variable(
             name='std::all-yaml-sections',
-            initial_value='{}'.format(yaml_sections)
+            initial_value=yaml_sections
         ),
         overwrite_existing=True
     )
+
+    process_selected_project()
 
     # yaml_sections = parse_project_manifest_items(yaml_sections=yaml_sections, project_name=project_name)
 

@@ -10,7 +10,7 @@ spec:
   parentProjects:
   - name: project-root
     path: https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-02/001-parent/demo-project-root.yaml
-  loggingConfig: https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-02/logging/demo-project--logging,yaml
+  loggingConfig: https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-02/logging/demo-project-logging,yaml
   valuesConfig:
   - https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-02/values/demo-project-values.yaml
   extensionPaths: []            # Additional third party extensions
