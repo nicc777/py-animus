@@ -77,7 +77,7 @@ def read_manifest_and_extract_individual_yaml_sections(start_manifest: str, proc
     return final_yaml_sections
 
 
-def convert_yaml_to_extension_instances():
+def convert_yaml_to_extension_instances(yaml_sections_override: dict=None):
     yaml_sections = variable_cache.get_value(
         variable_name='std::all-yaml-sections',
         value_if_expired=dict(),
@@ -85,6 +85,8 @@ def convert_yaml_to_extension_instances():
         raise_exception_on_expired=False,
         raise_exception_on_not_found=False
     )
+    if yaml_sections_override is not None:
+        yaml_sections = yaml_sections_override
     for manifest_kind, manifest_yaml_string in yaml_sections.items():
         logger.info('Converting raw yaml with kind "{}"'.format(manifest_kind))
         if manifest_kind != 'Project' and manifest_kind != 'Values' and manifest_kind.endswith('Logging') is False:
@@ -106,7 +108,7 @@ def convert_yaml_to_extension_instances():
                     )
 
 
-def process_selected_project():
+def process_selected_project(project_name_override: str=None, yaml_sections_override: dict=None):
     project_name = variable_cache.get_value(
         variable_name='std::project-name',
         value_if_expired=None,
@@ -114,6 +116,8 @@ def process_selected_project():
         raise_exception_on_expired=False,
         raise_exception_on_not_found=False
     )
+    if project_name_override is not None:
+        project_name = project_name_override
     yaml_sections = variable_cache.get_value(
         variable_name='std::all-yaml-sections',
         value_if_expired=dict(),
@@ -121,6 +125,8 @@ def process_selected_project():
         raise_exception_on_expired=False,
         raise_exception_on_not_found=False
     )
+    if yaml_sections_override is not None:
+        yaml_sections = yaml_sections_override
     if project_name is None:
         raise Exception('The named project manifest was not found in the supplied manifest file. Cannot continue.')
     if 'Project' not in yaml_sections:
@@ -138,16 +144,9 @@ def process_selected_project():
             logger.info('Project "{}" not in scope (non-default scope with no environments defined in project manifest)'.format(work_instance.metadata['name']))
             in_scope = False
         if work_instance.metadata['name'] != project_name:
-            logger.info('Project "{}" not selected as manifest name "{}" does not match the selected project name "{}"'.format(work_instance.metadata['name'], project_name))
+            logger.info('Project "{}" not selected as name does not match the selected project name "{}"'.format(work_instance.metadata['name'], project_name))
             in_scope = False
         if in_scope:
-            variable_cache.store_variable(
-                variable=Variable(
-                    name='function::convert_yaml_to_extension_instances',
-                    initial_value=convert_yaml_to_extension_instances
-                ),
-                overwrite_existing=False
-            )
             logger.info('Project "{}" selected for processing'.format(work_instance.metadata['name']))
             execution_plan.all_work.add_unit_of_work(
                 unit_of_work=UnitOfWork(
@@ -156,58 +155,59 @@ def process_selected_project():
             )
             execution_plan.calculate_execution_plan()
             logger.info('Current Execution Order: '.format(execution_plan.execution_order))
+            execution_plan.do_work(scope=scope.value, action=actions.command)
 
 
-def parse_project_manifest_items(yaml_sections: dict, project_name: str):
-    ###
-    ### Process manifests defined within the scope
-    ###
-    # TODO - now parse Project and execute... If project has other project dependencies, parse those now first...
-    for manifest_kind, manifest_yaml_string in yaml_sections.items():
-        logger.info('Processing raw yaml with kind "{}"'.format(manifest_kind))
-        if manifest_kind == 'Project': 
-            for yaml_section in manifest_yaml_string:
-                work_instance = parse_animus_formatted_yaml(raw_yaml_str=yaml_section)
-                in_scope = True
-                if 'environments' in work_instance.metadata:
-                    if scope.value not in work_instance.metadata['environments']:
-                        in_scope = False
-                        logger.info('Project "{}" not in scope (scope not found in environments)'.format(work_instance.metadata['name']))
-                elif scope.value != 'default':
-                    logger.info('Project "{}" not in scope (non-default scope with no environments defined in project manifest)'.format(work_instance.metadata['name']))
-                    in_scope = False
-                if in_scope:
-                    if work_instance.metadata['name'] == project_name:
-                        logger.info('Project "{}" selected for processing'.format(work_instance.metadata['name']))
-                        execution_plan.all_work.add_unit_of_work(
-                            unit_of_work=UnitOfWork(
-                                work_instance=work_instance
-                            )
-                        )
-                    else:
-                        logger.info('Project "{}" not selected for processing (project name mismatch)'.format(work_instance.metadata['name']))
-                else:
-                    logger.info('Project "{}" not selected for processing (scope/environment mismatch)'.format(work_instance.metadata['name']))
-        else:
-            if manifest_kind != 'Project': # We process this last...
-                for yaml_section in manifest_yaml_string:
-                    work_instance = parse_animus_formatted_yaml(raw_yaml_str=yaml_section)
-                    in_scope = True
-                    if 'environments' in work_instance.metadata:
-                        if scope.value not in work_instance.metadata['environments']:
-                            in_scope = False
-                            logger.info('Manifest "{}" not in scope (scope not found in environments)'.format(work_instance.metadata['name']))
-                    elif scope.value != 'default':
-                        logger.info('Manifest "{}" not in scope (non-default scope with no environments defined in project manifest)'.format(work_instance.metadata['name']))
-                        in_scope = False
-                    if in_scope:
-                        execution_plan.all_work.add_unit_of_work(
-                            unit_of_work=UnitOfWork(
-                                work_instance=work_instance
-                            )
-                        )
-    execution_plan.calculate_execution_plan()
-    calculated_execution_plan = execution_plan.execution_order
-    logger.info('Current calculated execution plan: {}'.format(calculated_execution_plan))
-    execution_plan.do_work(scope=scope.value, action=actions.command)
+# def parse_project_manifest_items(yaml_sections: dict, project_name: str):
+#     ###
+#     ### Process manifests defined within the scope
+#     ###
+#     # TODO - now parse Project and execute... If project has other project dependencies, parse those now first...
+#     for manifest_kind, manifest_yaml_string in yaml_sections.items():
+#         logger.info('Processing raw yaml with kind "{}"'.format(manifest_kind))
+#         if manifest_kind == 'Project': 
+#             for yaml_section in manifest_yaml_string:
+#                 work_instance = parse_animus_formatted_yaml(raw_yaml_str=yaml_section)
+#                 in_scope = True
+#                 if 'environments' in work_instance.metadata:
+#                     if scope.value not in work_instance.metadata['environments']:
+#                         in_scope = False
+#                         logger.info('Project "{}" not in scope (scope not found in environments)'.format(work_instance.metadata['name']))
+#                 elif scope.value != 'default':
+#                     logger.info('Project "{}" not in scope (non-default scope with no environments defined in project manifest)'.format(work_instance.metadata['name']))
+#                     in_scope = False
+#                 if in_scope:
+#                     if work_instance.metadata['name'] == project_name:
+#                         logger.info('Project "{}" selected for processing'.format(work_instance.metadata['name']))
+#                         execution_plan.all_work.add_unit_of_work(
+#                             unit_of_work=UnitOfWork(
+#                                 work_instance=work_instance
+#                             )
+#                         )
+#                     else:
+#                         logger.info('Project "{}" not selected for processing (project name mismatch)'.format(work_instance.metadata['name']))
+#                 else:
+#                     logger.info('Project "{}" not selected for processing (scope/environment mismatch)'.format(work_instance.metadata['name']))
+#         else:
+#             if manifest_kind != 'Project': # We process this last...
+#                 for yaml_section in manifest_yaml_string:
+#                     work_instance = parse_animus_formatted_yaml(raw_yaml_str=yaml_section)
+#                     in_scope = True
+#                     if 'environments' in work_instance.metadata:
+#                         if scope.value not in work_instance.metadata['environments']:
+#                             in_scope = False
+#                             logger.info('Manifest "{}" not in scope (scope not found in environments)'.format(work_instance.metadata['name']))
+#                     elif scope.value != 'default':
+#                         logger.info('Manifest "{}" not in scope (non-default scope with no environments defined in project manifest)'.format(work_instance.metadata['name']))
+#                         in_scope = False
+#                     if in_scope:
+#                         execution_plan.all_work.add_unit_of_work(
+#                             unit_of_work=UnitOfWork(
+#                                 work_instance=work_instance
+#                             )
+#                         )
+#     execution_plan.calculate_execution_plan()
+#     calculated_execution_plan = execution_plan.execution_order
+#     logger.info('Current calculated execution plan: {}'.format(calculated_execution_plan))
+#     execution_plan.do_work(scope=scope.value, action=actions.command)
 

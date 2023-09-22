@@ -128,7 +128,7 @@ class Project(ManifestBase):   # pragma: no cover
         actions.add_or_update_action(action=Action(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Project Action', action_status=action_state))
         return 
 
-    def apply_manifest(self): 
+    def apply_manifest(self):
         for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
             if action_name == 'Project Action' and expected_action == Action.APPLY_PENDING:
                 self._process_action()                

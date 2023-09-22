@@ -26,11 +26,20 @@ from py_animus.models import VariableCache, AllScopedValues, all_scoped_values, 
 
 host_name_01 = "localhost"
 server_port_01 = 7999
+
+# examples/projects/simple-01/project-01.yaml
 example_project_manifest_01 = '{}{}examples/projects/simple-01/project-01.yaml'.format(
     os.path.dirname(os.path.realpath(__file__)),
     os.sep
 )
 example_project_manifest_01 = example_project_manifest_01.replace('/tests/', '/')
+
+# examples/projects/simple-02/002-child/demo-project-child.yaml
+example_project_manifest_02 = '{}{}examples/projects/simple-02/002-child/demo-project-child.yaml'.format(
+    os.path.dirname(os.path.realpath(__file__)),
+    os.sep
+)
+example_project_manifest_02 = example_project_manifest_02.replace('/tests/', '/')
 
 
 class TestHttpServerBasic(BaseHTTPRequestHandler):  # pragma: no cover
@@ -95,6 +104,14 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
         self.assertTrue(result)
         # self._verify_values()
         # self.assertTrue(os.path.exists('/tmp/test.log'))
+
+    @patch.dict('os.environ', {'DEBUG': 'e'})
+    def test_complex_01_init_from_local_file(self):
+        result = run_main(cli_parameter_overrides=['animus.py', 'apply', example_project_manifest_02, 'project-child', 'sandbox1'])
+        logger.info('TEST INFO')
+        logger.info('TEST DEBUG')
+        self.assertIsNotNone(result)
+        self.assertTrue(result)
 
     def test_basic_init_with_invalid_project_fail_raises_Exception(self):
         with self.assertRaises(Exception):
