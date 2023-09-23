@@ -179,6 +179,13 @@ def process_project(project_manifest_uri: str, project_name: str):
                 _process_logging_sections(manifest_yaml_sections=potential_logging_yaml_sections)
 
             # TODO Load Extensions
+            extension_paths = variable_cache.get_value(
+                variable_name='{}PROJECT_EXTENSION_PATHS'.format(project_instance_variables_base_name),
+                value_if_expired=list(),
+                default_value_if_not_found=list(),
+                raise_exception_on_expired=False,
+                raise_exception_on_not_found=False
+            )
 
             # Load manifest files and parse sections.
             combined_project_manifest_sections = dict()
@@ -204,6 +211,7 @@ def process_project(project_manifest_uri: str, project_name: str):
                 raise Exception('Unrecognized Command "{}" - expected either "apply" or "delete"'.format(actions.command))
             
             project_instance_variable_names = variable_cache.get_all_variable_names_staring_with(project_instance_variables_base_name)
+            logger.debug('Collected variable names: {}'.format(project_instance_variable_names))
         else:
             logger.info('Project "{}" not in scope for processing'.format(project_instance.metadata['name']))
 

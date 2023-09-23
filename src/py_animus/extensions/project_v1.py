@@ -42,6 +42,24 @@ class Project(ManifestBase):   # pragma: no cover
             raise Exception('Spec "manifestFiles" can not be NULL')
         if isinstance(self.spec['manifestFiles'], list) is False:
             raise Exception('Spec "manifestFiles" must be a list containing at least ONE file/URL to a manifest file')
+        
+        ###
+        ### Process "extension_paths" in Spec
+        ###
+        extension_paths = list()
+        if 'extensionPaths' in self.spec:
+            if isinstance(self.spec['extensionPaths'], list):
+                for path in self.spec['extensionPaths']:
+                    if path not in extension_paths:
+                        extension_paths.append(path)
+        variable_cache.store_variable(
+            variable=Variable(
+                name='{}'.format(self._var_name(var_name='PROJECT_EXTENSION_PATHS')),
+                initial_value=extension_paths
+            ),
+            overwrite_existing=True
+        )
+
         done_action = Action.APPLY_DONE
         if actions.command == 'delete':
             done_action == Action.DELETE_DONE
@@ -113,29 +131,6 @@ class Project(ManifestBase):   # pragma: no cover
             variable=Variable(
                 name='PROJECT_MANIFEST_FILES',
                 initial_value=manifest_files
-            ),
-            overwrite_existing=True
-        )
-
-        ###
-        ### Process "extension_paths" in Spec
-        ###
-        extension_paths = variable_cache.get_value(
-            variable_name='PROJECT_EXTENSION_PATHS',
-            value_if_expired=list(),
-            default_value_if_not_found=list(),
-            raise_exception_on_expired=False,
-            raise_exception_on_not_found=False
-        )
-        if 'extensionPaths' in self.spec:
-            if isinstance(self.spec['extensionPaths'], list):
-                for path in self.spec['extensionPaths']:
-                    if path not in extension_paths:
-                        extension_paths.append(path)
-        variable_cache.store_variable(
-            variable=Variable(
-                name='PROJECT_EXTENSION_PATHS',
-                initial_value=extension_paths
             ),
             overwrite_existing=True
         )
