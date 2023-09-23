@@ -8,9 +8,9 @@ metadata:
   - sandbox2
 spec:
   workDirectory: '/tmp/sample-01'
-  loggingConfig: /tmp/sample-01/project-01.yaml
+  loggingConfig: https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-01/project-01.yaml
   valuesConfig:
-  - /tmp/sample-01/project-01.yaml
+  - https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-01/project-01.yaml
   extensionPaths: []            # Additional third party extensions
   manifestFiles:                # Additional path to YAML manifests to parse for work
   - /tmp/sample-01/project-01.yaml

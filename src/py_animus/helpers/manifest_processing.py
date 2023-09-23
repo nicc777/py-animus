@@ -44,12 +44,11 @@ def _parse_values_data(manifest_data: dict):
     all_scoped_values.add_scoped_values(scoped_values=scoped_values)
 
 
-def _process_values_sections(manifest_yaml_sections: dict, process_values: bool=False)->dict:
+def _process_values_sections(manifest_yaml_sections: dict)->dict:
     if 'Values' in manifest_yaml_sections:
-        if process_values is True:
-            for value_manifest_section_text in manifest_yaml_sections['Values']:
-                _parse_values_data(manifest_data=load_from_str_and_ignore_custom_tags(value_manifest_section_text)['part_1'])
-            manifest_yaml_sections.pop('Values')
+        for value_manifest_section_text in manifest_yaml_sections['Values']:
+            _parse_values_data(manifest_data=load_from_str_and_ignore_custom_tags(value_manifest_section_text)['part_1'])
+        manifest_yaml_sections.pop('Values')
     return manifest_yaml_sections
 
 
@@ -210,6 +209,7 @@ def process_project(project_manifest_uri: str, project_name: str):
     if project_name is None:
         raise Exception('The named project manifest was not found in the supplied manifest file. Cannot continue.')
     yaml_sections = extract_yaml_section_from_supplied_manifest_file(manifest_uri=project_manifest_uri)
+    yaml_sections = _process_values_sections(manifest_yaml_sections=yaml_sections)
     if len(yaml_sections) == 0:
         raise Exception('No manifests present')
     if 'Project' not in yaml_sections:
@@ -241,9 +241,15 @@ def process_project(project_manifest_uri: str, project_name: str):
             logger.info('Project "{}" selected for processing'.format(project_instance.metadata['name']))
             project_instance.determine_actions()
 
+            # Process values
+            if 'valuesConfig' in project_instance.metadata:
+                for values_config_uri in project_instance.metadata['valuesConfig']:
+                    potential_values_yaml_sections = extract_yaml_section_from_supplied_manifest_file(manifest_uri=values_config_uri)
+                    _process_values_sections(manifest_yaml_sections=potential_values_yaml_sections)
+
             # Process logging
             logging_manifest = variable_cache.get_value(
-                variable_name='{}{}'.format(project_instance_variables_base_name, 'LOGGING_CONFIG'),
+                variable_name='LOGGING_CONFIG',
                 value_if_expired=None,
                 default_value_if_not_found=None,
                 raise_exception_on_expired=False,
@@ -251,8 +257,7 @@ def process_project(project_manifest_uri: str, project_name: str):
             )
             if logging_manifest is not None:
                 potential_logging_yaml_sections = extract_yaml_section_from_supplied_manifest_file(manifest_uri=logging_manifest)
-                extracted_yaml_sections_that_may_contain_logging_manifests = spit_yaml_text_from_file_with_multiple_yaml_sections(yaml_text=potential_logging_yaml_sections)
-                _process_logging_sections(manifest_yaml_sections=extracted_yaml_sections_that_may_contain_logging_manifests)
+                _process_logging_sections(manifest_yaml_sections=potential_logging_yaml_sections)
 
             # The idea now is that the project extension sets various variables for next actions
             if actions.command == 'apply':

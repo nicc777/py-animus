@@ -11,13 +11,14 @@ import copy
 from py_animus import parse_command_line_arguments
 from py_animus.models import variable_cache, scope, actions, Variable
 from py_animus.helpers.manifest_processing import process_project
-from py_animus.animus_logging import logger
+from py_animus.animus_logging import logger, set_global_logging_level
 from py_animus.extensions import UnitOfWork, execution_plan
 
 from termcolor import colored, cprint
 
 
 def run_main(cli_parameter_overrides: list=list()):
+    set_global_logging_level()
     cli_arguments = parse_command_line_arguments(overrides=cli_parameter_overrides)
 
     actions.set_command(command='{}'.format(cli_arguments[1]))
