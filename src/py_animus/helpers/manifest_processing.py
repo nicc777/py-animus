@@ -9,7 +9,6 @@
 import json
 import copy
 
-from py_animus import parse_command_line_arguments
 from py_animus.models import all_scoped_values, variable_cache, scope, ScopedValues, Value, actions, Variable
 from py_animus.helpers.file_io import file_exists, read_text_file
 from py_animus.helpers.yaml_helper import spit_yaml_text_from_file_with_multiple_yaml_sections, load_from_str_and_ignore_custom_tags, parse_animus_formatted_yaml
@@ -54,8 +53,15 @@ def _process_values_sections(manifest_yaml_sections: dict, process_values: bool=
     return manifest_yaml_sections
 
 
-def _process_logging_sections(manifest_yaml_sections: dict, process_logging: bool=False)->dict:
-    if process_logging is True:
+def _process_logging_sections(manifest_yaml_sections: dict)->dict:
+    logging_configured = variable_cache.get_value(
+        variable_name='std:logging_configured',
+        value_if_expired=False,
+        default_value_if_not_found=False,
+        raise_exception_on_expired=False,
+        raise_exception_on_not_found=False
+    )
+    if logging_configured is False:
         logging_actions = list()
         for logging_kind in ('StreamHandlerLogging', 'FileHandlerLogging',):
             if logging_kind in manifest_yaml_sections:
@@ -66,14 +72,21 @@ def _process_logging_sections(manifest_yaml_sections: dict, process_logging: boo
                 manifest_yaml_sections.pop(logging_kind)
         for logging_extension in logging_actions:
             logging_extension.apply_manifest()
+    variable_cache.store_variable(
+        variable=Variable(
+            name='std:logging_configured',
+            initial_value=True
+        ),
+        overwrite_existing=True
+    )
     logger.info('Logging ready')
     return manifest_yaml_sections
 
 
-def read_manifest_and_extract_individual_yaml_sections(start_manifest: str, process_values: bool=False, process_logging: bool=False)->dict:
+def read_manifest_and_extract_individual_yaml_sections(start_manifest: str, process_values: bool=False)->dict:
     extracted_yaml_sections = spit_yaml_text_from_file_with_multiple_yaml_sections(yaml_text=start_manifest)
     remaining_extracted_yaml_sections = _process_values_sections(manifest_yaml_sections=copy.deepcopy(extracted_yaml_sections), process_values=process_values)
-    final_yaml_sections = _process_logging_sections(manifest_yaml_sections=copy.deepcopy(remaining_extracted_yaml_sections), process_logging=process_logging)
+    final_yaml_sections = _process_logging_sections(manifest_yaml_sections=copy.deepcopy(remaining_extracted_yaml_sections))
     return final_yaml_sections
 
 
@@ -108,72 +121,152 @@ def convert_yaml_to_extension_instances(yaml_sections_override: dict=None):
                     )
 
 
-def process_selected_project(project_name_override: str=None, yaml_sections_override: dict=None):
-    project_name = variable_cache.get_value(
-        variable_name='std::project-name',
-        value_if_expired=None,
-        default_value_if_not_found=None,
-        raise_exception_on_expired=False,
-        raise_exception_on_not_found=False
-    )
-    if project_name_override is not None:
-        project_name = project_name_override
-    yaml_sections = variable_cache.get_value(
-        variable_name='std::all-yaml-sections',
-        value_if_expired=dict(),
-        default_value_if_not_found=dict(),
-        raise_exception_on_expired=False,
-        raise_exception_on_not_found=False
-    )
-    if yaml_sections_override is not None:
-        yaml_sections = yaml_sections_override
+# def process_selected_project(project_name_override: str=None, yaml_sections_override: dict=None):
+#     project_name = variable_cache.get_value(
+#         variable_name='std::project-name',
+#         value_if_expired=None,
+#         default_value_if_not_found=None,
+#         raise_exception_on_expired=False,
+#         raise_exception_on_not_found=False
+#     )
+#     if project_name_override is not None:
+#         project_name = project_name_override
+#     yaml_sections = variable_cache.get_value(
+#         variable_name='std::all-yaml-sections',
+#         value_if_expired=dict(),
+#         default_value_if_not_found=dict(),
+#         raise_exception_on_expired=False,
+#         raise_exception_on_not_found=False
+#     )
+#     if yaml_sections_override is not None:
+#         yaml_sections = yaml_sections_override
+#     if project_name is None:
+#         raise Exception('The named project manifest was not found in the supplied manifest file. Cannot continue.')
+#     if 'Project' not in yaml_sections:
+#         raise Exception('No projects found in the supplied Manifest file')
+#     if len(yaml_sections) == 0:
+#         raise Exception('No manifests present')
+    
+#     print('*** PROCESSING PROJECT "{}"'.format(project_name))
+
+#     for yaml_section in yaml_sections['Project']:
+#         work_instance = parse_animus_formatted_yaml(raw_yaml_str=yaml_section)
+#         in_scope = True
+#         if 'environments' in work_instance.metadata:
+#             if scope.value not in work_instance.metadata['environments']:
+#                 in_scope = False
+#                 logger.info('Project "{}" not in scope (scope not found in environments)'.format(work_instance.metadata['name']))
+#         elif scope.value != 'default':
+#             logger.info('Project "{}" not in scope (non-default scope with no environments defined in project manifest)'.format(work_instance.metadata['name']))
+#             in_scope = False
+#         if work_instance.metadata['name'] != project_name:
+#             logger.info('Project "{}" not selected as name does not match the selected project name "{}"'.format(work_instance.metadata['name'], project_name))
+#             in_scope = False
+#         if in_scope:
+
+#             if 'parentProjects' in work_instance.spec:
+#                 if isinstance(work_instance.spec['parentProjects'], list):
+#                     for parent_project_data in work_instance.spec['parentProjects']:
+#                         if 'name' in parent_project_data and 'path' in parent_project_data:
+
+#                             parent_start_manifest = parent_project_data['path']
+#                             if parent_start_manifest.lower().startswith('http'):
+#                                 files = download_files(urls=[parent_start_manifest,])
+#                                 if len(files) > 0:
+#                                     parent_start_manifest = files[0]
+
+#                             if file_exists(parent_start_manifest) is False:
+#                                 raise Exception('Manifest file "{}" does not exist!'.format(parent_start_manifest))
+
+#                             parent_project_yaml_sections = read_manifest_and_extract_individual_yaml_sections(start_manifest=parent_start_manifest, process_logging=False, process_values=False)
+#                             process_selected_project(project_name_override=parent_project_data['name'], yaml_sections_override=parent_project_yaml_sections)
+
+#             logger.info('Project "{}" selected for processing'.format(work_instance.metadata['name']))
+#             execution_plan.all_work.add_unit_of_work(
+#                 unit_of_work=UnitOfWork(
+#                     work_instance=work_instance
+#                 )
+#             )
+#             execution_plan.calculate_execution_plan()
+#             logger.info('Current Execution Order: '.format(execution_plan.execution_order))
+#             execution_plan.do_work(scope=scope.value, action=actions.command)
+
+
+
+def extract_yaml_section_from_supplied_manifest_file(manifest_uri: str)->dict:
+    final_manifest_file_to_parse = '{}'.format(manifest_uri)
+    if manifest_uri.lower().startswith('http'):
+        files = download_files(urls=[manifest_uri,])
+        if len(files) > 0:
+            final_manifest_file_to_parse = files[0]
+
+    if file_exists(final_manifest_file_to_parse) is False:
+        raise Exception('Manifest file "{}" does not exist!'.format(final_manifest_file_to_parse))
+    
+    return spit_yaml_text_from_file_with_multiple_yaml_sections(yaml_text=final_manifest_file_to_parse)
+    
+
+def process_project(project_manifest_uri: str, project_name: str):
     if project_name is None:
         raise Exception('The named project manifest was not found in the supplied manifest file. Cannot continue.')
-    if 'Project' not in yaml_sections:
-        raise Exception('No projects found in the supplied Manifest file')
+    yaml_sections = extract_yaml_section_from_supplied_manifest_file(manifest_uri=project_manifest_uri)
     if len(yaml_sections) == 0:
         raise Exception('No manifests present')
+    if 'Project' not in yaml_sections:
+        raise Exception('No projects found in the supplied Manifest file')
     for yaml_section in yaml_sections['Project']:
-        work_instance = parse_animus_formatted_yaml(raw_yaml_str=yaml_section)
+        project_instance = parse_animus_formatted_yaml(raw_yaml_str=yaml_section)
+        project_instance_variables_base_name = '{}:{}:{}:'.format(
+            project_instance.__class__.__name__,
+            project_instance.metadata['name'],
+            scope.value
+        )
         in_scope = True
-        if 'environments' in work_instance.metadata:
-            if scope.value not in work_instance.metadata['environments']:
+        if 'environments' in project_instance.metadata:
+            if scope.value not in project_instance.metadata['environments']:
                 in_scope = False
-                logger.info('Project "{}" not in scope (scope not found in environments)'.format(work_instance.metadata['name']))
+                logger.info('Project "{}" not in scope (scope not found in environments)'.format(project_instance.metadata['name']))
         elif scope.value != 'default':
-            logger.info('Project "{}" not in scope (non-default scope with no environments defined in project manifest)'.format(work_instance.metadata['name']))
+            logger.info('Project "{}" not in scope (non-default scope with no environments defined in project manifest)'.format(project_instance.metadata['name']))
             in_scope = False
-        if work_instance.metadata['name'] != project_name:
-            logger.info('Project "{}" not selected as name does not match the selected project name "{}"'.format(work_instance.metadata['name'], project_name))
+        if project_instance.metadata['name'] != project_name:
+            logger.info('Project "{}" not selected as name does not match the selected project name "{}"'.format(project_instance.metadata['name'], project_name))
             in_scope = False
         if in_scope:
-
-            if 'parentProjects' in work_instance.spec:
-                if isinstance(work_instance.spec['parentProjects'], list):
-                    for parent_project_data in work_instance.spec['parentProjects']:
+            if 'parentProjects' in project_instance.spec:
+                if isinstance(project_instance.spec['parentProjects'], list):
+                    for parent_project_data in project_instance.spec['parentProjects']:
                         if 'name' in parent_project_data and 'path' in parent_project_data:
+                            process_project(project_manifest_uri=parent_project_data['path'], project_name=parent_project_data['name'])
+            logger.info('Project "{}" selected for processing'.format(project_instance.metadata['name']))
+            project_instance.determine_actions()
 
-                            parent_start_manifest = parent_project_data['path']
-                            if parent_start_manifest.lower().startswith('http'):
-                                files = download_files(urls=[parent_start_manifest,])
-                                if len(files) > 0:
-                                    parent_start_manifest = files[0]
-
-                            if file_exists(parent_start_manifest) is False:
-                                raise Exception('Manifest file "{}" does not exist!'.format(parent_start_manifest))
-
-                            parent_project_yaml_sections = read_manifest_and_extract_individual_yaml_sections(start_manifest=parent_start_manifest, process_logging=False, process_values=False)
-                            process_selected_project(project_name_override=parent_project_data['name'], yaml_sections_override=parent_project_yaml_sections)
-
-            logger.info('Project "{}" selected for processing'.format(work_instance.metadata['name']))
-            execution_plan.all_work.add_unit_of_work(
-                unit_of_work=UnitOfWork(
-                    work_instance=work_instance
-                )
+            # Process logging
+            logging_manifest = variable_cache.get_value(
+                variable_name='{}{}'.format(project_instance_variables_base_name, 'LOGGING_CONFIG'),
+                value_if_expired=None,
+                default_value_if_not_found=None,
+                raise_exception_on_expired=False,
+                raise_exception_on_not_found=False
             )
-            execution_plan.calculate_execution_plan()
-            logger.info('Current Execution Order: '.format(execution_plan.execution_order))
-            execution_plan.do_work(scope=scope.value, action=actions.command)
+            if logging_manifest is not None:
+                potential_logging_yaml_sections = extract_yaml_section_from_supplied_manifest_file(manifest_uri=logging_manifest)
+                extracted_yaml_sections_that_may_contain_logging_manifests = spit_yaml_text_from_file_with_multiple_yaml_sections(yaml_text=potential_logging_yaml_sections)
+                _process_logging_sections(manifest_yaml_sections=extracted_yaml_sections_that_may_contain_logging_manifests)
+
+            # The idea now is that the project extension sets various variables for next actions
+            if actions.command == 'apply':
+                project_instance.apply_manifest()
+            elif actions.command == 'delete':
+                project_instance.delete_manifest()
+            else:
+                raise Exception('Unrecognized Command "{}" - expected either "apply" or "delete"'.format(actions.command))
+            
+            project_instance_variable_names = variable_cache.get_all_variable_names_staring_with(project_instance_variables_base_name)
+        else:
+            logger.info('Project "{}" not in scope for processing'.format(project_instance.metadata['name']))
+
+
 
 
 # def parse_project_manifest_items(yaml_sections: dict, project_name: str):

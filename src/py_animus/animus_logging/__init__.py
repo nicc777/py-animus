@@ -11,12 +11,11 @@ import logging
 
 logger = logging.getLogger('py-animus')
 if os.getenv('DEBUG', '0')[0].lower() in ('1','t','e'): # 1, or [t/T]rue or [e/E]nable(d)
-    print('DEBUG Level Logging Enabled')
+    print('STARTUP: Initial global logging level: DEBUG')
     logger.setLevel(logging.DEBUG)
 else:
+    print('STARTUP: Initial global logging level: INFO')
     logger.setLevel(logging.INFO)
-    print('INFO Level Logging Enabled')
-
 
 
 def add_handler(h):

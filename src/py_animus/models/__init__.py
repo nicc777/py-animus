@@ -345,6 +345,13 @@ class VariableCache:
         """
         self.values = dict()
 
+    def get_all_variable_names_staring_with(self, start_str: str)->list:
+        names = list()
+        for values_key in list(self.values.keys()):
+            if values_key.startswith(start_str):
+                names.append(values_key)
+        return names
+
     def store_variable(self, variable: Variable, overwrite_existing: bool=False):
         """Stores an instance of Variable
 

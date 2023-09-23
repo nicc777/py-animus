@@ -50,6 +50,20 @@ class Project(ManifestBase):   # pragma: no cover
             pending_action = Action.DELETE_PENDING
         if self.implemented_manifest_differ_from_this_manifest() is True:
             self.register_action(action_name='Project Action', initial_status=pending_action)
+
+        ###
+        ### Process "loggingConfig" in Spec
+        ###
+        if 'loggingConfig' in self.spec:
+            if isinstance(self.spec['loggingConfig'], str):        
+                variable_cache.store_variable(
+                    variable=Variable(
+                        name='LOGGING_CONFIG',
+                        initial_value=self.spec['loggingConfig']
+                    ),
+                    overwrite_existing=True
+                )
+        
         return actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name'])
 
     def _process_action(self):
