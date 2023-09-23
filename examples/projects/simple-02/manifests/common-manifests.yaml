@@ -14,7 +14,7 @@ spec:
     - 'echo "COMMON SHELLSCRIPT EXECUTED - Action: ${action} with logging level set to ${debugLevel}"'
     - action: !Variable std::action
       debugLevel: !Value demo-project-log-level
-    convertOutputToText: true
-    stripNewline: True
-    convertRepeatingSpaces: true
-    stripLeadingTrailingSpaces: true
+  convertOutputToText: true
+  stripNewline: True
+  convertRepeatingSpaces: true
+  stripLeadingTrailingSpaces: true

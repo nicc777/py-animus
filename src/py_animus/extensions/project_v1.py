@@ -15,17 +15,17 @@ class Project(ManifestBase):   # pragma: no cover
     """
         Spec fields:
 
-        | Field                       | Type    | Required | Default Value                               | Description                                                                                                 |
-        |-----------------------------|---------|----------|---------------------------------------------|-------------------------------------------------------------------------------------------------------------|
-        | workDirectory               | str     | Yes      | No Default                                  | A directory that will be created to store all temporary artifacts. The directory will be deleted once done. |
-        | parentProjects              | list    | No       | Empty dict                                  | Any additional projects referenced here will be processed first.                                            |
-        | parentProjects.[n].name     | str     | Yes (1)  | No Default                                  | The project name                                                                                            |
-        | parentProjects.[n].path     | str     | Yes (1)  | No Default                                  | Te path to the file containing the project manifest.                                                        |
-        | loggingConfig               | str     | No       | No Default                                  | Path to the manifest containing any "*Logging" type manifests                                               |
-        | valuesConfig                | str     | No       | No Default                                  | Path to the manifest containing any "Values" type manifests                                                 |
-        | manifestFiles               | list    | No       | Empty list                                  | Local YAML files containing more manifests to ingest. The value can be an empty list                        |
-        | extensionPaths              | list    | No       | Empty list                                  | Directories containing third party extensions to ingest                                                     |
-        | skipConfirmation            | bool    | No       | False                                       | If `False`, print the execution plan and prompt user to proceed.                                            |
+        | Field                       | Type    | Required | Default Value                               | Description                                                                                                                                                    |
+        |-----------------------------|---------|----------|---------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+        | workDirectory               | str     | Yes      | No Default                                  | A directory that will be created to store all temporary artifacts. The directory will be deleted once done.                                                    |
+        | parentProjects              | list    | No       | Empty dict                                  | Any additional projects referenced here will be processed first.                                                                                               |
+        | parentProjects.[n].name     | str     | Yes (1)  | No Default                                  | The project name                                                                                                                                               |
+        | parentProjects.[n].path     | str     | Yes (1)  | No Default                                  | Te path to the file containing the project manifest.                                                                                                           |
+        | loggingConfig               | str     | No       | No Default                                  | Path to the manifest containing any "*Logging" type manifests                                                                                                  |
+        | valuesConfig                | str     | No       | No Default                                  | Path to the manifest containing any "Values" type manifests                                                                                                    |
+        | manifestFiles               | list    | Yes      | Empty list                                  | YAML files/URL's containing manifests to ingest. There must be at least ONE file/URL defined, even if it points to the same file/URL as this project manifest. |
+        | extensionPaths              | list    | No       | Empty list                                  | Directories containing third party extensions to ingest                                                                                                        |
+        | skipConfirmation            | bool    | No       | False                                       | If `False`, print the execution plan and prompt user to proceed.                                                                                               |
 
         Notes:
 
@@ -36,6 +36,12 @@ class Project(ManifestBase):   # pragma: no cover
         super().__init__(post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
 
     def implemented_manifest_differ_from_this_manifest(self)->bool:
+        if 'manifestFiles' not in self.spec:
+            raise Exception('Project manifest MUST contain "manifestFiles" with a list of manifest files to ingest and process.')
+        if self.spec['manifestFiles'] is None:
+            raise Exception('Spec "manifestFiles" can not be NULL')
+        if isinstance(self.spec['manifestFiles'], list) is False:
+            raise Exception('Spec "manifestFiles" must be a list containing at least ONE file/URL to a manifest file')
         done_action = Action.APPLY_DONE
         if actions.command == 'delete':
             done_action == Action.DELETE_DONE

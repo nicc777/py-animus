@@ -13,7 +13,7 @@ spec:
   - https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-01/project-01.yaml
   extensionPaths: []            # Additional third party extensions
   manifestFiles:                # Additional path to YAML manifests to parse for work
-  - /tmp/sample-01/project-01.yaml
+  - https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-01/project-01.yaml
   skipConfirmation: false       # If true, no confirmation on the execution plan will be asked for (Console).
 ---
 kind: FileHandlerLogging
@@ -62,4 +62,8 @@ spec:
     - 'echo "Action: ${action} with logging level set to ${debugLevel}"'
     - action: !Variable std::action
       debugLevel: !Value project-1-log-level
+  convertOutputToText: true
+  stripNewline: True
+  convertRepeatingSpaces: true
+  stripLeadingTrailingSpaces: true
 
