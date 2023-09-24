@@ -7,8 +7,8 @@
 """
 import copy
 import json
-from py_animus.helpers import get_utc_timestamp, is_debug_set_in_environment
 from py_animus.animus_logging import logger
+from py_animus.helpers import get_utc_timestamp, is_debug_set_in_environment
 
 
 class Action:
@@ -152,9 +152,12 @@ class Values:
 
     def add_value(self, value: Value):
         self.values[value.name] = value
+        logger.debug('Added value {}'.format(value.name))
+        print('### Added value {}'.format(value.name))
 
     def find_value_by_name(self, name: str)->Value:
         if name not in self.values:
+            logger.error('Dump of current values keys: {}'.format(list(self.values.keys())))
             raise Exception('Value named "{}" was not found'.format(name))
         return self.values[name]
     
@@ -171,6 +174,8 @@ class ScopedValues:
 
     def add_value(self, value: Value):
         self.values.add_value(value=value)
+        logger.debug('   Added value {} for scope {}'.format(value.name, self.scope))
+        print('###   Added value {} for scope {}'.format(value.name, self.scope))
 
     def find_value_by_name(self, name: str)->Value:
         return self.values.find_value_by_name(name=name)
@@ -190,6 +195,8 @@ class AllScopedValues:
         else:
             if replace is True:
                 self.scoped_values_collection[scoped_values.scope] = scoped_values
+        logger.debug('Added scoped values for scope {}'.format(scoped_values.scope))
+        print('### Added scoped values for scope {}'.format(scoped_values.scope))
 
     def find_scoped_values(self, scope: str)->ScopedValues:
         if scope not in self.scoped_values_collection:
@@ -200,6 +207,11 @@ class AllScopedValues:
         current_scoped_values = self.find_scoped_values(scope=scope)
         current_scoped_values.add_value(value=value)
         self.add_scoped_values(scoped_values=copy.deepcopy(current_scoped_values), replace=True)
+        logger.debug('Scoped value named "{}" added for scope "{}"'.format(value.name, scope))
+        print('### Scoped value named "{}" added for scope "{}"'.format(value.name, scope))
+
+    def clear(self):
+        self.scoped_values_collection = dict()
 
 
 class Variable:
@@ -490,6 +502,9 @@ class VariableCache:
 
     def __str__(self)->str:
         return json.dumps(self.to_dict(for_logging=True))
+    
+    def clear(self):
+        self.values = dict()
     
 
 variable_cache = VariableCache()

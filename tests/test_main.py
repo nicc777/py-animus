@@ -8,7 +8,6 @@
 
 import sys
 import os
-import json
 import tempfile
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import _thread as thread
@@ -58,6 +57,8 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
     def setUp(self):
         print('-'*80)
         self.tmp_dir = tempfile.TemporaryDirectory()
+        all_scoped_values.clear()
+        variable_cache.clear
 
     def tearDown(self):
         os.rmdir(self.tmp_dir.name)
@@ -105,7 +106,7 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
         # self._verify_values()
         # self.assertTrue(os.path.exists('/tmp/test.log'))
 
-    # @patch.dict('os.environ', {'DEBUG': 'e'})
+    @patch.dict('os.environ', {'DEBUG': 'e'})
     def test_complex_01_init_from_local_file(self):
         result = run_main(cli_parameter_overrides=['animus.py', 'apply', example_project_manifest_02, 'project-child', 'sandbox1'])
         logger.info('TEST INFO')

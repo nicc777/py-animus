@@ -8,7 +8,6 @@
 
 
 import traceback
-import logging
 import sys
 
 
@@ -19,9 +18,12 @@ SUPPORTED_COMMANDS = (
 
 
 def get_logging_stream_handler(
-    level=logging.INFO,
-    formatter: logging.Formatter=logging.Formatter('%(asctime)s %(levelname)s - %(message)s')
-)->logging.StreamHandler:
+    level,
+    formatter=None
+):
+    import logging
+    if formatter is None:
+        formatter: logging.Formatter=logging.Formatter('%(asctime)s %(levelname)s - %(message)s')
     try:
         h = logging.StreamHandler(sys.stdout)
         h.setLevel(level)    

@@ -6,14 +6,13 @@
     https://raw.githubusercontent.com/nicc777/verbacratis/main/LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt
 """
 
-import json
 import copy
 
+from py_animus.animus_logging import logger
 from py_animus.models import all_scoped_values, variable_cache, scope, ScopedValues, Value, actions, Variable
 from py_animus.helpers.file_io import file_exists, read_text_file
 from py_animus.helpers.yaml_helper import spit_yaml_text_from_file_with_multiple_yaml_sections, load_from_str_and_ignore_custom_tags, parse_animus_formatted_yaml
 from py_animus.utils.http_requests_io import download_files
-from py_animus.animus_logging import logger
 from py_animus.extensions import UnitOfWork, execution_plan
 
 
@@ -161,12 +160,15 @@ def process_project(project_manifest_uri: str, project_name: str):
             project_instance.determine_actions()
 
             # Process values
+            logger.info('Values processing for project "{}" starting'.format(project_instance.metadata['name']))
             if 'valuesConfig' in project_instance.spec:
                 for values_config_uri in project_instance.spec['valuesConfig']:
                     potential_values_yaml_sections = extract_yaml_section_from_supplied_manifest_file(manifest_uri=values_config_uri)
                     _process_values_sections(manifest_yaml_sections=potential_values_yaml_sections)
+            logger.info('   Values processing for project "{}" completed'.format(project_instance.metadata['name']))
 
             # Process logging
+            logger.info('Logging processing for project "{}" starting'.format(project_instance.metadata['name']))
             logging_manifest = variable_cache.get_value(
                 variable_name='LOGGING_CONFIG',
                 value_if_expired=None,
@@ -177,8 +179,10 @@ def process_project(project_manifest_uri: str, project_name: str):
             if logging_manifest is not None:
                 potential_logging_yaml_sections = extract_yaml_section_from_supplied_manifest_file(manifest_uri=logging_manifest)
                 _process_logging_sections(manifest_yaml_sections=potential_logging_yaml_sections)
+            logger.info('   Logging processing for project "{}" completed'.format(project_instance.metadata['name']))
 
             # TODO Load Extensions
+            logger.info('Extensions processing for project "{}" starting'.format(project_instance.metadata['name']))
             extension_paths = variable_cache.get_value(
                 variable_name='{}PROJECT_EXTENSION_PATHS'.format(project_instance_variables_base_name),
                 value_if_expired=list(),
@@ -187,7 +191,10 @@ def process_project(project_manifest_uri: str, project_name: str):
                 raise_exception_on_not_found=False
             )
 
+            logger.info('   Extensions processing for project "{}" completed'.format(project_instance.metadata['name']))
+
             # Load manifest files and parse sections.
+            logger.info('Manifest processing for project "{}" starting'.format(project_instance.metadata['name']))
             combined_project_manifest_sections = dict()
             final_combined_project_manifest_sections = dict()
             for project_manifest_file_or_url in project_instance.spec['manifestFiles']:
@@ -209,6 +216,7 @@ def process_project(project_manifest_uri: str, project_name: str):
                 project_instance.delete_manifest()
             else:
                 raise Exception('Unrecognized Command "{}" - expected either "apply" or "delete"'.format(actions.command))
+            logger.info('   Manifest processing for project "{}" completed'.format(project_instance.metadata['name']))
             
             project_instance_variable_names = variable_cache.get_all_variable_names_staring_with(project_instance_variables_base_name)
             logger.debug('Collected variable names: {}'.format(project_instance_variable_names))
