@@ -161,8 +161,8 @@ def process_project(project_manifest_uri: str, project_name: str):
             project_instance.determine_actions()
 
             # Process values
-            if 'valuesConfig' in project_instance.metadata:
-                for values_config_uri in project_instance.metadata['valuesConfig']:
+            if 'valuesConfig' in project_instance.spec:
+                for values_config_uri in project_instance.spec['valuesConfig']:
                     potential_values_yaml_sections = extract_yaml_section_from_supplied_manifest_file(manifest_uri=values_config_uri)
                     _process_values_sections(manifest_yaml_sections=potential_values_yaml_sections)
 

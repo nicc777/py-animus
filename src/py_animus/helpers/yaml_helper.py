@@ -384,7 +384,7 @@ def parse_animus_formatted_yaml(raw_yaml_str: str)->ManifestBase:
         'Values',   # These manifests should by now already be parsed...
     )
 
-    logger.info('Parsing input YAML: {}'.format(raw_yaml_str))
+    logger.debug('Parsing input YAML: {}'.format(raw_yaml_str))
 
     yaml.SafeLoader.add_constructor(        '!Value',       ValueTag.from_yaml      )
     yaml.SafeLoader.add_constructor(        '!Variable',    VariableTag.from_yaml   )
