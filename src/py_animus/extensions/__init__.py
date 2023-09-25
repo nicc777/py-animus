@@ -41,6 +41,7 @@ class AnimusExtensions:
             self.extensions[idx] = extension
         if idx not in self.supported_versions_of_extensions:
             self.supported_versions_of_extensions[idx] = copy.deepcopy(initialized_extension.supported_versions)
+        logger.info('Extension kind "{}" and version "{}" added to Animus Extensions'.format(initialized_extension_kind, version))
 
     def find_extension_that_supports_version(self, extension_kind: str, version: str)->ManifestBase:
         idx = '{}:{}'.format(extension_kind, version)

@@ -7,13 +7,17 @@
 """
 
 import copy
+import sys
+import importlib
+import os
+import inspect
 
 from py_animus.animus_logging import logger
 from py_animus.models import all_scoped_values, variable_cache, scope, ScopedValues, Value, actions, Variable
 from py_animus.helpers.file_io import file_exists
 from py_animus.helpers.yaml_helper import spit_yaml_text_from_file_with_multiple_yaml_sections, load_from_str_and_ignore_custom_tags, parse_animus_formatted_yaml
 from py_animus.utils.http_requests_io import download_files
-from py_animus.extensions import UnitOfWork, execution_plan
+from py_animus.extensions import UnitOfWork, execution_plan, ManifestBase, extensions
 
 
 def _parse_values_data(manifest_data: dict):
@@ -114,7 +118,29 @@ def extract_yaml_section_from_supplied_manifest_file(manifest_uri: str)->dict:
         raise Exception('Manifest file "{}" does not exist!'.format(final_manifest_file_to_parse))
     
     return spit_yaml_text_from_file_with_multiple_yaml_sections(yaml_text=final_manifest_file_to_parse)
-    
+
+
+def get_modules_in_package(files: list):
+    for file in files:
+        path_portion = '{}'.format(os.sep).join(file.split(os.sep)[0:-1])
+        if path_portion not in sys.path:
+            sys.path.insert(0,path_portion)
+            logger.info('Added path "{}" to sys.path'.format(path_portion))
+        if file not in ['__init__.py', '__pycache__']:
+            if file[-3:] != '.py':
+                logger.warning('File "{}" not a Python file - ignoring'.format(file))
+                continue    # pragma: no cover
+            file_name = file[:-3]
+            module_name = file_name
+            # module_name = module_name.replace('{}'.format(os.sep), '', 1).replace('{}'.format(os.sep), '.')
+            module_name = module_name.split('{}'.format(os.sep))[-1]
+            logger.info('Attempting to add module named "{}" from file "{}"'.format(module_name, file_name))
+            for name, cls in inspect.getmembers(importlib.import_module(module_name), inspect.isclass):
+                if cls.__module__ == module_name:
+                    m = importlib.import_module(module_name)
+                    clazz = getattr(m, name)
+                    yield (clazz, name)
+
 
 def process_project(project_manifest_uri: str, project_name: str):
     if project_name is None:
@@ -174,8 +200,8 @@ def process_project(project_manifest_uri: str, project_name: str):
             if logging_manifest is not None:
                 potential_logging_yaml_sections = extract_yaml_section_from_supplied_manifest_file(manifest_uri=logging_manifest)
                 _process_logging_sections(manifest_yaml_sections=potential_logging_yaml_sections)
+                project_instance.reset_logger()
             logger.info('   Logging processing for project "{}" completed'.format(project_instance.metadata['name']))
-            project_instance.reset_logger()
 
             # TODO Load Extensions
             logger.info('Extensions processing for project "{}" starting'.format(project_instance.metadata['name']))
@@ -187,7 +213,12 @@ def process_project(project_manifest_uri: str, project_name: str):
                 raise_exception_on_expired=False,
                 raise_exception_on_not_found=False
             )
-
+            for returned_class, kind in get_modules_in_package(files=extension_files):
+                # if isinstance(returned_class, ManifestBase) is False:
+                #     raise Exception('Incorrect Base Class')
+                extensions.add_extension(extension=returned_class)
+                logger.info('Added extension kind "{}"'.format(kind))
+            
             logger.info('   Extensions processing for project "{}" completed'.format(project_instance.metadata['name']))
 
             # Load manifest files and parse sections.
