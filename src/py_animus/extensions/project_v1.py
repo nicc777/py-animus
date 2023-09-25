@@ -61,7 +61,7 @@ class Project(ManifestBase):   # pragma: no cover
                             if os.path.exists(extension_path):
                                 if extension_path not in extension_files:
                                     extension_files.append(extension_path)
-                                    self.logger.info('Added extension file "{}"'.format(extension_path))
+                                    self.logger.info('        Added extension file "{}"'.format(extension_path))
                             else:
                                 self.logger.warning('Extension file "{}" ignored as it was not found on the filesystem.'.format(extension_path))
                         else:
