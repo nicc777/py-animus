@@ -36,9 +36,11 @@ logger = logging.getLogger('py-animus')
 
 
 def set_global_logging_level():
+    
     if logging_context.custom_logging_set is False:
         print('STARTUP: Setting Default Logging Handler: "StreamHandler"')
         logger.addHandler(default_handler)
+
     if os.getenv('DEBUG', '0')[0].lower() in ('1','t','e'): # 1, or [t/T]rue or [e/E]nable(d)
         print('STARTUP: Initial global logging level: DEBUG')
         logger.setLevel(logging.DEBUG)

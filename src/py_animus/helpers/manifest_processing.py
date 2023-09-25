@@ -10,7 +10,7 @@ import copy
 
 from py_animus.animus_logging import logger
 from py_animus.models import all_scoped_values, variable_cache, scope, ScopedValues, Value, actions, Variable
-from py_animus.helpers.file_io import file_exists, read_text_file
+from py_animus.helpers.file_io import file_exists
 from py_animus.helpers.yaml_helper import spit_yaml_text_from_file_with_multiple_yaml_sections, load_from_str_and_ignore_custom_tags, parse_animus_formatted_yaml
 from py_animus.utils.http_requests_io import download_files
 from py_animus.extensions import UnitOfWork, execution_plan
@@ -81,13 +81,6 @@ def _process_logging_sections(manifest_yaml_sections: dict)->dict:
     return manifest_yaml_sections
 
 
-def read_manifest_and_extract_individual_yaml_sections(start_manifest: str, process_values: bool=False)->dict:
-    extracted_yaml_sections = spit_yaml_text_from_file_with_multiple_yaml_sections(yaml_text=start_manifest)
-    remaining_extracted_yaml_sections = _process_values_sections(manifest_yaml_sections=copy.deepcopy(extracted_yaml_sections), process_values=process_values)
-    final_yaml_sections = _process_logging_sections(manifest_yaml_sections=copy.deepcopy(remaining_extracted_yaml_sections))
-    return final_yaml_sections
-
-
 def convert_yaml_to_extension_instances(yaml_sections: dict=None):
     for manifest_kind, manifest_yaml_string in yaml_sections.items():
         logger.info('Converting raw yaml with kind "{}"'.format(manifest_kind))
@@ -126,6 +119,8 @@ def extract_yaml_section_from_supplied_manifest_file(manifest_uri: str)->dict:
 def process_project(project_manifest_uri: str, project_name: str):
     if project_name is None:
         raise Exception('The named project manifest was not found in the supplied manifest file. Cannot continue.')
+    # all_scoped_values.reset_logger()
+    # variable_cache.reset_logger()
     yaml_sections = extract_yaml_section_from_supplied_manifest_file(manifest_uri=project_manifest_uri)
     yaml_sections = _process_values_sections(manifest_yaml_sections=yaml_sections)
     if len(yaml_sections) == 0:

@@ -7,7 +7,6 @@
 """
 
 
-import traceback
 import sys
 
 
@@ -15,23 +14,6 @@ SUPPORTED_COMMANDS = (
     'apply',
     'delete',
 )
-
-
-def get_logging_stream_handler(
-    level,
-    formatter=None
-):
-    import logging
-    if formatter is None:
-        formatter: logging.Formatter=logging.Formatter('%(asctime)s %(levelname)s - %(message)s')
-    try:
-        h = logging.StreamHandler(sys.stdout)
-        h.setLevel(level)    
-        h.setFormatter(formatter)
-        return h
-    except: # pragma: no cover
-        traceback.print_exc()
-    return None # pragma: no cover
 
 
 def validate_list(input_list: list, min_length: int=0, max_length: int=999, can_be_none: bool=False, error_message: str='List validation failed'):

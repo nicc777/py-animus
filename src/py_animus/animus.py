@@ -8,7 +8,6 @@
 
 from py_animus.animus_logging import logger, set_global_logging_level
 from py_animus import parse_command_line_arguments
-from py_animus.helpers.manifest_processing import process_project
 
 
 def run_main(cli_parameter_overrides: list=list()):
@@ -19,6 +18,7 @@ def run_main(cli_parameter_overrides: list=list()):
     from py_animus.utils import initialize_animus
     start_manifest, project_name = initialize_animus(cli_arguments=cli_arguments)
 
+    from py_animus.helpers.manifest_processing import process_project
     process_project(
         project_manifest_uri=start_manifest,
         project_name=project_name

@@ -7,8 +7,45 @@
 """
 import copy
 import json
-from py_animus.animus_logging import logger
+import importlib
+# from py_animus.animus_logging import logger
+import py_animus.animus_logging as animus_logger
 from py_animus.helpers import get_utc_timestamp, is_debug_set_in_environment
+
+
+class LoggerHelper:
+
+    def __init__(self):
+        self.logger_is_initialized = False
+        self.logger = None
+
+    def initialize(self):
+        if self.logger_is_initialized is False:
+            importlib.reload(animus_logger)
+            self.logger = animus_logger.logger
+
+    def log_info(self, message: str):
+        self.initialize()
+        self.logger.info(message)
+
+    def log_debug(self, message: str):
+        self.initialize()
+        self.logger.debug(message)
+
+    def log_error(self, message: str):
+        self.initialize()
+        self.logger.error(message)
+
+    def log_warning(self, message: str):
+        self.initialize()
+        self.logger.warning(message)
+
+    def log_warn(self, message: str):
+        self.log_warning(message=message)
+
+    def reload_logger(self):
+        importlib.reload(animus_logger)
+        self.logger = animus_logger.logger
 
 
 class Action:
@@ -149,15 +186,15 @@ class Values:
 
     def __init__(self):
         self.values = dict()
+        self.log_helper = LoggerHelper()
 
     def add_value(self, value: Value):
         self.values[value.name] = value
-        logger.debug('Added value {}'.format(value.name))
-        print('### Added value {}'.format(value.name))
+        self.log_helper.log_debug('Added value {}'.format(value.name))
 
     def find_value_by_name(self, name: str)->Value:
         if name not in self.values:
-            logger.error('Dump of current values keys: {}'.format(list(self.values.keys())))
+            self.log_helper.log_error('Dump of current values keys: {}'.format(list(self.values.keys())))
             raise Exception('Value named "{}" was not found'.format(name))
         return self.values[name]
     
@@ -165,17 +202,21 @@ class Values:
         if name in self.values:
             self.values.pop(name)
 
+    def reset_logger(self):
+        self.log_helper = LoggerHelper()
+        self.log_helper.reload_logger()
+
 
 class ScopedValues:
 
     def __init__(self, scope: str):
         self.scope = scope
         self.values = Values()
+        self.log_helper = LoggerHelper()
 
     def add_value(self, value: Value):
         self.values.add_value(value=value)
-        logger.debug('   Added value {} for scope {}'.format(value.name, self.scope))
-        print('###   Added value {} for scope {}'.format(value.name, self.scope))
+        self.log_helper.log_debug('   Added value {} for scope {}'.format(value.name, self.scope))
 
     def find_value_by_name(self, name: str)->Value:
         return self.values.find_value_by_name(name=name)
@@ -183,11 +224,17 @@ class ScopedValues:
     def remove_value(self, name: str):
         self.values.remove_value(name=name)
 
+    def reset_logger(self):
+        self.log_helper = LoggerHelper()
+        self.log_helper.reload_logger()
+        self.values.reset_logger()
+
 
 class AllScopedValues:
 
     def __init__(self) -> None:
         self.scoped_values_collection = dict()
+        self.log_helper = LoggerHelper()
 
     def add_scoped_values(self, scoped_values: ScopedValues, replace: bool=False):
         if scoped_values.scope not in self.scoped_values_collection:
@@ -195,8 +242,7 @@ class AllScopedValues:
         else:
             if replace is True:
                 self.scoped_values_collection[scoped_values.scope] = scoped_values
-        logger.debug('Added scoped values for scope {}'.format(scoped_values.scope))
-        print('### Added scoped values for scope {}'.format(scoped_values.scope))
+        self.log_helper.log_debug('Added scoped values for scope {}'.format(scoped_values.scope))
 
     def find_scoped_values(self, scope: str)->ScopedValues:
         if scope not in self.scoped_values_collection:
@@ -207,11 +253,16 @@ class AllScopedValues:
         current_scoped_values = self.find_scoped_values(scope=scope)
         current_scoped_values.add_value(value=value)
         self.add_scoped_values(scoped_values=copy.deepcopy(current_scoped_values), replace=True)
-        logger.debug('Scoped value named "{}" added for scope "{}"'.format(value.name, scope))
-        print('### Scoped value named "{}" added for scope "{}"'.format(value.name, scope))
+        self.log_helper.log_debug('Scoped value named "{}" added for scope "{}"'.format(value.name, scope))
 
     def clear(self):
         self.scoped_values_collection = dict()
+
+    def reset_logger(self):
+        self.log_helper = LoggerHelper()
+        self.log_helper.reload_logger()
+        for scope, scoped_values in self.scoped_values_collection.items():
+            scoped_values.reset_logger()
 
 
 class Variable:
@@ -251,10 +302,11 @@ class Variable:
         self.init_timestamp = get_utc_timestamp(with_decimal=False)
         self.debug = is_debug_set_in_environment()
         self.mask_in_logs = mask_in_logs
+        self.log_helper = LoggerHelper()
 
     def _log_debug(self, message):
         if self.debug is True:
-            logger.debug('[{}:{}] {}'.format(self.__class__.__name__, self.name, message))
+            self.log_helper.log_debug('[{}:{}] {}'.format(self.__class__.__name__, self.name, message))
 
     def set_value(self, value, reset_ttl: bool=True):
         """Set the value of the Variable.
@@ -320,9 +372,9 @@ class Variable:
     def log_value(self, value_if_expired=None, raise_exception_on_expired: bool=True, reset_timer_on_value_read: bool=False):
         value = self.get_value(value_if_expired=value_if_expired, raise_exception_on_expired=raise_exception_on_expired, reset_timer_on_value_read=reset_timer_on_value_read, for_logging=True)
         if is_debug_set_in_environment() is True:
-            logger.debug('Variable(name="{}", init_timestamp={}, ttl={}, mask_in_logs={}): "{}"'.format(self.name, self. init_timestamp, self.ttl, self.mask_in_logs, value))
+            self.log_helper.log_debug('Variable(name="{}", init_timestamp={}, ttl={}, mask_in_logs={}): "{}"'.format(self.name, self. init_timestamp, self.ttl, self.mask_in_logs, value))
         else:
-            logger.info('Variable(name="{}"): "{}"'.format(self.name, value))
+            self.log_helper.log_info('Variable(name="{}"): "{}"'.format(self.name, value))
     
     def to_dict(self, for_logging: bool=False):
         final_value = ''
@@ -340,6 +392,10 @@ class Variable:
         if self.ttl < 0:
             data['expires'] = 9999999999
         return data
+    
+    def reset_logger(self):
+        self.log_helper = LoggerHelper()
+        self.log_helper.reload_logger()
 
 
 class VariableCache:
@@ -356,6 +412,7 @@ class VariableCache:
           logger: An instance of logging.Logger used for logging (Optional, default is teh result from internal call to get_logger())
         """
         self.values = dict()
+        self.log_helper = LoggerHelper()
 
     def get_all_variable_names_staring_with(self, start_str: str)->list:
         names = list()
@@ -417,10 +474,10 @@ class VariableCache:
                 )
             )
         if variable_name not in self.values and raise_exception_on_not_found is True:
-            logger.debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to True'.format(variable_name))
+            self.log_helper.log_debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to True'.format(variable_name))
             raise Exception('Variable "{}" not found'.format(variable_name))
         elif variable_name not in self.values and raise_exception_on_not_found is False:
-            logger.debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to False - Returning default_value_if_not_found'.format(variable_name))
+            self.log_helper.log_debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to False - Returning default_value_if_not_found'.format(variable_name))
             return default_value_if_not_found
         return copy.deepcopy(self.values[variable_name].get_value(value_if_expired=value_if_expired, raise_exception_on_expired=raise_exception_on_expired, reset_timer_on_value_read=reset_timer_on_value_read, for_logging=for_logging))
 
@@ -490,7 +547,7 @@ class VariableCache:
 
     def delete_variable(self, variable_name: str):
         if variable_name in self.values:
-            logger.debug('[variable_name={}] Deleted'.format(variable_name))
+            self.log_helper.log_debug('[variable_name={}] Deleted'.format(variable_name))
             self.values.pop(variable_name)
 
     def to_dict(self, for_logging: bool=False):
@@ -505,6 +562,12 @@ class VariableCache:
     
     def clear(self):
         self.values = dict()
+
+    def reset_logger(self):
+        self.log_helper = LoggerHelper()
+        self.log_helper.reload_logger()
+        for variable_name, variable in self.values.items():
+            variable.reset_logger()
     
 
 variable_cache = VariableCache()
