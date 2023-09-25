@@ -6,6 +6,8 @@
     https://raw.githubusercontent.com/nicc777/verbacratis/main/LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt
 """
 
+import os
+import sys
 from py_animus.animus_logging import logger
 from py_animus.models import Action, actions, variable_cache, Variable
 from py_animus.models.extensions import ManifestBase
@@ -20,7 +22,7 @@ class Project(ManifestBase):   # pragma: no cover
         | workDirectory               | str     | Yes      | No Default                                  | A directory that will be created to store all temporary artifacts. The directory will be deleted once done.                                                    |
         | parentProjects              | list    | No       | Empty dict                                  | Any additional projects referenced here will be processed first.                                                                                               |
         | parentProjects.[n].name     | str     | Yes (1)  | No Default                                  | The project name                                                                                                                                               |
-        | parentProjects.[n].path     | str     | Yes (1)  | No Default                                  | Te path to the file containing the project manifest.                                                                                                           |
+        | parentProjects.[n].path     | str     | Yes (1)  | No Default                                  | Te path to the file or directory containing the project manifest. If the path is a directory, all Python files will be ingested.                               |
         | loggingConfig               | str     | No       | No Default                                  | Path to the manifest containing any "*Logging" type manifests                                                                                                  |
         | valuesConfig                | str     | No       | No Default                                  | Path to the manifest containing any "Values" type manifests                                                                                                    |
         | manifestFiles               | list    | Yes      | Empty list                                  | YAML files/URL's containing manifests to ingest. There must be at least ONE file/URL defined, even if it points to the same file/URL as this project manifest. |
@@ -35,6 +37,17 @@ class Project(ManifestBase):   # pragma: no cover
     def __init__(self, post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):
         super().__init__(post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
 
+    def _get_python_files_from_directory(self, target_dir: str)->list:
+        file_list = list()
+        files = os.listdir(target_dir)
+        for file in files:
+            if file not in ['__init__.py', '__pycache__']:
+                if file[-3:] != '.py':
+                    continue    # pragma: no cover
+                file_list.append(file)
+                logger.info('Added potential extension file "{}"'.format(file))
+        return file_list
+
     def implemented_manifest_differ_from_this_manifest(self)->bool:
         if 'manifestFiles' not in self.spec:
             raise Exception('Project manifest MUST contain "manifestFiles" with a list of manifest files to ingest and process.')
@@ -46,16 +59,23 @@ class Project(ManifestBase):   # pragma: no cover
         ###
         ### Process "extension_paths" in Spec
         ###
-        extension_paths = list()
+        extension_files = list()
+        
         if 'extensionPaths' in self.spec:
             if isinstance(self.spec['extensionPaths'], list):
                 for path in self.spec['extensionPaths']:
-                    if path not in extension_paths:
-                        extension_paths.append(path)
+                    if os.path.isdir(path):
+                        extension_files += self._get_python_files_from_directory(target_dir=path)
+                    else:
+                        if path.endswith('.py') is True:
+                            if path not in extension_files:
+                                extension_files.append(path)
+                        else:
+                            logger.warning('Extension file "{}" ignored as it is not a directory or a Python file.'.format(path))
         variable_cache.store_variable(
             variable=Variable(
-                name='{}'.format(self._var_name(var_name='PROJECT_EXTENSION_PATHS')),
-                initial_value=extension_paths
+                name='{}'.format(self._var_name(var_name='PROJECT_EXTENSION_FILES')),
+                initial_value=extension_files
             ),
             overwrite_existing=True
         )
