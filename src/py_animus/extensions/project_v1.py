@@ -7,10 +7,11 @@
 """
 
 import os
-import sys
-from py_animus.animus_logging import logger
+import importlib
+# from py_animus.animus_logging import logger
 from py_animus.models import Action, actions, variable_cache, Variable
 from py_animus.models.extensions import ManifestBase
+import py_animus.animus_logging as animus_logger
 
 
 class Project(ManifestBase):   # pragma: no cover
@@ -36,6 +37,42 @@ class Project(ManifestBase):   # pragma: no cover
 
     def __init__(self, post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):
         super().__init__(post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
+        self.logger = animus_logger.logger
+
+    def reset_logger(self):
+        self.logger = None
+        importlib.reload(animus_logger)
+        self.logger = animus_logger.logger
+        self.logger.info('Logger reloaded')
+
+    def collect_extension_files(self):
+        ###
+        ### Process "extension_paths" in Spec
+        ###
+        extension_files = list()
+        
+        if 'extensionPaths' in self.spec:
+            if isinstance(self.spec['extensionPaths'], list):
+                for extension_path in self.spec['extensionPaths']:
+                    if os.path.isdir(extension_path):
+                        extension_files += self._get_python_files_from_directory(target_dir=extension_path)
+                    else:
+                        if extension_path.endswith('.py') is True:
+                            if os.path.exists(extension_path):
+                                if extension_path not in extension_files:
+                                    extension_files.append(extension_path)
+                                    self.logger.info('Added extension file "{}"'.format(extension_path))
+                            else:
+                                self.logger.warning('Extension file "{}" ignored as it was not found on the filesystem.'.format(extension_path))
+                        else:
+                            self.logger.warning('Extension file "{}" ignored as it is not a directory or a Python file.'.format(extension_path))
+        variable_cache.store_variable(
+            variable=Variable(
+                name='{}'.format(self._var_name(var_name='PROJECT_EXTENSION_FILES')),
+                initial_value=extension_files
+            ),
+            overwrite_existing=True
+        )
 
     def _get_python_files_from_directory(self, target_dir: str)->list:
         file_list = list()
@@ -45,7 +82,7 @@ class Project(ManifestBase):   # pragma: no cover
                 if file[-3:] != '.py':
                     continue    # pragma: no cover
                 file_list.append(file)
-                logger.info('Added potential extension file "{}"'.format(file))
+                self.logger.info('Added potential extension file "{}"'.format(file))
         return file_list
 
     def implemented_manifest_differ_from_this_manifest(self)->bool:
@@ -55,30 +92,6 @@ class Project(ManifestBase):   # pragma: no cover
             raise Exception('Spec "manifestFiles" can not be NULL')
         if isinstance(self.spec['manifestFiles'], list) is False:
             raise Exception('Spec "manifestFiles" must be a list containing at least ONE file/URL to a manifest file')
-        
-        ###
-        ### Process "extension_paths" in Spec
-        ###
-        extension_files = list()
-        
-        if 'extensionPaths' in self.spec:
-            if isinstance(self.spec['extensionPaths'], list):
-                for path in self.spec['extensionPaths']:
-                    if os.path.isdir(path):
-                        extension_files += self._get_python_files_from_directory(target_dir=path)
-                    else:
-                        if path.endswith('.py') is True:
-                            if path not in extension_files:
-                                extension_files.append(path)
-                        else:
-                            logger.warning('Extension file "{}" ignored as it is not a directory or a Python file.'.format(path))
-        variable_cache.store_variable(
-            variable=Variable(
-                name='{}'.format(self._var_name(var_name='PROJECT_EXTENSION_FILES')),
-                initial_value=extension_files
-            ),
-            overwrite_existing=True
-        )
 
         done_action = Action.APPLY_DONE
         if actions.command == 'delete':
@@ -167,13 +180,13 @@ class Project(ManifestBase):   # pragma: no cover
         for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
             if action_name == 'Project Action' and expected_action == Action.APPLY_PENDING:
                 self._process_action()                
-        logger.info('Project Applied')
+        self.logger.info('Project Applied')
         return
     
     def delete_manifest(self):
         for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
             if action_name == 'Project Action' and expected_action == Action.DELETE_PENDING:
                 self._process_action()
-        logger.info('Project Deleted')
+        self.logger.info('Project Deleted')
         return
 

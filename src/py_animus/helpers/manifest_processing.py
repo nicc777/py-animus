@@ -175,9 +175,11 @@ def process_project(project_manifest_uri: str, project_name: str):
                 potential_logging_yaml_sections = extract_yaml_section_from_supplied_manifest_file(manifest_uri=logging_manifest)
                 _process_logging_sections(manifest_yaml_sections=potential_logging_yaml_sections)
             logger.info('   Logging processing for project "{}" completed'.format(project_instance.metadata['name']))
+            project_instance.reset_logger()
 
             # TODO Load Extensions
             logger.info('Extensions processing for project "{}" starting'.format(project_instance.metadata['name']))
+            project_instance.collect_extension_files()
             extension_files = variable_cache.get_value(
                 variable_name='{}PROJECT_EXTENSION_FILES'.format(project_instance_variables_base_name),
                 value_if_expired=list(),

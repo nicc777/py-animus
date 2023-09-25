@@ -16,7 +16,8 @@ spec:
   loggingConfig: https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-02/logging/demo-project-logging,yaml
   valuesConfig:
   - https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-02/values/demo-project-values.yaml
-  extensionPaths: []            # Additional third party extensions
+  extensionPaths:
+  - '/tmp/test_extensions/test_extension_v1.py'
   manifestFiles:                # Additional path to YAML manifests to parse for work
   - https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-02/manifests/common-manifests.yaml
   - https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-02/manifests/root-manifests.yaml
