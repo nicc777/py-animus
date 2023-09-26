@@ -17,7 +17,7 @@ from py_animus.models import all_scoped_values, variable_cache, scope, ScopedVal
 from py_animus.helpers.file_io import file_exists
 from py_animus.helpers.yaml_helper import spit_yaml_text_from_file_with_multiple_yaml_sections, load_from_str_and_ignore_custom_tags, parse_animus_formatted_yaml
 from py_animus.utils.http_requests_io import download_files
-from py_animus.extensions import UnitOfWork, execution_plan, ManifestBase, extensions
+from py_animus.extensions import UnitOfWork, execution_plan, extensions
 
 
 class ProjectExecutionTracker:
@@ -240,12 +240,11 @@ def process_project(project_manifest_uri: str, project_name: str):
                 raise_exception_on_not_found=False
             )
             for returned_class, kind in get_modules_in_package(files=extension_files):
-                # if isinstance(returned_class, ManifestBase) is False:
-                #     raise Exception('Incorrect Base Class')
                 extensions.add_extension(extension=returned_class)
                 logger.info('Added extension kind "{}"'.format(kind))
             
             logger.info('   Extensions processing for project "{}" completed'.format(project_instance.metadata['name']))
+            logger.debug('Extensions Ingested: {}'.format(str(extensions)))
 
             # Load manifest files and parse sections.
             logger.info('Manifest processing for project "{}" starting'.format(project_instance.metadata['name']))

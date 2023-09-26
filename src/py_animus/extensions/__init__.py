@@ -53,6 +53,27 @@ class AnimusExtensions:
                 if version in supported_versions:
                     return copy.deepcopy(self.extensions[idx])
         raise Exception('Extension kind "{}" of version "{}" was not found'.format(extension_kind, version))
+    
+    def to_dict(self):
+        data = dict()
+        for key in list(self.extensions.keys()):
+            kind, version = key.split(':')
+            if kind not in data:
+                data[kind] = list()
+            if version not in data[kind]:
+                data[kind].append(version)
+        for key in list(self.supported_versions_of_extensions.keys()):
+            kind, version = key.split(':')
+            if kind in data:
+                if version not in data[kind]:
+                    data[kind].append(version)
+        return data
+    
+    def __repr__(self) -> str:
+        return json.dumps(self.to_dict())
+    
+    def __str__(self) -> str:
+        return json.dumps(self.to_dict())
                 
 
 extensions = AnimusExtensions()
