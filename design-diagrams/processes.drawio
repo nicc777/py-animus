@@ -1,4 +1,4 @@
-<mxfile host="Electron" modified="2023-09-26T04:42:56.246Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.1.2 Chrome/106.0.5249.199 Electron/21.4.3 Safari/537.36" etag="OXnywYnUFRiSFQ8jabQZ" version="21.1.2" type="device">
+<mxfile host="Electron" modified="2023-09-26T04:45:45.012Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.1.2 Chrome/106.0.5249.199 Electron/21.4.3 Safari/537.36" etag="InRJe0Uz0ncktcsxJW-Q" version="21.1.2" type="device" pages="2">
   <diagram name="Project Init" id="9PZ8RRwFv8GzSiJsPlFz">
     <mxGraphModel dx="2924" dy="1194" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
@@ -220,6 +220,23 @@
         </mxCell>
         <mxCell id="WGlD0M0k0vVbys6D3SNf-53" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
           <mxGeometry x="210" y="2680" width="30" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="5NSbpUi4SQmXMqqBmFfI" name="Extension Processing">
+    <mxGraphModel dx="2074" dy="1194" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="TvDHF0SMNIn1CvHtueFF-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;dashed=1;" edge="1" parent="1" source="TvDHF0SMNIn1CvHtueFF-1" target="TvDHF0SMNIn1CvHtueFF-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="TvDHF0SMNIn1CvHtueFF-1" value="determine_actions()" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="240" y="400" width="320" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="TvDHF0SMNIn1CvHtueFF-2" value="implemented_manifest_differ_from_this_manifest()" style="rounded=1;whiteSpace=wrap;html=1;absoluteArcSize=1;arcSize=14;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="240" y="240" width="320" height="80" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

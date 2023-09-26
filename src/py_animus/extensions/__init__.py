@@ -116,6 +116,7 @@ class UnitOfWork:
                     scope
                 )
             )
+            self.work_instance.determine_actions()
             if action == 'apply':
                 if 'skipApplyAll' in self.work_instance.metadata:
                     if self.work_instance.metadata['skipApplyAll'] is True:

@@ -65,25 +65,29 @@ class TestExtension(ManifestBase):   # pragma: no cover
         super().__init__(post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
 
     def implemented_manifest_differ_from_this_manifest(self)->bool:
+        self.log(message='NOW WE DETERMINE WHAT WAS PREVIOUSLY DONE COMPARED TO WHAT IS CONFIGURED IN THE MANIFEST TO BE DONE...', level='info')
         if actions.get_action_status(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Test Action') == Action.APPLY_DONE:
             return False
         return True
     
     def determine_actions(self)->list:
+        self.log(message='WE WILL NOW FIGURE OUT WHAT NEEDS TO BE DONE DONE...', level='info')
         self.register_action(action_name='Test Action', initial_status=Action.UNKNOWN)
         if self.implemented_manifest_differ_from_this_manifest() is True:
             self.register_action(action_name='Test Action', initial_status=Action.APPLY_PENDING)
         return actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name'])
 
-    def apply_manifest(self): 
+    def apply_manifest(self):
+        self.log(message='APPLY CALLED...', level='info')
         for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
             if action_name == 'Test Action' and expected_action == Action.APPLY_PENDING:
-                self._configure_logging()
+                self.log(message='SOME ACTUAL WORK IS NOW BEING DONE...', level='info')
                 actions.add_or_update_action(action=Action(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Test Action', action_status=Action.APPLY_DONE))
         self.log(message='TestExtension done', level='info')
         return
     
     def delete_manifest(self):
+        self.log(message='DELETE CALLED...', level='info')
         return # This test does not have any delete action
 """
 
