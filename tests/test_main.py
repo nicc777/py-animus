@@ -134,18 +134,18 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
         logger.debug('TEST DEBUG')
         self.assertIsNotNone(result)
         self.assertTrue(result)
-        # self._verify_values()
-        # self.assertTrue(os.path.exists('/tmp/test.log'))
+        self._verify_values()
+        self.assertTrue(os.path.exists('/tmp/test.log'))
 
     @patch.dict('os.environ', {'DEBUG': 'e'})
     def test_basic_init_from_http_server(self):
-        result = run_main(cli_parameter_overrides=['animus.py', 'apply', 'http://{}:{}/'.format(host_name_01, server_port_01), 'project', 'sandbox1'])
+        result = run_main(cli_parameter_overrides=['animus.py', 'apply', 'http://{}:{}/'.format(host_name_01, server_port_01), 'project-1', 'sandbox1'])
         logger.info('TEST INFO')
         logger.debug('TEST DEBUG')
         self.assertIsNotNone(result)
         self.assertTrue(result)
-        # self._verify_values()
-        # self.assertTrue(os.path.exists('/tmp/test.log'))
+        self._verify_values()
+        self.assertTrue(os.path.exists('/tmp/test.log'))
 
     # @patch.dict('os.environ', {'DEBUG': 'e'})
     def test_complex_01_init_from_local_file(self):

@@ -13,11 +13,11 @@
 | src/py\_animus/extensions/syslog\_handler\_logging\_v1.py   |        7 |        0 |    100% |
 | src/py\_animus/helpers/\_\_init\_\_.py                      |       25 |        0 |    100% |
 | src/py\_animus/helpers/file\_io.py                          |      130 |        7 |     95% |
-| src/py\_animus/helpers/manifest\_processing.py              |      186 |       19 |     90% |
+| src/py\_animus/helpers/manifest\_processing.py              |      186 |       22 |     88% |
 | src/py\_animus/helpers/utils.py                             |       40 |        0 |    100% |
 | src/py\_animus/helpers/yaml\_helper.py                      |      236 |       32 |     86% |
 | src/py\_animus/models/\_\_init\_\_.py                       |      326 |       42 |     87% |
 | src/py\_animus/models/extensions.py                         |      108 |       21 |     81% |
 | src/py\_animus/utils/\_\_init\_\_.py                        |       14 |        0 |    100% |
 | src/py\_animus/utils/http\_requests\_io.py                  |       18 |        0 |    100% |
-|                                                   **TOTAL** | **1374** |  **176** | **87%** |
+|                                                   **TOTAL** | **1374** |  **179** | **87%** |
