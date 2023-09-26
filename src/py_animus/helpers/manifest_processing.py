@@ -229,7 +229,7 @@ def process_project(project_manifest_uri: str, project_name: str):
                 project_instance.reset_logger()
             logger.info('   Logging processing for project "{}" completed'.format(project_instance.metadata['name']))
 
-            # TODO Load Extensions
+            # Load Extensions
             logger.info('Extensions processing for project "{}" starting'.format(project_instance.metadata['name']))
             project_instance.collect_extension_files()
             extension_files = variable_cache.get_value(
