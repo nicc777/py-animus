@@ -8,12 +8,11 @@
 
 import copy
 from py_animus.animus_logging import logger
+from py_animus.models import variable_cache, scope, actions, Variable
 
 
 def initialize_animus(cli_arguments: tuple):
     logger.info('Init Start')
-
-    from py_animus.models import variable_cache, scope, actions, Variable
     
     actions.set_command(command='{}'.format(cli_arguments[1]))
     start_manifest = cli_arguments[2]

@@ -56,6 +56,7 @@ class TestHttpServerBasic(BaseHTTPRequestHandler):  # pragma: no cover
 test_extension_manifest = """# A minimalistic test extension that does not really do anything.
 from py_animus.animus_logging import logger, add_handler
 from py_animus.models.extensions import ManifestBase
+from py_animus.models import all_scoped_values, variable_cache, Action, actions
 
 
 class TestExtension(ManifestBase):   # pragma: no cover
@@ -79,7 +80,7 @@ class TestExtension(ManifestBase):   # pragma: no cover
             if action_name == 'Test Action' and expected_action == Action.APPLY_PENDING:
                 self._configure_logging()
                 actions.add_or_update_action(action=Action(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Test Action', action_status=Action.APPLY_DONE))
-        logger.info('TestExtension done')
+        self.log(message='TestExtension done', level='info')
         return
     
     def delete_manifest(self):
@@ -147,7 +148,7 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
         # self._verify_values()
         # self.assertTrue(os.path.exists('/tmp/test.log'))
 
-    @patch.dict('os.environ', {'DEBUG': 'e'})
+    # @patch.dict('os.environ', {'DEBUG': 'e'})
     def test_complex_01_init_from_local_file(self):
         result = run_main(cli_parameter_overrides=['animus.py', 'apply', example_project_manifest_02, 'project-child', 'sandbox1'])
         logger.info('TEST INFO')
