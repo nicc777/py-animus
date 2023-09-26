@@ -18,7 +18,8 @@ def run_main(cli_parameter_overrides: list=list()):
     from py_animus.utils import initialize_animus
     start_manifest, project_name = initialize_animus(cli_arguments=cli_arguments)
 
-    from py_animus.helpers.manifest_processing import process_project
+    from py_animus.helpers.manifest_processing import process_project, tracker
+    tracker.reset()
     process_project(
         project_manifest_uri=start_manifest,
         project_name=project_name

@@ -20,6 +20,27 @@ from py_animus.utils.http_requests_io import download_files
 from py_animus.extensions import UnitOfWork, execution_plan, ManifestBase, extensions
 
 
+class ProjectExecutionTracker:
+
+    def __init__(self):
+        self.executed_projects = list()
+
+    def mark_project_as_executed(self, project_name: str):
+        if project_name not in self.executed_projects:
+            self.executed_projects.append(project_name)
+
+    def can_execute_project(self, project_name: str):
+        if project_name in self.executed_projects:
+            return False
+        return True
+    
+    def reset(self):
+        self.executed_projects = list()
+
+
+tracker = ProjectExecutionTracker()
+
+
 def _parse_values_data(manifest_data: dict):
     converted_data = dict((k.lower(),v) for k,v in manifest_data.items()) # Convert keys to lowercase
     scoped_values = ScopedValues(scope=scope.value)
@@ -155,6 +176,11 @@ def process_project(project_manifest_uri: str, project_name: str):
         raise Exception('No projects found in the supplied Manifest file')
     for yaml_section in yaml_sections['Project']:
         project_instance = parse_animus_formatted_yaml(raw_yaml_str=yaml_section)
+
+        if tracker.can_execute_project(project_name=project_instance.metadata['name']) is False:
+            return
+        tracker.mark_project_as_executed(project_name=project_instance.metadata['name'])
+
         project_instance_variables_base_name = '{}:{}:{}:'.format(
             project_instance.__class__.__name__,
             project_instance.metadata['name'],
@@ -250,4 +276,5 @@ def process_project(project_manifest_uri: str, project_name: str):
             logger.debug('Collected variable names: {}'.format(project_instance_variable_names))
         else:
             logger.info('Project "{}" not in scope for processing'.format(project_instance.metadata['name']))
+    return
 

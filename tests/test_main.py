@@ -147,7 +147,7 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
         # self._verify_values()
         # self.assertTrue(os.path.exists('/tmp/test.log'))
 
-    # @patch.dict('os.environ', {'DEBUG': 'e'})
+    @patch.dict('os.environ', {'DEBUG': 'e'})
     def test_complex_01_init_from_local_file(self):
         result = run_main(cli_parameter_overrides=['animus.py', 'apply', example_project_manifest_02, 'project-child', 'sandbox1'])
         logger.info('TEST INFO')
