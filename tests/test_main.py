@@ -92,6 +92,7 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
 
     def setUp(self):
         print('-'*80)
+        shutil.rmtree('/tmp/test_extensions/', ignore_errors=True)
         self.tmp_dir = tempfile.TemporaryDirectory()
         os.mkdir('/tmp/test_extensions')
         all_scoped_values.clear()
@@ -101,9 +102,7 @@ class TestClassMainBasic01(unittest.TestCase):    # pragma: no cover
             f.write(test_extension_manifest)
 
     def tearDown(self):
-        # os.rmdir(self.tmp_dir.name)
         shutil.rmtree(self.tmp_dir.name, ignore_errors=True)
-        shutil.rmtree('/tmp/test_extensions/', ignore_errors=True)
         if os.path.exists('/tmp/test.log') is True:
             os.unlink('/tmp/test.log')
 

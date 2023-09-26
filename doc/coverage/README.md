@@ -1,1 +1,23 @@
-No source for code: '/tmp/test_extensions/test_extension_v1.py'.
+| Name                                                        |    Stmts |     Miss |   Cover |
+|------------------------------------------------------------ | -------: | -------: | ------: |
+| /tmp/test\_extensions/test\_extension\_v1.py                |        3 |        0 |    100% |
+| src/py\_animus/\_\_init\_\_.py                              |       34 |        9 |     74% |
+| src/py\_animus/animus.py                                    |       13 |        0 |    100% |
+| src/py\_animus/animus\_logging/\_\_init\_\_.py              |       33 |        2 |     94% |
+| src/py\_animus/extensions/\_\_init\_\_.py                   |      172 |       44 |     74% |
+| src/py\_animus/extensions/datagram\_handler\_logging\_v1.py |        5 |        0 |    100% |
+| src/py\_animus/extensions/file\_handler\_logging\_v1.py     |        5 |        0 |    100% |
+| src/py\_animus/extensions/project\_v1.py                    |        5 |        0 |    100% |
+| src/py\_animus/extensions/shell\_script\_v1.py              |        9 |        0 |    100% |
+| src/py\_animus/extensions/stream\_handler\_logging\_v1.py   |        5 |        0 |    100% |
+| src/py\_animus/extensions/syslog\_handler\_logging\_v1.py   |        7 |        0 |    100% |
+| src/py\_animus/helpers/\_\_init\_\_.py                      |       25 |        0 |    100% |
+| src/py\_animus/helpers/file\_io.py                          |      130 |        7 |     95% |
+| src/py\_animus/helpers/manifest\_processing.py              |      186 |       19 |     90% |
+| src/py\_animus/helpers/utils.py                             |       40 |        0 |    100% |
+| src/py\_animus/helpers/yaml\_helper.py                      |      236 |       32 |     86% |
+| src/py\_animus/models/\_\_init\_\_.py                       |      326 |       42 |     87% |
+| src/py\_animus/models/extensions.py                         |      108 |       21 |     81% |
+| src/py\_animus/utils/\_\_init\_\_.py                        |       14 |        0 |    100% |
+| src/py\_animus/utils/http\_requests\_io.py                  |       18 |        0 |    100% |
+|                                                   **TOTAL** | **1374** |  **176** | **87%** |
