@@ -25,7 +25,7 @@ def run_main(cli_parameter_overrides: list=list()):
         project_name=project_name
     )
 
-    logger.info('Ready to rumble!')
+    logger.info('ANIMUS DONE')
 
     return True
 

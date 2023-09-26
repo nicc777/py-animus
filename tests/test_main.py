@@ -79,7 +79,7 @@ class TestExtension(ManifestBase):   # pragma: no cover
             if action_name == 'Test Action' and expected_action == Action.APPLY_PENDING:
                 self._configure_logging()
                 actions.add_or_update_action(action=Action(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Test Action', action_status=Action.APPLY_DONE))
-        logger.info('SyslogHandlerLogging configuration done')
+        logger.info('TestExtension done')
         return
     
     def delete_manifest(self):

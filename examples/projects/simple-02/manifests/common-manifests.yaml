@@ -18,3 +18,14 @@ spec:
   stripNewline: True
   convertRepeatingSpaces: true
   stripLeadingTrailingSpaces: true
+---
+kind: TestExtension
+version: v1
+metadata:
+  name: test1
+  skipDeleteAll: true
+  environments:
+  - sandbox1
+  - sandbox2
+spec:
+  test: true
