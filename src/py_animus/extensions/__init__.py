@@ -14,6 +14,7 @@ from py_animus.extensions.rotating_file_handler_logging_v1 import RotatingFileHa
 from py_animus.extensions.syslog_handler_logging_v1 import SyslogHandlerLogging as SyslogHandlerLoggingV1
 from py_animus.extensions.datagram_handler_logging_v1 import DatagramHandlerLogging as DatagramHandlerLoggingV1
 from py_animus.extensions.shell_script_v1 import ShellScript as ShellScriptV1
+from py_animus.extensions.cli_input_prompt_v1 import CliInputPrompt as CliInputPromptV1
 from py_animus.extensions.project_v1 import Project as ProjectV1
 from py_animus.animus_logging import logger
 from py_animus.models.extensions import ManifestBase
@@ -86,8 +87,8 @@ extensions.add_extension(extension=RotatingFileHandlerLoggingV1)
 extensions.add_extension(extension=SyslogHandlerLoggingV1)
 extensions.add_extension(extension=DatagramHandlerLoggingV1)
 extensions.add_extension(extension=ShellScriptV1)
+extensions.add_extension(extension=CliInputPromptV1)
 extensions.add_extension(extension=ProjectV1)
-
 
 
 class UnitOfWork:
