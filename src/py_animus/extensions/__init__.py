@@ -10,6 +10,7 @@ import copy
 import json
 from py_animus.extensions.stream_handler_logging_v1 import StreamHandlerLogging as StreamHandlerLoggingV1
 from py_animus.extensions.file_handler_logging_v1 import FileHandlerLogging as FileHandlerLoggingV1
+from py_animus.extensions.rotating_file_handler_logging_v1 import RotatingFileHandlerLogging as RotatingFileHandlerLoggingV1
 from py_animus.extensions.syslog_handler_logging_v1 import SyslogHandlerLogging as SyslogHandlerLoggingV1
 from py_animus.extensions.datagram_handler_logging_v1 import DatagramHandlerLogging as DatagramHandlerLoggingV1
 from py_animus.extensions.shell_script_v1 import ShellScript as ShellScriptV1
@@ -81,6 +82,7 @@ extensions = AnimusExtensions()
 # Add standard extensions
 extensions.add_extension(extension=StreamHandlerLoggingV1)
 extensions.add_extension(extension=FileHandlerLoggingV1)
+extensions.add_extension(extension=RotatingFileHandlerLoggingV1)
 extensions.add_extension(extension=SyslogHandlerLoggingV1)
 extensions.add_extension(extension=DatagramHandlerLoggingV1)
 extensions.add_extension(extension=ShellScriptV1)
