@@ -1,3 +1,10 @@
+"""
+    Copyright (c) 2023. All rights reserved. NS Coetzee <nicc777@gmail.com>
+
+    This file is licensed under GPLv3 and a copy of the license should be included in the project (look for the file 
+    called LICENSE), or alternatively view the license text at 
+    https://raw.githubusercontent.com/nicc777/verbacratis/main/LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt
+"""
 
 from py_animus.models import all_scoped_values, variable_cache, Action, actions, Variable
 from py_animus.animus_logging import logger, add_handler
@@ -10,20 +17,21 @@ import chardet
 import os
 
 
-class ShellScript(ManifestBase):    # pragma: no cover
-    """Executes a shell script.
+class ShellScript(ManifestBase):    # pragma: no cover    
+    """
+        Spec fields:
 
-Output from STDOUT will be stored in a `Variable` with `:STDOUT` appended to the
-variable name
-
-Output from STDERR will be stored in a `Variable` with `:STDERR` appended to the
-variable name
-
-Both STDOUT and STDERR will be stored as strings. No output will result in an
-empty sting.
-
-The exit status will be stored in a `Variable` with `:EXIT_CODE` appended to the
-variable name
+        | Field                        | Type     | Required | Default Value                               | Description                                                                                                                                                                                                                                     |
+        |------------------------------|----------|----------|---------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|        
+        | `shellInterpreter`           |  str     | No       | `sh`                                        | The shell interpreter to select in the shabang line. Supported values: `sh`, `zsh`, `perl`, `python` and `bash`                                                                                                                                 |
+        | `source`                     |  dict    | Yes      | n/a                                         | Defines the script source                                                                                                                                                                                                                       |
+        | `source.type`                |  str     | No       | `inline`                                    | Select the source type, which can be either `filePath` that points to an existing script file on the local file system, or `inLine` with the script source defined in the `spec.source.value` field                                             |
+        | `source.value`               |  str     | No       | `exit 0`                                    | If `spec.source.type` has a value of `inLine` then the value here will be assumed to be the script content of that type. if `spec.source.type` has a value of `filePath` then this value must point to an existing file on the local filesystem |
+        | `workDir.path`               |  str     | No       | System Generated                            | An optional path to a working directory. The extension will create temporary files (if needed) in this directory and execute them from here.                                                                                                    |
+        | `convertOutputToText`        |  bool    | No       | False                                       | Normally the STDOUT and STDERR will be binary encoded. Setting this value to true will convert those values to a normal string. Default=False                                                                                                   |
+        | `stripNewline`               |  bool    | No       | False                                       | Output may include newline or other line break characters. Setting this value to true will remove newline characters. Default=False                                                                                                             |
+        | `convertRepeatingSpaces`     |  bool    | No       | False                                       | Output may contain more than one repeating space or tab characters. Setting this value to true will replace these with a single space. Default=False                                                                                            |
+        | `stripLeadingTrailingSpaces` |  bool    | No       | False                                       | Output may contain more than one repeating space or tab characters. Setting this value to true will replace these with a single space. Default=False                                                                                            |
 
     """
 
@@ -163,8 +171,7 @@ variable name
                 variable_cache.store_variable(
                     variable=Variable(
                         name=self._var_name(var_name='EXIT_CODE'),
-                        initial_value=-999,
-                        logger=self.logger
+                        initial_value=-999
                     ),
                     overwrite_existing=True
                 )
@@ -172,8 +179,7 @@ variable name
                 variable_cache.store_variable(
                     variable=Variable(
                         name=self._var_name(var_name='STDOUT'),
-                        initial_value=None,
-                        logger=self.logger
+                        initial_value=None
                     ),
                     overwrite_existing=True
                 )
@@ -181,8 +187,7 @@ variable name
                 variable_cache.store_variable(
                     variable=Variable(
                         name=self._var_name(var_name='STDERR'),
-                        initial_value=None,
-                        logger=self.logger
+                        initial_value=None
                     ),
                     overwrite_existing=True
                 )
@@ -282,6 +287,7 @@ variable name
         ### DONE
         ###
         self._del_file(file=work_file)
+        actions.add_or_update_action(action=Action(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Run ShellScript', action_status=Action.APPLY_DONE))
         return
 
     def delete_manifest(self):
