@@ -15,6 +15,7 @@ from py_animus.extensions.syslog_handler_logging_v1 import SyslogHandlerLogging 
 from py_animus.extensions.datagram_handler_logging_v1 import DatagramHandlerLogging as DatagramHandlerLoggingV1
 from py_animus.extensions.shell_script_v1 import ShellScript as ShellScriptV1
 from py_animus.extensions.cli_input_prompt_v1 import CliInputPrompt as CliInputPromptV1
+from py_animus.extensions.web_download_file_v1 import WebDownloadFile as WebDownloadFileV1
 from py_animus.extensions.project_v1 import Project as ProjectV1
 from py_animus.animus_logging import logger
 from py_animus.models.extensions import ManifestBase
@@ -43,7 +44,7 @@ class AnimusExtensions:
             self.extensions[idx] = extension
         if idx not in self.supported_versions_of_extensions:
             self.supported_versions_of_extensions[idx] = copy.deepcopy(initialized_extension.supported_versions)
-        logger.info('Extension kind "{}" and version "{}" added to Animus Extensions'.format(initialized_extension_kind, version))
+        logger.debug('Extension kind "{}" and version "{}" added to Animus Extensions'.format(initialized_extension_kind, version))
 
     def find_extension_that_supports_version(self, extension_kind: str, version: str)->ManifestBase:
         idx = '{}:{}'.format(extension_kind, version)
@@ -88,6 +89,7 @@ extensions.add_extension(extension=SyslogHandlerLoggingV1)
 extensions.add_extension(extension=DatagramHandlerLoggingV1)
 extensions.add_extension(extension=ShellScriptV1)
 extensions.add_extension(extension=CliInputPromptV1)
+extensions.add_extension(extension=WebDownloadFileV1)
 extensions.add_extension(extension=ProjectV1)
 
 
