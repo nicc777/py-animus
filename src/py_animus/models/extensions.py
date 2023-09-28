@@ -11,9 +11,9 @@ import json
 import hashlib
 import yaml
 import os
-from py_animus.helpers import get_utc_timestamp, is_debug_set_in_environment
+from py_animus.helpers import is_debug_set_in_environment
 from py_animus.animus_logging import logger
-from py_animus.models import actions, Action, scope
+from py_animus.models import actions, Action, scope, variable_cache
 
 
 SUPPORTED_TYPES = (
@@ -21,7 +21,7 @@ SUPPORTED_TYPES = (
     int,
     float,
     list,
-    dict
+    dict,
 )
 
 
@@ -167,6 +167,40 @@ class ManifestBase:
             scope.value,
             var_name
         )
+
+    def resolve_all_pending_variables(self, iterable):
+        resolved_iterable = None
+        if isinstance(iterable, dict):
+            resolved_iterable = dict()
+            for k,v in iterable.items():
+                if isinstance(v, str):
+                    if v.startswith('!Variable'):
+                        variable_name = v.split(' ')[1]
+                        self.log(message='Resolving pending variable named "{}"'.format(variable_name), level='debug')
+                        resolved_iterable[k] = variable_cache.get_value(variable_name=variable_name, unresolved_variables_returns_original_reference=True)
+                    else:
+                        resolved_iterable[k] = v
+                elif isinstance(v, dict) or isinstance(v, list) or isinstance(v, tuple):
+                    resolved_iterable[k] = self.resolve_all_pending_variables(iterable=v)
+                else:
+                    resolved_iterable[k] = v
+        elif isinstance(iterable, list) or isinstance(iterable, tuple):
+            resolved_iterable = list()
+            for v in iterable:
+                if isinstance(v, str):
+                    if v.startswith('!Variable'):
+                        variable_name = v.split(' ')[1]
+                        self.log(message='Resolving pending variable named "{}"'.format(variable_name), level='debug')
+                        resolved_iterable.append(variable_cache.get_value(variable_name=variable_name, unresolved_variables_returns_original_reference=True))
+                    else:
+                        resolved_iterable.append(v)
+                elif isinstance(v, dict) or isinstance(v, list) or isinstance(v, tuple):
+                    resolved_iterable.append(self.resolve_all_pending_variables(iterable=v))
+                else:
+                    resolved_iterable.append(v)
+            if isinstance(iterable, tuple):
+                resolved_iterable = tuple(resolved_iterable)
+        return resolved_iterable
 
     def register_action(self, action_name: str, initial_status: str=Action.UNKNOWN):
         """

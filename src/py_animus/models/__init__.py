@@ -442,7 +442,8 @@ class VariableCache:
             raise_exception_on_not_found: bool=True,
             default_value_if_not_found=None,
             init_with_default_value_if_not_found: bool=False,
-            for_logging: bool=False
+            for_logging: bool=False,
+            unresolved_variables_returns_original_reference: bool=True
         ):
         """Get the value of a stored Variable.
 
@@ -475,7 +476,11 @@ class VariableCache:
             )
         if variable_name not in self.values and raise_exception_on_not_found is True:
             self.log_helper.log_debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to True'.format(variable_name))
-            raise Exception('Variable "{}" not found'.format(variable_name))
+            if unresolved_variables_returns_original_reference is True:
+                return '!Variable {}'.format(variable_name)
+                # return PendingVariable(original_variable_name=variable_name)
+            else:
+                raise Exception('Variable "{}" not found'.format(variable_name))
         elif variable_name not in self.values and raise_exception_on_not_found is False:
             self.log_helper.log_debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to False - Returning default_value_if_not_found'.format(variable_name))
             return default_value_if_not_found

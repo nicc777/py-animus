@@ -264,8 +264,12 @@ def process_project(project_manifest_uri: str, project_name: str):
             # The idea now is that the project extension sets various variables for next actions
             execution_plan.do_work(scope=scope.value, action=actions.command)
             if actions.command == 'apply':
+                project_instance.metadata = project_instance.resolve_all_pending_variables(iterable=copy.deepcopy(project_instance.metadata))
+                project_instance.spec = project_instance.resolve_all_pending_variables(iterable=copy.deepcopy(project_instance.spec))
                 project_instance.apply_manifest()
             elif actions.command == 'delete':
+                project_instance.metadata = project_instance.resolve_all_pending_variables(iterable=copy.deepcopy(project_instance.metadata))
+                project_instance.spec = project_instance.resolve_all_pending_variables(iterable=copy.deepcopy(project_instance.spec))
                 project_instance.delete_manifest()
             else:
                 raise Exception('Unrecognized Command "{}" - expected either "apply" or "delete"'.format(actions.command))
