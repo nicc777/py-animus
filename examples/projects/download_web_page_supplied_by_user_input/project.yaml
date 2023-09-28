@@ -1,0 +1,9 @@
+---
+kind: Project
+version: v1
+metadata:
+  name: web-file-download
+spec:
+  loggingConfig: https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/download_web_page_supplied_by_user_input/logging.yaml
+  manifestFiles:
+  - https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/download_web_page_supplied_by_user_input/tasks.yaml

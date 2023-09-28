@@ -31,7 +31,6 @@ class CliInputPrompt(ManifestBase):
     def __init__(self, post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):
         super().__init__(post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
 
-
     def _validate(self):
         if self.spec is None:
             self.spec = dict()

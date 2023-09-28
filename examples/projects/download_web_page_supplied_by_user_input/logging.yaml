@@ -1,0 +1,9 @@
+---
+kind: StreamHandlerLogging
+version: v1
+metadata:
+  name: StreamHandler
+spec:
+  level: 'debug'
+  # see https://docs.python.org/3/library/logging.html#logrecord-attributes
+  loggingFormat: 'EXAMPLE: %(levelname)s - %(filename)s:%(funcName)s:%(lineno)d - %(message)s'
