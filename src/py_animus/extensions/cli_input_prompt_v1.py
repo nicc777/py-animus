@@ -190,5 +190,5 @@ class CliInputPrompt(ManifestBase):
         return
 
     def delete_manifest(self):
-        
+        self.apply_manifest()
         return
