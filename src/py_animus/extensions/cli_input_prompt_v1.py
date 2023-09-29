@@ -43,7 +43,7 @@ class CliInputPrompt(ManifestBase):
             default_value_if_not_found=False,
             raise_exception_on_expired=False,
             raise_exception_on_not_found=False
-        ):
+        ) is False:
 
             self.log(message='Not Yet Validated', level='debug')
 

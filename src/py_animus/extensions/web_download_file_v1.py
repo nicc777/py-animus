@@ -365,7 +365,7 @@ class WebDownloadFile(ManifestBase):
         if effective_method is not None:
             result = effective_method(**parameters)
             if result is True:
-                self._set_variables(all_ok=True, deleted=False, variable_cache=variable_cache)
+                self._set_variables(all_ok=True, deleted=False)
             else:
                 raise Exception('Failed to download "{}" to file "{}"'.format(url, target_file))
         else:
@@ -386,5 +386,5 @@ class WebDownloadFile(ManifestBase):
                 self.log(message='   Target file "{}" not deleted as it is not a file'.format(self.spec['targetOutputFile']), level='info')
         else:
             self.log(message='   Target file "{}" already deleted'.format(self.spec['targetOutputFile']), level='info')
-        self._set_variables(all_ok=False, deleted=True, variable_cache=variable_cache)
+        self._set_variables(all_ok=False, deleted=True)
         return

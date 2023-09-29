@@ -123,9 +123,9 @@ class UnitOfWork:
             )
             self.work_instance.metadata = self.work_instance.resolve_all_pending_variables(iterable=copy.deepcopy(self.work_instance.metadata))
             self.work_instance.spec = self.work_instance.resolve_all_pending_variables(iterable=copy.deepcopy(self.work_instance.spec))
+            self.work_instance.determine_actions()
             logger.debug('Final Resolved Metadata : "{}"'.format(json.dumps(self.work_instance.metadata, default=str)))
             logger.debug('Final Resolved Spec     : "{}"'.format(json.dumps(self.work_instance.spec, default=str)))
-            self.work_instance.determine_actions()
             if action == 'apply':
                 if 'skipApplyAll' in self.work_instance.metadata:
                     if self.work_instance.metadata['skipApplyAll'] is True:
