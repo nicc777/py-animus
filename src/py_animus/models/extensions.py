@@ -159,6 +159,14 @@ class ManifestBase:
         self.target_environments = ['default',]
         self.original_manifest = dict()
         self.pending_action_description = 'No pending actions'
+        self.done_status_values = (
+            Action.APPLY_ABORTED_WITH_ERRORS,
+            Action.APPLY_DONE,
+            Action.APPLY_SKIP,
+            Action.DELETE_ABORTED_WITH_ERRORS,
+            Action.DELETE_DONE,
+            Action.DELETE_SKIP,
+        )
 
     def _var_name(self, var_name: str):
         return '{}:{}:{}:{}'.format(

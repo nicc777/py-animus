@@ -159,7 +159,7 @@ class Actions:
     def get_action_status(self, manifest_kind: str, manifest_name: str, action_name: str)->str:
         idx = '{}:{}:{}'.format(manifest_kind, manifest_name, action_name)
         if idx not in self.actions:
-            raise Exception('No action status found for kind "{}" named "{}" for action name "{}"').format(manifest_kind, manifest_name, action_name)
+            return Action.UNKNOWN
         return self.actions[idx].current_status
     
     def get_progress(self)->float:

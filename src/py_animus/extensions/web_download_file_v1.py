@@ -97,13 +97,21 @@ class WebDownloadFile(ManifestBase):
         return False
     
     def determine_actions(self):
-        try:
-            if actions.get_action_status(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Download File') == Action.APPLY_DONE:
-                pass
-        except:
+        if 'skipDeleteAll' in self.metadata:
+            if self.metadata['skipDeleteAll'] is True:
+                self.register_action(action_name='Download File', initial_status=Action.DELETE_SKIP)
+        if 'skipApplyAll' in self.metadata:
+            if self.metadata['skipApplyAll'] is True:
+                self.register_action(action_name='Download File', initial_status=Action.APPLY_SKIP)
+        if actions.get_action_status(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Download File') == Action.UNKNOWN:
             if self.implemented_manifest_differ_from_this_manifest() is True:
-                self.register_action(action_name='Download File', initial_status=Action.APPLY_PENDING)
-        return actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name'])
+                if actions.command == 'apply':
+                    self.register_action(action_name='Download File', initial_status=Action.APPLY_PENDING)
+                elif actions.command == 'delete':
+                    self.register_action(action_name='Download File', initial_status=Action.DELETE_PENDING)
+                else:
+                    raise Exception('Unknown or unsupported command for this manifest kind "{}"'.format(self.kind))
+        return 
 
     def _build_proxy_dict(self, proxy_host: str, proxy_username: str, proxy_password: str)->dict:
         proxies = dict()
@@ -188,16 +196,17 @@ class WebDownloadFile(ManifestBase):
     def apply_manifest(self):
         self.log(message='APPLY CALLED', level='info')
 
-        for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
-            if action_name == 'Download File' and expected_action == Action.APPLY_DONE:
-                self.log(message='   Download File already executed', level='info')
-                return
+        download_file_action_status = actions.get_action_status(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Download File')
+        self.log(message='download_file_action_status={}'.format(download_file_action_status), level='debug')
+        if download_file_action_status in self.done_status_values:
+            self.log(message='   Action ignored because of status "{}"'.format(download_file_action_status), level='info')
+            return
 
         url = self.spec['sourceUrl']
         target_file = self.spec['targetOutputFile']
         self.log(message='   Downloading URL "{}" to target file "{}"'.format(url, target_file), level='info')
 
-        remote_file_size = variable_cache.get_value(variable_name=self._var_name(var_name='CONTENT_LENGTH'), raise_exception_on_expired=True, raise_exception_on_not_found=True)
+        remote_file_size = variable_cache.get_value(variable_name=self._var_name(var_name='CONTENT_LENGTH'), raise_exception_on_expired=True, raise_exception_on_not_found=True, unresolved_variables_returns_original_reference=False)
         large_file = False
         self.log(message='Checking if {} > 104857600...'.format(remote_file_size), level='info')
         if remote_file_size > 104857600:   # Anything larger than 100MiB is considered large and will be downloaded in chunks
@@ -236,7 +245,8 @@ class WebDownloadFile(ManifestBase):
                         value_if_expired=None,
                         default_value_if_not_found=None,
                         raise_exception_on_expired=False,
-                        raise_exception_on_not_found=False
+                        raise_exception_on_not_found=False,
+                        unresolved_variables_returns_original_reference=False
                     ).strip()
                     if proxy_password is None:
                         self.log(message='      Proxy Password not Set - Ignoring Proxy AuthenticationConfiguration', level='warning')
@@ -250,7 +260,8 @@ class WebDownloadFile(ManifestBase):
                 value_if_expired=None,
                 default_value_if_not_found=None,
                 raise_exception_on_expired=False,
-                raise_exception_on_not_found=False
+                raise_exception_on_not_found=False,
+                unresolved_variables_returns_original_reference=False
             ).strip()
             if http_basic_authentication_password is None:
                 self.log(message='      Basic Authentication Password not Set - Ignoring HTTP Basic Authentication Configuration', level='warning')
@@ -375,6 +386,11 @@ class WebDownloadFile(ManifestBase):
 
     def delete_manifest(self):
         self.log(message='DELETE CALLED', level='info')
+
+        if actions.get_action_status(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Download File') in self.done_status_values:
+            self.log(message='   Delete action already executed', level='info')
+            return
+
         if os.path.exists(self.spec['targetOutputFile']) is True:
             if Path(self.spec['targetOutputFile']).is_file() is True:
                 try:
