@@ -121,6 +121,7 @@ class UnitOfWork:
                     scope
                 )
             )
+            self.work_instance.logger_reset(new_logger=logger)
             self.work_instance.metadata = self.work_instance.resolve_all_pending_variables(iterable=copy.deepcopy(self.work_instance.metadata))
             self.work_instance.spec = self.work_instance.resolve_all_pending_variables(iterable=copy.deepcopy(self.work_instance.spec))
             self.work_instance.determine_actions()

@@ -24,7 +24,7 @@ def get_utc_timestamp(with_decimal: bool=False):
 def is_debug_set_in_environment()->bool:    # pragma: no cover
     try:
         env_debug = os.getenv('DEBUG', '0').lower()
-        if env_debug in ('1','true','t','enabled'):
+        if env_debug in ('1','true','t','enabled', 'e'):
             return True
     except:
         pass

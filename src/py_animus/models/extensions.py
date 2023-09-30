@@ -10,9 +10,10 @@ import copy
 import json
 import hashlib
 import yaml
-import os
+import importlib
 from py_animus.helpers import is_debug_set_in_environment
-from py_animus.animus_logging import logger
+# from py_animus.animus_logging import logger
+import py_animus.animus_logging
 from py_animus.models import actions, Action, scope, variable_cache
 
 
@@ -167,6 +168,7 @@ class ManifestBase:
             Action.DELETE_DONE,
             Action.DELETE_SKIP,
         )
+        self.logger = py_animus.animus_logging.logger
 
     def _var_name(self, var_name: str):
         return '{}:{}:{}:{}'.format(
@@ -230,17 +232,25 @@ class ManifestBase:
           level: The log level, expressed as a string. One of `info`, `error`, `debug` or `warning`
         """
         name = 'not-yet-known'
+        if self.logger is None:
+            self.logger = py_animus.animus_logging.logger
+            self.logger.info('self.logger was None but is now configured')
         if 'name' in self.metadata:
             name = self.metadata['name']
         if level.lower().startswith('d'):
             if self.debug:
-                logger.debug('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
+                self.logger.debug('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
         elif level.lower().startswith('i'):
-            logger.info('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
+            self.logger.info('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
         elif level.lower().startswith('w'):
-            logger.warning('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
+            self.logger.warning('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
         elif level.lower().startswith('e'):
-            logger.error('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
+            self.logger.error('[{}:{}:{}] {}'.format(self.kind, name, self.version, message))
+
+    def logger_reset(self, new_logger):
+        self.logger = new_logger
+        self.log(message='Logger for "{}" reloaded'.format(self.kind), level='info')
+        self.log(message='Logger for "{}" reloaded'.format(self.kind), level='debug')
 
     def parse_manifest(self, manifest_data: dict):
         """Called via the ManifestManager when manifests files are parsed and one is found to belong to a class of this implementation.
