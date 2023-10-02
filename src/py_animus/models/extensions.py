@@ -169,6 +169,7 @@ class ManifestBase:
             Action.DELETE_SKIP,
         )
         self.logger = py_animus.animus_logging.logger
+        self.extension_action_descriptions = ('Generic Action',)
 
     def _var_name(self, var_name: str):
         return '{}:{}:{}:{}'.format(
@@ -387,11 +388,36 @@ class ManifestBase:
         """
         raise Exception('To be implemented by user')
 
+    def _bulk_register_actions(self, final_action: str):
+        for action_description in self.extension_action_descriptions:
+            self.register_action(action_name='{}'.format(action_description), initial_status=final_action)
+            self.log(message='Registered action "{}" with status "{}"'.format(action_description, final_action), level='info')
+
     def determine_actions(self):
         """
-        TODO 
+            This is a generic function which can be overridden for finer grained control in extensions withy multiple actions.
         """
-        raise Exception('To be implemented by user')
+        if 'skipDeleteAll' in self.metadata:
+            if self.metadata['skipDeleteAll'] is True:
+                self._bulk_register_actions(final_action=Action.DELETE_SKIP)
+        if 'skipApplyAll' in self.metadata:
+            if self.metadata['skipApplyAll'] is True:
+                self._bulk_register_actions(final_action=Action.APPLY_SKIP)
+        if self.implemented_manifest_differ_from_this_manifest() is True:
+            if actions.command == 'apply':
+                self._bulk_register_actions(final_action=Action.APPLY_PENDING)
+            elif actions.command == 'delete':
+                self._bulk_register_actions(final_action=Action.DELETE_PENDING)
+            else:
+                raise Exception('Unknown or unsupported command for this manifest kind "{}"'.format(self.kind))
+        else:
+            if actions.command == 'apply':
+                self._bulk_register_actions(final_action=Action.APPLY_SKIP)
+            elif actions.command == 'delete':
+                self._bulk_register_actions(final_action=Action.DELETE_SKIP)
+            else:
+                raise Exception('Unknown or unsupported command for this manifest kind "{}"'.format(self.kind))
+        return
 
     def apply_manifest(self):  # pragma: no cover
         """A  method to Implement the state as defined in a manifest.

@@ -30,6 +30,9 @@ class CliInputPrompt(ManifestBase):
 
     def __init__(self, post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):
         super().__init__(post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
+        self.extension_action_descriptions = (
+            'CLI Prompt',
+        )
 
     def _validate(self):
         if self.spec is None:
@@ -126,23 +129,15 @@ class CliInputPrompt(ManifestBase):
         if current_value is None:
             return True
         return False
-
-    def determine_actions(self):
-        self._validate()
-        try:
-            if actions.get_action_status(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='CLI Prompt') == Action.APPLY_DONE:
-                pass
-        except:
-            if self.implemented_manifest_differ_from_this_manifest() is True:
-                self.register_action(action_name='CLI Prompt', initial_status=Action.APPLY_PENDING)
-        return actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name'])
-
+    
     def apply_manifest(self):
-
+        self.log(message='APPLY CALLED', level='info')
+            
         for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
-            if action_name == 'CLI Prompt' and expected_action == Action.APPLY_DONE:
-                self.log(message='   CLI Prompt already executed', level='info')
+            if action_name == 'CLI Prompt' and expected_action != Action.APPLY_PENDING:
+                self.log(message='   Apply action "{}" will not be done. Status: {}'.format(action_name, expected_action), level='info')
                 return
+
         value = None
         self.log(message='variable_cache={}'.format(str(variable_cache)), level='debug')
 
@@ -190,5 +185,12 @@ class CliInputPrompt(ManifestBase):
         return
 
     def delete_manifest(self):
+        self.log(message='DELETE CALLED - Rerouting to APPLY ACTION.', level='info')
+
+        for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
+            if action_name == 'CLI Prompt' and expected_action != Action.DELETE_PENDING:
+                self.log(message='   Apply action "{}" will not be done. Status: {}'.format(action_name, expected_action), level='info')
+                return
+            
         self.apply_manifest()
         return

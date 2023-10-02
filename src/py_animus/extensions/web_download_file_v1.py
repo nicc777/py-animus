@@ -31,6 +31,9 @@ class WebDownloadFile(ManifestBase):
 
     def __init__(self, post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):
         super().__init__(post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
+        self.extension_action_descriptions = (
+            'Download File',
+        )
 
     def _get_url_content_length(self, url: str)->dict:
         try:
@@ -96,23 +99,6 @@ class WebDownloadFile(ManifestBase):
 
         return False
     
-    def determine_actions(self):
-        if 'skipDeleteAll' in self.metadata:
-            if self.metadata['skipDeleteAll'] is True:
-                self.register_action(action_name='Download File', initial_status=Action.DELETE_SKIP)
-        if 'skipApplyAll' in self.metadata:
-            if self.metadata['skipApplyAll'] is True:
-                self.register_action(action_name='Download File', initial_status=Action.APPLY_SKIP)
-        if actions.get_action_status(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Download File') == Action.UNKNOWN:
-            if self.implemented_manifest_differ_from_this_manifest() is True:
-                if actions.command == 'apply':
-                    self.register_action(action_name='Download File', initial_status=Action.APPLY_PENDING)
-                elif actions.command == 'delete':
-                    self.register_action(action_name='Download File', initial_status=Action.DELETE_PENDING)
-                else:
-                    raise Exception('Unknown or unsupported command for this manifest kind "{}"'.format(self.kind))
-        return 
-
     def _build_proxy_dict(self, proxy_host: str, proxy_username: str, proxy_password: str)->dict:
         proxies = dict()
         proxy_str = ''
@@ -196,11 +182,10 @@ class WebDownloadFile(ManifestBase):
     def apply_manifest(self):
         self.log(message='APPLY CALLED', level='info')
 
-        download_file_action_status = actions.get_action_status(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Download File')
-        self.log(message='download_file_action_status={}'.format(download_file_action_status), level='debug')
-        if download_file_action_status in self.done_status_values:
-            self.log(message='   Action ignored because of status "{}"'.format(download_file_action_status), level='info')
-            return
+        for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
+            if action_name == 'Download File' and expected_action != Action.APPLY_PENDING:
+                self.log(message='   Apply action "{}" will not be done. Status: {}'.format(action_name, expected_action), level='info')
+                return
 
         url = self.spec['sourceUrl']
         target_file = self.spec['targetOutputFile']
@@ -387,9 +372,10 @@ class WebDownloadFile(ManifestBase):
     def delete_manifest(self):
         self.log(message='DELETE CALLED', level='info')
 
-        if actions.get_action_status(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Download File') in self.done_status_values:
-            self.log(message='   Delete action already executed', level='info')
-            return
+        for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
+            if action_name == 'Download File' and expected_action != Action.DELETE_PENDING:
+                self.log(message='   Apply action "{}" will not be done. Status: {}'.format(action_name, expected_action), level='info')
+                return
 
         if os.path.exists(self.spec['targetOutputFile']) is True:
             if Path(self.spec['targetOutputFile']).is_file() is True:
