@@ -119,6 +119,7 @@ class CliInputPrompt(ManifestBase):
             self.log(message='Already Validated', level='debug')
 
     def implemented_manifest_differ_from_this_manifest(self)->bool:
+        self._validate()
         current_value = variable_cache.get_value(
             variable_name=self._var_name(var_name='CLI_PROMPT'),
             value_if_expired=None,
