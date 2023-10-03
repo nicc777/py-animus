@@ -24,6 +24,8 @@ metadata:
     apply:
     - url
     - save-target
+    delete:
+    - save-target
 spec:
   sourceUrl: !Variable 'CliInputPrompt:url:default:CLI_PROMPT'
   targetOutputFile: !Variable 'CliInputPrompt:save-target:default:CLI_PROMPT'
