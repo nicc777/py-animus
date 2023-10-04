@@ -195,7 +195,7 @@ class Values:
     def find_value_by_name(self, name: str)->Value:
         if name not in self.values:
             self.log_helper.log_error('Dump of current values keys: {}'.format(list(self.values.keys())))
-            raise Exception('Value named "{}" was not found'.format(name))
+            return Value(name=name, initial_value=None)
         return self.values[name]
     
     def remove_value(self, name: str):
@@ -246,7 +246,8 @@ class AllScopedValues:
 
     def find_scoped_values(self, scope: str)->ScopedValues:
         if scope not in self.scoped_values_collection:
-            raise Exception('ScopedValues for scope "{}" Not Found'.format(scope))
+            empty_scoped_values = ScopedValues(scope=scope)
+            return empty_scoped_values
         return self.scoped_values_collection[scope]
         
     def add_value_to_scoped_value(self, scope: str, value: Value):

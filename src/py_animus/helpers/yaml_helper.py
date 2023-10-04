@@ -245,16 +245,21 @@ class ValuePlaceHolders:
         return_str = copy.deepcopy(input_str)
         if input_str.find('{}{}'.format('$', '{')) >= 0:
             for matched_placeholder in re.findall('\$\{([\w|\s|\-|\_|\.|\:]+)\}', input_str):
-                return_str = return_str.replace(
-                    '{}{}{}{}'.format('$', '{', matched_placeholder, '}'),
-                    self.get_value_placeholder(
-                        placeholder_name=matched_placeholder,
-                        create_in_not_exists=True
-                    ).get_environment_value(
-                        default_value_when_not_found=default_value_when_not_found,
-                        raise_exception_when_not_found=raise_exception_when_not_found
-                    )
+                val = self.get_value_placeholder(
+                    placeholder_name=matched_placeholder,
+                    create_in_not_exists=True
+                ).get_environment_value(
+                    default_value_when_not_found=default_value_when_not_found,
+                    raise_exception_when_not_found=raise_exception_when_not_found
                 )
+                logger.debug('(pre) val type={}'.format(type(val)))
+                if val is None:
+                    val = ''
+                    logger.warning('NoneType detected')
+                if isinstance(val, str) is False:
+                    val = '{}'.format(str(val))
+                logger.debug('val={}   type={}'.format(val, type(val)))
+                return_str = return_str.replace('{}{}{}{}'.format('$', '{', matched_placeholder, '}'),val)
         logger.debug('   return_str="{}'.format(return_str))
         return return_str
 
@@ -270,6 +275,8 @@ class ValueTag(yaml.YAMLObject):
         return self.resolved_value.value
     
     def __str__(self):
+        if self.resolved_value.value is None:
+            return ''
         return self.resolved_value.value
     
     @classmethod
@@ -360,7 +367,8 @@ class SubTag(yaml.YAMLObject):
 
                     value_placeholders.create_new_value_placeholder(placeholder_name=yaml_key)
                     value_placeholders.add_environment_value(placeholder_name=yaml_key, value=parsed_value)
-        self.resolved_value = value_placeholders.parse_and_replace_placeholders_in_string(input_str=main_line, default_value_when_not_found=None, raise_exception_when_not_found=True)
+        # self.resolved_value = value_placeholders.parse_and_replace_placeholders_in_string(input_str=main_line, default_value_when_not_found=None, raise_exception_when_not_found=True)
+        self.resolved_value = value_placeholders.parse_and_replace_placeholders_in_string(input_str=main_line, default_value_when_not_found='', raise_exception_when_not_found=False)
         logger.info('resolved_value={}'.format(self.resolved_value))
         
 
