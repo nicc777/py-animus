@@ -72,7 +72,6 @@ Spec fields:
             variable=Variable(
                 name=self._var_name(var_name='FILE_PATH'),
                 initial_value=self.spec['targetFile'],
-                logger=self.logger,
                 mask_in_logs=False
             ),
             overwrite_existing=True
@@ -81,7 +80,6 @@ Spec fields:
             variable=Variable(
                 name=self._var_name(var_name='WRITTEN'),
                 initial_value=True,
-                logger=self.logger,
                 mask_in_logs=False
             ),
             overwrite_existing=True
@@ -90,7 +88,6 @@ Spec fields:
             variable=Variable(
                 name=self._var_name(var_name='EXECUTABLE'),
                 initial_value=os.access(self.spec['targetFile'], os.X_OK),
-                logger=self.logger,
                 mask_in_logs=False
             ),
             overwrite_existing=True
@@ -99,7 +96,6 @@ Spec fields:
             variable=Variable(
                 name=self._var_name(var_name='SIZE'),
                 initial_value=get_file_size(file_path=self.spec['targetFile']),
-                logger=self.logger,
                 mask_in_logs=False
             ),
             overwrite_existing=True
@@ -108,7 +104,6 @@ Spec fields:
             variable=Variable(
                 name=self._var_name(var_name='SHA256_CHECKSUM'),
                 initial_value=calculate_file_checksum(file_path=self.spec['targetFile'], checksum_algorithm='sha256'),
-                logger=self.logger,
                 mask_in_logs=False
             ),
             overwrite_existing=True
