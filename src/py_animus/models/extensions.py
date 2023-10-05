@@ -183,6 +183,8 @@ class ManifestBase:
         if '!Variable' in input_str:
             variable_name = input_str.split('!Variable')[1]
             original_variable_str = '!Variable {}'.format(variable_name)
+            original_variable_str = original_variable_str.replace('  ', ' ')
+            original_variable_str = original_variable_str.strip()
             variable_name = variable_name.strip()
             if ' ' in variable_name or '\t' in variable_name:
                 variable_name = variable_name.split()[0]
@@ -203,9 +205,11 @@ class ManifestBase:
                 if isinstance(v, str):
                     self.log(message='      Identifying variable in string...', level='debug')
                     original_variable_str, variable_name = self._get_variable_name_from_full_variable_string(input_str=v)
+                    self.log(message='         original_variable_str={}'.format(original_variable_str), level='debug')
                     if variable_name is not None:
                         self.log(message='         Resolving variable_name "{}"'.format(variable_name), level='debug')
                         resolved_value = variable_cache.get_value(variable_name=variable_name, unresolved_variables_returns_original_reference=True)
+                        self.log(message='         resolved_value={}'.format(resolved_value), level='debug')
                         final_value = copy.deepcopy(v)
                         final_value = final_value.replace(original_variable_str, resolved_value)
                         resolved_iterable[k] = final_value
@@ -225,9 +229,11 @@ class ManifestBase:
                 if isinstance(v, str):
                     self.log(message='      Identifying variable in string...', level='debug')
                     original_variable_str, variable_name = self._get_variable_name_from_full_variable_string(input_str=v)
+                    self.log(message='         original_variable_str={}'.format(original_variable_str), level='debug')
                     if variable_name is not None:
                         self.log(message='         Resolving variable_name "{}"'.format(variable_name), level='debug')
                         resolved_value = variable_cache.get_value(variable_name=variable_name, unresolved_variables_returns_original_reference=True)
+                        self.log(message='         resolved_value={}'.format(resolved_value), level='debug')
                         final_value = copy.deepcopy(v)
                         final_value = final_value.replace(original_variable_str, resolved_value)
                         resolved_iterable.append(final_value)
