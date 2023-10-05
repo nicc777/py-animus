@@ -181,29 +181,43 @@ class ManifestBase:
 
     def resolve_all_pending_variables(self, iterable):
         resolved_iterable = None
+        self.log(message='Resolving data in iterable: {}'.format(iterable), level='debug')
         if isinstance(iterable, dict):
+            self.log(message='   DICT detected', level='debug')
             resolved_iterable = dict()
             for k,v in iterable.items():
+                self.log(message='   k: {}'.format(k), level='debug')
+                self.log(message='   v: {}'.format(v), level='debug')
                 if isinstance(v, str):
                     if v.startswith('!Variable'):
+                        self.log(message='      Parsing value STARTING with Variable', level='debug')
                         variable_name = v.split(' ')[1]
                         self.log(message='Resolving pending variable named "{}"'.format(variable_name), level='debug')
                         resolved_iterable[k] = variable_cache.get_value(variable_name=variable_name, unresolved_variables_returns_original_reference=True)
+                    elif '!Variable' in v:
+                        self.log(message='      Parsing Variable IN value', level='debug')
                     else:
+                        self.log(message='      Nothing to do', level='debug')
                         resolved_iterable[k] = v
                 elif isinstance(v, dict) or isinstance(v, list) or isinstance(v, tuple):
                     resolved_iterable[k] = self.resolve_all_pending_variables(iterable=v)
                 else:
                     resolved_iterable[k] = v
         elif isinstance(iterable, list) or isinstance(iterable, tuple):
+            self.log(message='   LIST detected', level='debug')
             resolved_iterable = list()
             for v in iterable:
+                self.log(message='   v: {}'.format(v), level='debug')
                 if isinstance(v, str):
                     if v.startswith('!Variable'):
+                        self.log(message='      Parsing value STARTING with Variable', level='debug')
                         variable_name = v.split(' ')[1]
                         self.log(message='Resolving pending variable named "{}"'.format(variable_name), level='debug')
                         resolved_iterable.append(variable_cache.get_value(variable_name=variable_name, unresolved_variables_returns_original_reference=True))
+                    elif '!Variable' in v:
+                        self.log(message='      Parsing Variable IN value', level='debug')
                     else:
+                        self.log(message='      Nothing to do', level='debug')
                         resolved_iterable.append(v)
                 elif isinstance(v, dict) or isinstance(v, list) or isinstance(v, tuple):
                     resolved_iterable.append(self.resolve_all_pending_variables(iterable=v))
