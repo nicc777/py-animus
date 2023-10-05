@@ -47,6 +47,9 @@ kind: ShellScript
 version: v1
 metadata:
   name: cleanup
+  dependencies:
+    delete:
+    - save-target
   skipApplyAll: true
 spec:
   source:
