@@ -478,14 +478,17 @@ class VariableCache:
         if variable_name not in self.values and raise_exception_on_not_found is True:
             self.log_helper.log_debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to True'.format(variable_name))
             if unresolved_variables_returns_original_reference is True:
+                self.log_helper.log_debug('[variable_name={}] unresolved_variables_returns_original_reference was TRUE - returning: !Variable {}'.format(variable_name, variable_name))
                 return '!Variable {}'.format(variable_name)
                 # return PendingVariable(original_variable_name=variable_name)
             else:
                 raise Exception('Variable "{}" not found'.format(variable_name))
         elif variable_name not in self.values and raise_exception_on_not_found is False:
-            self.log_helper.log_debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to False - Returning default_value_if_not_found'.format(variable_name))
+            self.log_helper.log_debug('[variable_name={}] Variable NOT FOUND, and raise_exception_on_not_found is set to False - Returning default_value_if_not_found: {}'.format(variable_name, default_value_if_not_found))
             return default_value_if_not_found
-        return copy.deepcopy(self.values[variable_name].get_value(value_if_expired=value_if_expired, raise_exception_on_expired=raise_exception_on_expired, reset_timer_on_value_read=reset_timer_on_value_read, for_logging=for_logging))
+        final_value = copy.deepcopy(self.values[variable_name].get_value(value_if_expired=value_if_expired, raise_exception_on_expired=raise_exception_on_expired, reset_timer_on_value_read=reset_timer_on_value_read, for_logging=for_logging))
+        self.log_helper.log_debug('[variable_name={}] final_value: {}'.format(variable_name, final_value))
+        return final_value
 
     def add_dict_item_to_existing_variable(
             self,

@@ -179,6 +179,18 @@ class ManifestBase:
             var_name
         )
 
+    def _get_variable_name_from_full_variable_string(self, input_str: str)->tuple:
+        if '!Variable' in input_str:
+            variable_name = input_str.split('!Variable')[1]
+            original_variable_str = '!Variable {}'.format(variable_name)
+            variable_name = variable_name.strip()
+            if ' ' in variable_name or '\t' in variable_name:
+                variable_name = variable_name.split()[0]
+            variable_name = variable_name.strip("'")
+            variable_name = variable_name.strip('"')
+            return (original_variable_str, variable_name,)
+        return (None, None,)
+
     def resolve_all_pending_variables(self, iterable):
         resolved_iterable = None
         self.log(message='Resolving data in iterable: {}'.format(iterable), level='debug')
@@ -189,15 +201,17 @@ class ManifestBase:
                 self.log(message='   k: {}'.format(k), level='debug')
                 self.log(message='   v: {}'.format(v), level='debug')
                 if isinstance(v, str):
-                    if v.startswith('!Variable'):
-                        self.log(message='      Parsing value STARTING with Variable', level='debug')
-                        variable_name = v.split(' ')[1]
-                        self.log(message='Resolving pending variable named "{}"'.format(variable_name), level='debug')
-                        resolved_iterable[k] = variable_cache.get_value(variable_name=variable_name, unresolved_variables_returns_original_reference=True)
-                    elif '!Variable' in v:
-                        self.log(message='      Parsing Variable IN value', level='debug')
+                    self.log(message='      Identifying variable in string...', level='debug')
+                    original_variable_str, variable_name = self._get_variable_name_from_full_variable_string(input_str=v)
+                    if variable_name is not None:
+                        self.log(message='         Resolving variable_name "{}"'.format(variable_name), level='debug')
+                        resolved_value = variable_cache.get_value(variable_name=variable_name, unresolved_variables_returns_original_reference=True)
+                        final_value = copy.deepcopy(v)
+                        final_value = final_value.replace(original_variable_str, resolved_value)
+                        resolved_iterable[k] = final_value
+                        self.log(message='            RESULT: {}={}'.format(k, final_value), level='debug')
                     else:
-                        self.log(message='      Nothing to do', level='debug')
+                        self.log(message='         No Variable to resolve found in string', level='debug')
                         resolved_iterable[k] = v
                 elif isinstance(v, dict) or isinstance(v, list) or isinstance(v, tuple):
                     resolved_iterable[k] = self.resolve_all_pending_variables(iterable=v)
@@ -209,15 +223,17 @@ class ManifestBase:
             for v in iterable:
                 self.log(message='   v: {}'.format(v), level='debug')
                 if isinstance(v, str):
-                    if v.startswith('!Variable'):
-                        self.log(message='      Parsing value STARTING with Variable', level='debug')
-                        variable_name = v.split(' ')[1]
-                        self.log(message='Resolving pending variable named "{}"'.format(variable_name), level='debug')
-                        resolved_iterable.append(variable_cache.get_value(variable_name=variable_name, unresolved_variables_returns_original_reference=True))
-                    elif '!Variable' in v:
-                        self.log(message='      Parsing Variable IN value', level='debug')
+                    self.log(message='      Identifying variable in string...', level='debug')
+                    original_variable_str, variable_name = self._get_variable_name_from_full_variable_string(input_str=v)
+                    if variable_name is not None:
+                        self.log(message='         Resolving variable_name "{}"'.format(variable_name), level='debug')
+                        resolved_value = variable_cache.get_value(variable_name=variable_name, unresolved_variables_returns_original_reference=True)
+                        final_value = copy.deepcopy(v)
+                        final_value = final_value.replace(original_variable_str, resolved_value)
+                        resolved_iterable.append(final_value)
+                        self.log(message='            RESULT: {}'.format(final_value), level='debug')
                     else:
-                        self.log(message='      Nothing to do', level='debug')
+                        self.log(message='         No Variable to resolve found in string', level='debug')
                         resolved_iterable.append(v)
                 elif isinstance(v, dict) or isinstance(v, list) or isinstance(v, tuple):
                     resolved_iterable.append(self.resolve_all_pending_variables(iterable=v))

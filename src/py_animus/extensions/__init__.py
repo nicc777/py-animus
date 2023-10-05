@@ -124,8 +124,8 @@ class UnitOfWork:
                 )
             )
             self.work_instance.logger_reset(new_logger=logger)
-            # self.work_instance.metadata = self.work_instance.resolve_all_pending_variables(iterable=copy.deepcopy(self.work_instance.metadata))
-            # self.work_instance.spec = self.work_instance.resolve_all_pending_variables(iterable=copy.deepcopy(self.work_instance.spec))
+            self.work_instance.metadata = self.work_instance.resolve_all_pending_variables(iterable=copy.deepcopy(self.work_instance.metadata))
+            self.work_instance.spec = self.work_instance.resolve_all_pending_variables(iterable=copy.deepcopy(self.work_instance.spec))
             self.work_instance.determine_actions()
             logger.debug('Final Resolved Metadata : "{}"'.format(json.dumps(self.work_instance.metadata, default=str)))
             logger.debug('Final Resolved Spec     : "{}"'.format(json.dumps(self.work_instance.spec, default=str)))
@@ -139,8 +139,6 @@ class UnitOfWork:
                             )
                         )
                         return
-                self.work_instance.metadata = self.work_instance.resolve_all_pending_variables(iterable=copy.deepcopy(self.work_instance.metadata))
-                self.work_instance.spec = self.work_instance.resolve_all_pending_variables(iterable=copy.deepcopy(self.work_instance.spec))
                 self.work_instance.apply_manifest()
             if action == 'delete':
                 if 'skipDeleteAll' in self.work_instance.metadata:
@@ -152,8 +150,6 @@ class UnitOfWork:
                             )
                         )
                         return
-                self.work_instance.metadata = self.work_instance.resolve_all_pending_variables(iterable=copy.deepcopy(self.work_instance.metadata))
-                self.work_instance.spec = self.work_instance.resolve_all_pending_variables(iterable=copy.deepcopy(self.work_instance.spec))
                 self.work_instance.delete_manifest()
         else:
             logger.warning(
