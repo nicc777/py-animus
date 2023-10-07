@@ -36,6 +36,7 @@ metadata:
   dependencies:
     apply:
     - web-download
+  skipDeleteAll: true
 spec:
   data: !Sub
   - '{"status": "${status}","downloadPath": "${path}"}'
