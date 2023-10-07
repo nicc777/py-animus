@@ -40,7 +40,7 @@ spec:
   data: !Sub
   - '{"status": "${status}","downloadPath": "${path}"}'
   - status: !Variable 'CliInputPrompt:web-download:default:STATUS'
-    path: !Value 'CliInputPrompt:save-target:default:CLI_PROMPT'
+    path: !Variable 'CliInputPrompt:save-target:default:CLI_PROMPT'
   targetFile: /tmp/results.json
 ---
 kind: ShellScript
