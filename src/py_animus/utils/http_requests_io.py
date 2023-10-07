@@ -21,6 +21,8 @@ def download_files(urls: list, target_dir: str='/tmp', set_no_verify_ssl: bool=F
             hashlib.sha256(url.encode('utf-8')).hexdigest()
         )
         if outfile not in files:
+            if os.path.exists(outfile):
+                os.unlink(outfile)
             r = None
             if set_no_verify_ssl is False:
                 r = requests.get(url)

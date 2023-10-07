@@ -166,8 +166,6 @@ def get_modules_in_package(files: list):
 def process_project(project_manifest_uri: str, project_name: str):
     if project_name is None:
         raise Exception('The named project manifest was not found in the supplied manifest file. Cannot continue.')
-    # all_scoped_values.reset_logger()
-    # variable_cache.reset_logger()
     yaml_sections = extract_yaml_section_from_supplied_manifest_file(manifest_uri=project_manifest_uri)
     yaml_sections = _process_values_sections(manifest_yaml_sections=yaml_sections)
     if len(yaml_sections) == 0:
