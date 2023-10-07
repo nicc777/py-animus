@@ -183,41 +183,43 @@ class ManifestBase:
         variables = dict()
         if '!Variable' in input_str:
 
+            self.log(message='         FOUND variable input_str', level='debug')
             sections = input_str.split('!Variable') # NOTE: There may be MORE than one variable in a single line...
+            self.log(message='         sections : {}'.format(sections), level='debug')
+            self.log(message='            QTY   : {}'.format(len(sections)), level='debug')
             if len(sections) > 1:
-                sections_qty = len(sections) / 2
+                sections_qty = len(sections)
+                self.log(message='         sections_qty: {}'.format(sections_qty), level='debug')
                 if sections_qty % 2 == 0:
-                    for section_start_ids in range(0, sections_qty):
-                        variable_name_idx = (section_start_ids*2) + 1
+                    self.log(message='         Parsing sections', level='debug')
+                    for section_start_ids in range(0, sections_qty, 2):
+                        variable_name_idx = section_start_ids + 1
                         variable_name = sections[variable_name_idx]
                         variable_name.strip()
+                        self.log(message='         variable_name interim value: "{}"'.format(variable_name), level='debug')
 
                         result = re.search(r"([\w|\:|\-]+)", variable_name)
                         if len(result.groups()) > 0:
+                            self.log(message='         Extracting group 0 for variable_name in regex groups'.format(variable_name), level='debug')
                             variable_name = result.groups()[0]
 
                             original_variable_str = '!Variable {}'.format(variable_name)
                             original_variable_str = original_variable_str.replace('  ', ' ')
-                            original_variable_str = original_variable_str.strip()            
+                            original_variable_str = original_variable_str.strip()
+                            self.log(message='         original_variable_str: {}'.format(original_variable_str), level='debug')
+                            self.log(message='         FINAL variable_name "{}"'.format(variable_name), level='debug')
                             if original_variable_str not in variables:
+                                self.log(message='         Added variable to variables DICT', level='debug')
                                 variables[original_variable_str] = variable_name
-                        
-
-
-        #     variable_name = input_str.split('!Variable')[1]
-        #     original_variable_str = '!Variable {}'.format(variable_name)
-        #     original_variable_str = original_variable_str.replace('  ', ' ')
-        #     original_variable_str = original_variable_str.strip()
-        #     variable_name = variable_name.strip()
-        #     if ' ' in variable_name or '\t' in variable_name:
-        #         variable_name = variable_name.split()[0]
-        #     variable_name = variable_name.strip("'")
-        #     variable_name = variable_name.strip('"')
-
-
-
-        #     return (original_variable_str, variable_name,)
-        # return (None, None,)
+                            else:
+                                self.log(message='         Not adding variable to variables DICT - already exists', level='debug')
+                        else:
+                            self.log(message='         No REGEX match for variable name...'.format(variable_name), level='debug')
+            else:
+                self.log(message='         No sections to parse', level='debug')
+        else:
+            self.log(message='         NO variable found in input_str', level='debug')
+        self.log(message='         input_str={}   variables: {}'.format(input_str, json.dumps(variables, default=str)), level='debug')
         return variables
 
     def resolve_all_pending_variables(self, iterable):
@@ -231,11 +233,10 @@ class ManifestBase:
                 self.log(message='   v: {}'.format(v), level='debug')
                 if isinstance(v, str):
                     self.log(message='      Identifying variable in string...', level='debug')
-                    # original_variable_str, variable_name = self._get_variable_name_from_full_variable_string(input_str=v)
                     variables = self._get_variable_name_from_full_variable_string(input_str=v)
                     if len(variables) > 0:
                         for original_variable_str, variable_name in variables.items():
-                            self.log(message='         original_variable_str={}'.format(original_variable_str), level='debug')
+                            self.log(message='         original_variable_str={}   variable name identified as "{}"'.format(original_variable_str, variable_name), level='debug')
                             if variable_name is not None:
                                 self.log(message='         Resolving variable_name "{}"'.format(variable_name), level='debug')
                                 resolved_value = variable_cache.get_value(variable_name=variable_name, unresolved_variables_returns_original_reference=True)
@@ -261,11 +262,10 @@ class ManifestBase:
                 self.log(message='   v: {}'.format(v), level='debug')
                 if isinstance(v, str):
                     self.log(message='      Identifying variable in string...', level='debug')
-                    # original_variable_str, variable_name = self._get_variable_name_from_full_variable_string(input_str=v)
                     variables = self._get_variable_name_from_full_variable_string(input_str=v)
                     if len(variables) > 0:
                         for original_variable_str, variable_name in variables.items():
-                            self.log(message='         original_variable_str={}'.format(original_variable_str), level='debug')
+                            self.log(message='         original_variable_str={}   variable name identified as "{}"'.format(original_variable_str, variable_name), level='debug')
                             if variable_name is not None:
                                 self.log(message='         Resolving variable_name "{}"'.format(variable_name), level='debug')
                                 resolved_value = variable_cache.get_value(variable_name=variable_name, unresolved_variables_returns_original_reference=True)
