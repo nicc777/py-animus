@@ -54,9 +54,7 @@ metadata:
 spec:
   source:
     type: inline
-    value: !Sub
-    - 'rm -vf ${file}'
-    - file: !Variable 'CliInputPrompt:save-target:default:CLI_INPUT_VALUE'
+    value: 'rm -vf /tmp/*.md'
   convertOutputToText: true
   stripNewline: True
   convertRepeatingSpaces: true
