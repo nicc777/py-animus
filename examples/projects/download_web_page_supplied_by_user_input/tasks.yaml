@@ -26,8 +26,8 @@ metadata:
     - save-target
   skipDeleteAll: true
 spec:
-  sourceUrl: !Variable 'CliInputPrompt:url:default:CLI_PROMPT'
-  targetOutputFile: !Variable 'CliInputPrompt:save-target:default:CLI_PROMPT'
+  sourceUrl: !Variable 'CliInputPrompt:url:default:CLI_INPUT_VALUE'
+  targetOutputFile: !Variable 'CliInputPrompt:save-target:default:CLI_INPUT_VALUE'
 ---
 kind: WriteFile
 version: v1
@@ -40,7 +40,7 @@ spec:
   data: !Sub
   - '{"status": "${status}","downloadPath": "${path}"}'
   - status: !Variable 'CliInputPrompt:web-download:default:STATUS'
-    path: !Variable 'CliInputPrompt:save-target:default:CLI_PROMPT'
+    path: !Variable 'CliInputPrompt:save-target:default:CLI_INPUT_VALUE'
   targetFile: /tmp/results.json
 ---
 kind: ShellScript
@@ -56,7 +56,7 @@ spec:
     type: inline
     value: !Sub
     - 'rm -vf ${file}'
-    - file: !Variable 'CliInputPrompt:save-target:default:CLI_PROMPT'
+    - file: !Variable 'CliInputPrompt:save-target:default:CLI_INPUT_VALUE'
   convertOutputToText: true
   stripNewline: True
   convertRepeatingSpaces: true

@@ -121,7 +121,7 @@ class CliInputPrompt(ManifestBase):
     def implemented_manifest_differ_from_this_manifest(self)->bool:
         self._validate()
         current_value = variable_cache.get_value(
-            variable_name=self._var_name(var_name='CLI_PROMPT'),
+            variable_name=self._var_name(var_name='CLI_INPUT_VALUE'),
             value_if_expired=None,
             default_value_if_not_found=None,
             raise_exception_on_expired=False,
@@ -161,7 +161,7 @@ class CliInputPrompt(ManifestBase):
 
         variable_cache.store_variable(
             variable=Variable(
-                name=self._var_name(var_name='CLI_PROMPT'),
+                name=self._var_name(var_name='CLI_INPUT_VALUE'),
                 initial_value=value,
                 ttl=ttl,
                 mask_in_logs=self.spec['containsCredentials']
@@ -170,9 +170,9 @@ class CliInputPrompt(ManifestBase):
         )
         self.log(
             message='("{}") Input value "{}"'.format(
-                self._var_name(var_name='CLI_PROMPT'),
+                self._var_name(var_name='CLI_INPUT_VALUE'),
                 variable_cache.get_value(
-                    variable_name=self._var_name(var_name='CLI_PROMPT'),
+                    variable_name=self._var_name(var_name='CLI_INPUT_VALUE'),
                     value_if_expired='',
                     default_value_if_not_found='',
                     raise_exception_on_expired=False,
