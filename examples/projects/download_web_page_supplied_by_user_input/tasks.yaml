@@ -103,7 +103,7 @@ metadata:
 spec:
   source:
     type: inline
-    value: 'touch /tmp/all-done ; curl -s http://localhost/my-done-callback-url'
+    value: 'touch /tmp/all-done ; curl -s https://reqbin.com/echo'
   convertOutputToText: true
   stripNewline: True
   convertRepeatingSpaces: true
