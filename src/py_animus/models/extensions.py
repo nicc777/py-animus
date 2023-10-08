@@ -183,9 +183,7 @@ class ManifestBase:
         variables = dict()
         all_variable_names = variable_cache.get_all_current_names()
         self.log(message='         all_variable_names      : {}'.format(all_variable_names), level='debug')
-        # self.log(message='         current variable cache: : '.format(str(variable_cache)), level='debug')
         if '!Variable' in input_str:
-
             self.log(message='         FOUND variable input_str', level='debug')
             sections = input_str.split('!Variable') # NOTE: There may be MORE than one variable in a single line...
             self.log(message='         sections : {}'.format(sections), level='debug')
@@ -193,13 +191,11 @@ class ManifestBase:
             if len(sections) > 1:
                 sections_qty = len(sections)
                 self.log(message='         sections_qty: {}'.format(sections_qty), level='debug')
-                
                 for section in sections:
                     self.log(message='         Parsing sections', level='debug')
                     variable_name = '{}'.format(section)
                     variable_name.strip()
                     self.log(message='            variable_name interim value: "{}"'.format(variable_name), level='debug')
-
                     result = re.search(r"([\w|\:|\-]+)", variable_name)
                     try:
                         if len(result.groups()) > 0:
@@ -217,7 +213,6 @@ class ManifestBase:
                                     variables[original_variable_str] = variable_name
                                 else:
                                     self.log(message='            Not adding variable to variables DICT - already exists', level='debug')
-
                         else:
                             self.log(message='            No REGEX match for variable name...'.format(variable_name), level='debug')
                     except AttributeError:
