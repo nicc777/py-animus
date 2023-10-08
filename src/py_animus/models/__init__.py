@@ -577,6 +577,9 @@ class VariableCache:
         self.log_helper.reload_logger()
         for variable_name, variable in self.values.items():
             variable.reset_logger()
+
+    def get_all_current_names(self):
+        return list(self.values.keys())
     
 
 variable_cache = VariableCache()

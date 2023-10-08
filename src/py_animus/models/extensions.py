@@ -181,6 +181,9 @@ class ManifestBase:
 
     def _get_variable_name_from_full_variable_string(self, input_str: str)->dict:
         variables = dict()
+        all_variable_names = variable_cache.get_all_current_names()
+        self.log(message='         all_variable_names      : '.format(all_variable_names), level='debug')
+        self.log(message='         current variable cache: : '.format(str(variable_cache)), level='debug')
         if '!Variable' in input_str:
 
             self.log(message='         FOUND variable input_str', level='debug')
@@ -190,31 +193,37 @@ class ManifestBase:
             if len(sections) > 1:
                 sections_qty = len(sections)
                 self.log(message='         sections_qty: {}'.format(sections_qty), level='debug')
-                if sections_qty % 2 == 0:
+                
+                for section in sections:
                     self.log(message='         Parsing sections', level='debug')
-                    for section_start_ids in range(0, sections_qty, 2):
-                        variable_name_idx = section_start_ids + 1
-                        variable_name = sections[variable_name_idx]
-                        variable_name.strip()
-                        self.log(message='         variable_name interim value: "{}"'.format(variable_name), level='debug')
+                    variable_name = '{}'.format(section)
+                    variable_name.strip()
+                    self.log(message='         variable_name interim value: "{}"'.format(variable_name), level='debug')
 
-                        result = re.search(r"([\w|\:|\-]+)", variable_name)
+                    result = re.search(r"([\w|\:|\-]+)", variable_name)
+                    try:
                         if len(result.groups()) > 0:
                             self.log(message='         Extracting group 0 for variable_name in regex groups'.format(variable_name), level='debug')
                             variable_name = result.groups()[0]
 
-                            original_variable_str = '!Variable {}'.format(variable_name)
-                            original_variable_str = original_variable_str.replace('  ', ' ')
-                            original_variable_str = original_variable_str.strip()
-                            self.log(message='         original_variable_str: {}'.format(original_variable_str), level='debug')
-                            self.log(message='         FINAL variable_name "{}"'.format(variable_name), level='debug')
-                            if original_variable_str not in variables:
-                                self.log(message='         Added variable to variables DICT', level='debug')
-                                variables[original_variable_str] = variable_name
-                            else:
-                                self.log(message='         Not adding variable to variables DICT - already exists', level='debug')
+                            if variable_name in all_variable_names:
+                                original_variable_str = '!Variable {}'.format(variable_name)
+                                original_variable_str = original_variable_str.replace('  ', ' ')
+                                original_variable_str = original_variable_str.strip()
+                                self.log(message='         original_variable_str: {}'.format(original_variable_str), level='debug')
+                                self.log(message='         FINAL variable_name "{}"'.format(variable_name), level='debug')
+                                if original_variable_str not in variables:
+                                    self.log(message='         Added variable to variables DICT', level='debug')
+                                    variables[original_variable_str] = variable_name
+                                else:
+                                    self.log(message='         Not adding variable to variables DICT - already exists', level='debug')
+
                         else:
                             self.log(message='         No REGEX match for variable name...'.format(variable_name), level='debug')
+                    except AttributeError:
+                        self.log(message='No groups found in regex', level='error')
+                    except:
+                        self.log(message='EXCEPTION: {}'.format(traceback.format_exc()), level='error')
             else:
                 self.log(message='         No sections to parse', level='debug')
         else:
