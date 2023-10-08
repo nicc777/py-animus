@@ -98,7 +98,7 @@ metadata:
 spec:
   source:
     type: inline
-    value: 'rm -vf /tmp/all-done ; touch /tmp/all-done'
+    value: 'touch /tmp/all-done ; curl -s http://localhost/my-done-callback-url'
   convertOutputToText: true
   stripNewline: True
   convertRepeatingSpaces: true
