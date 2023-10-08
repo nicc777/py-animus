@@ -474,7 +474,21 @@ class ManifestBase:
 
     def determine_actions(self):
         """
-            This is a generic function which can be overridden for finer grained control in extensions withy multiple actions.
+            This is a generic function which can be overridden for finer 
+            grained control in extensions withy multiple actions.
+
+            Add a action conditional redirect. For example, when a delete
+            command is done, allow it to redirect to apply for a particular 
+            manifest.
+
+            Example MetaData definition:
+                actionOverrides:
+                    delete: apply   # Redirects delete action to the apply action
+                    apply: delete   # Redirects apply action to the delete action
+
+            This may be useful in cases where certain actions must always be 
+            applied even when running a delete action, for example when we 
+            clone a Git repo that contains some helper commands,,,
         """
         if 'skipDeleteAll' in self.metadata:
             if self.metadata['skipDeleteAll'] is True:

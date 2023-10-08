@@ -139,6 +139,11 @@ class UnitOfWork:
                             )
                         )
                         return
+                elif 'actionOverrides' in self.work_instance.metadata:
+                    if 'apply' in self.work_instance.metadata['actionOverrides']:
+                        if self.work_instance.metadata['actionOverrides']['apply'] == 'delete':
+                            self.work_instance.metadata.pop('actionOverrides')  # Remove because we do not want any potential for circular references.
+                            self.run(action='delete', scope=scope)
                 self.work_instance.apply_manifest()
             if action == 'delete':
                 if 'skipDeleteAll' in self.work_instance.metadata:
@@ -150,6 +155,11 @@ class UnitOfWork:
                             )
                         )
                         return
+                elif 'actionOverrides' in self.work_instance.metadata:
+                    if 'delete' in self.work_instance.metadata['actionOverrides']:
+                        if self.work_instance.metadata['actionOverrides']['delete'] == 'apply':
+                            self.work_instance.metadata.pop('actionOverrides')  # Remove because we do not want any potential for circular references.
+                            self.run(action='apply', scope=scope)
                 self.work_instance.delete_manifest()
         else:
             logger.warning(

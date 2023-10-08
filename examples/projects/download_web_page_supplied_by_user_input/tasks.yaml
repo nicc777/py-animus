@@ -1,9 +1,27 @@
 ---
+kind: ShellScript
+version: v1
+metadata:
+  name: cleanup-all-done
+  actionOverrides:
+    delete: apply   # Redirects delete action to the apply action
+spec:
+  source:
+    type: inline
+    value: 'rm -vf /tmp/all-done ; echo ; echo ; echo "CLEANUP DONE" ; echo ; echo'
+  convertOutputToText: true
+  stripNewline: True
+  convertRepeatingSpaces: true
+  stripLeadingTrailingSpaces: true
+---
 kind: CliInputPrompt
 version: v1
 metadata:
   name: url
   skipDeleteAll: true
+  dependencies:
+    apply:
+    - cleanup-all-done
 spec:
   promptText: 'Enter URL of file to download:'
   promptCharacter: 'URL > '
@@ -25,6 +43,9 @@ metadata:
     apply:
     - url
     - save-target
+    - cleanup-all-done
+    delete:
+    - cleanup-all-done
   skipDeleteAll: true
 spec:
   sourceUrl: !Variable 'CliInputPrompt:url:default:CLI_INPUT_VALUE'
@@ -37,6 +58,9 @@ metadata:
   dependencies:
     apply:
     - web-download
+    - cleanup-all-done
+    delete:
+    - cleanup-all-done
 spec:
   data: !Sub
   - '{"status": "${status}","downloadPath": "${path}"}'
@@ -51,11 +75,30 @@ metadata:
   dependencies:
     delete:
     - save-target
+    - cleanup-all-done
   skipApplyAll: true
 spec:
   source:
     type: inline
     value: 'rm -vf /tmp/*.md'
+  convertOutputToText: true
+  stripNewline: True
+  convertRepeatingSpaces: true
+  stripLeadingTrailingSpaces: true
+---
+kind: ShellScript
+version: v1
+metadata:
+  name: all-done
+  dependencies:
+    apply:
+    - write-file-v1-minimal
+    delete:
+    - cleanup
+spec:
+  source:
+    type: inline
+    value: 'rm -vf /tmp/all-done ; touch /tmp/all-done'
   convertOutputToText: true
   stripNewline: True
   convertRepeatingSpaces: true
