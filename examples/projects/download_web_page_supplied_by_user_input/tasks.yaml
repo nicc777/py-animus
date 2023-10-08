@@ -40,7 +40,7 @@ metadata:
 spec:
   data: !Sub
   - '{"status": "${status}","downloadPath": "${path}"}'
-  - status: !Variable 'CliInputPrompt:web-download:default:STATUS'
+  - status: !Variable 'WebDownloadFile:web-download:default:STATUS'
     path: !Variable 'CliInputPrompt:save-target:default:CLI_INPUT_VALUE'
   targetFile: /tmp/results.json
 ---
