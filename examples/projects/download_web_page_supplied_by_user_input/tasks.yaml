@@ -2,7 +2,7 @@
 kind: ShellScript
 version: v1
 metadata:
-  name: cleanup-all-done
+  name: cleanup-all-done-file
   actionOverrides:
     delete: apply   # Redirects delete action to the apply action
 spec:
@@ -21,7 +21,7 @@ metadata:
   skipDeleteAll: true
   dependencies:
     apply:
-    - cleanup-all-done
+    - cleanup-all-done-file
 spec:
   promptText: 'Enter URL of file to download:'
   promptCharacter: 'URL > '
@@ -32,7 +32,7 @@ metadata:
   name: save-target
   dependencies:
     apply:
-    - cleanup-all-done
+    - cleanup-all-done-file
   skipDeleteAll: true
 spec:
   promptText: 'Enter the full path where the downloaded file must be saved, including the filename:'
@@ -46,9 +46,9 @@ metadata:
     apply:
     - url
     - save-target
-    - cleanup-all-done
+    - cleanup-all-done-file
     delete:
-    - cleanup-all-done
+    - cleanup-all-done-file
   skipDeleteAll: true
 spec:
   sourceUrl: !Variable 'CliInputPrompt:url:default:CLI_INPUT_VALUE'
@@ -61,9 +61,9 @@ metadata:
   dependencies:
     apply:
     - web-download
-    - cleanup-all-done
+    - cleanup-all-done-file
     delete:
-    - cleanup-all-done
+    - cleanup-all-done-file
 spec:
   data: !Sub
   - '{"status": "${status}","downloadPath": "${path}"}'
@@ -78,7 +78,7 @@ metadata:
   dependencies:
     delete:
     - save-target
-    - cleanup-all-done
+    - cleanup-all-done-file
   skipApplyAll: true
 spec:
   source:
@@ -92,11 +92,13 @@ spec:
 kind: ShellScript
 version: v1
 metadata:
-  name: all-done
+  name: write-all-done-file
   dependencies:
     apply:
     - write-file-v1-minimal
+    - cleanup-all-done-file
     delete:
+    - cleanup-all-done-file
     - cleanup
 spec:
   source:
