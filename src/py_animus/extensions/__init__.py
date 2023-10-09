@@ -17,6 +17,7 @@ from py_animus.extensions.shell_script_v1 import ShellScript as ShellScriptV1
 from py_animus.extensions.cli_input_prompt_v1 import CliInputPrompt as CliInputPromptV1
 from py_animus.extensions.web_download_file_v1 import WebDownloadFile as WebDownloadFileV1
 from py_animus.extensions.write_file_v1 import WriteFile as WriteFileV1
+from py_animus.extensions.git_repo_v1 import GitRepo as GitRepoV1
 from py_animus.extensions.project_v1 import Project as ProjectV1
 from py_animus.animus_logging import logger
 from py_animus.models.extensions import ManifestBase
@@ -92,6 +93,7 @@ extensions.add_extension(extension=ShellScriptV1)
 extensions.add_extension(extension=CliInputPromptV1)
 extensions.add_extension(extension=WebDownloadFileV1)
 extensions.add_extension(extension=WriteFileV1)
+extensions.add_extension(extension=GitRepoV1)
 extensions.add_extension(extension=ProjectV1)
 
 

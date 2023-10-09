@@ -1,0 +1,20 @@
+---
+kind: Project
+version: v1
+metadata:
+  name: project-1
+spec:
+  workDirectory: '/tmp/sample-01'
+  loggingConfig: https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-01/project-01.yaml
+  extensionPaths: []
+  manifestFiles:
+  - https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/clone_extensions_repo/project-01.yaml
+  skipConfirmation: false       # If true, no confirmation on the execution plan will be asked for (Console).
+---
+kind: GitRepo
+version: v1
+metadata:
+  name: git-repo-v1-minimal
+spec:
+  workDir: /tmp/test-extensions-1
+  cloneUrl: https://github.com/nicc777/py-animus-extensions
