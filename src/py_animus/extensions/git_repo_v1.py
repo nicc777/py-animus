@@ -40,7 +40,7 @@ Spec fields:
 | `authentication.sshAuthentication.sshPrivateKeyFile` | str      | No       |                | The full path to the SSH private key. Only required if `authentication.type` is set to `ssh`. For SSH this is for now the only supported option.                                                                                                                                                                                       |
 | `workDir`                                            | str      | No       |                | If supplied, this directory will be used to clone the Git repository into. If not supplied, a random temporary directory will be created. The final value will be in the `GIT_DIR` variable.                                                                                                                                           |
 | `checkoutBranch`                                     | str      | No       |                | If supplied, this branch will be checked out. Default=main                                                                                                                                                                                                                                                                             |
-| `options.skipSslVerify`                              | bool     | No       |                | If `authentication.type` is `http` and there is a need to skip SSL verification, set this to `true`. Default=false                                                                                                                                                                                                                     |
+| `options.skipSslVerify`                              | bool     | No       | False          | If `authentication.type` is `http` and there is a need to skip SSL verification, set this to `true`. Default=false                                                                                                                                                                                                                     |
         
     """
 
@@ -48,7 +48,9 @@ Spec fields:
         super().__init__(post_parsing_method=post_parsing_method, version=version, supported_versions=supported_versions)
         self.extension_action_descriptions = (
             'Git Clone',
-            'Git Pull'
+            'Git Pull',
+            'Git Create Random Dir',
+            'Git Delete Dir'
         )
 
     def _create_temporary_working_directory(self)->str:
@@ -62,16 +64,53 @@ Spec fields:
         return work_dir
 
     def implemented_manifest_differ_from_this_manifest(self)->bool:
-        work_dir = self._create_temporary_working_directory()
-        variable_cache.store_variable(
-            variable=Variable(
-                name='{}:GIT_DIR'.format(self._var_name),
-                initial_value=work_dir,
-                logger=self.logger
-            ),
-            overwrite_existing=True
-        )
+        # work_dir = self._create_temporary_working_directory()
+        # variable_cache.store_variable(
+        #     variable=Variable(
+        #         name=self._var_name(var_name='GIT_DIR'),
+        #         initial_value=work_dir,
+        #         logger=self.logger
+        #     ),
+        #     overwrite_existing=True
+        # )
         return True
+
+    def determine_actions(self):
+        if actions.command == 'delete':
+            if 'skipDeleteAll' in self.metadata:
+                if self.metadata['skipDeleteAll'] is True:
+                    self._bulk_register_actions(final_action=Action.DELETE_SKIP)
+                    return
+        if actions.command == 'apply':
+            if 'skipApplyAll' in self.metadata:
+                if self.metadata['skipApplyAll'] is True:
+                    self._bulk_register_actions(final_action=Action.APPLY_SKIP)
+                    return
+                
+        if self.implemented_manifest_differ_from_this_manifest() is True:
+            if actions.command == 'apply':
+                if 'workDir' in self.spec:
+                    if os.path.exists('{}{}.git'.format(self.metadata['workDirt'], os.sep)) is True:
+                        self.register_action(action_name='Git Pull', initial_status=Action.APPLY_PENDING)
+                        self.log(message='Registered action "Git Pull" with status "{}"'.format(Action.APPLY_PENDING), level='info')
+                    else:
+                        self.register_action(action_name='Git Clone', initial_status=Action.APPLY_PENDING)
+                        self.log(message='Registered action "Git Clone" with status "{}"'.format(Action.APPLY_PENDING), level='info')    
+                else:
+                    self.register_action(action_name='Git Create Random Dir', initial_status=Action.APPLY_PENDING)
+                    self.log(message='Registered action "Git Create Random Dir" with status "{}"'.format(Action.APPLY_PENDING), level='info')
+                    self.register_action(action_name='Git Clone', initial_status=Action.APPLY_PENDING)
+                    self.log(message='Registered action "Git Clone" with status "{}"'.format(Action.APPLY_PENDING), level='info')
+            elif actions.command == 'delete':
+                if 'workDir' in self.spec:
+                    self.register_action(action_name='Git Delete Dir', initial_status=Action.APPLY_PENDING)
+                    self.log(message='Registered action "Git Delete Dir" with status "{}"'.format(Action.APPLY_PENDING), level='info')
+            else:
+                raise Exception('Unknown or unsupported command for this manifest kind "{}"'.format(self.kind))
+        else:
+            # Right now we do not have a scenario where the implemented_manifest_differ_from_this_manifest() method will return false...
+            self.log(message='Unforeseen scenario - no actions will be taken !!!', level='warning')
+        return
 
     def _git_clone_from_https(
         self,
@@ -182,34 +221,68 @@ Spec fields:
             * 'Git Clone'
             * 'Git Pull'
         """
-        final_action = None
+        final_actions = list()
         for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
-            if action_name == 'Git Clone' and expected_action != Action.APPLY_PENDING and final_action is None:
+            if action_name == 'Git Clone' and expected_action != Action.APPLY_PENDING:
                 self.log(message='   Apply action "{}" will not be done. Status: {}'.format(action_name, expected_action), level='info')
-            elif action_name == 'Git Clone' and expected_action == Action.APPLY_PENDING and final_action is None:
+            elif action_name == 'Git Clone' and expected_action == Action.APPLY_PENDING:
                 self.log(message='   Apply action "{}" will be done. Status: {}'.format(action_name, expected_action), level='info')
-                final_action = 'Git Clone'
-            elif action_name == 'Git Pull' and expected_action != Action.APPLY_PENDING and final_action is None:
+                final_actions.append('Git Clone')
+            elif action_name == 'Git Pull' and expected_action != Action.APPLY_PENDING:
                 self.log(message='   Apply action "{}" will not be done. Status: {}'.format(action_name, expected_action), level='info')
-            elif action_name == 'Git Pull' and expected_action == Action.APPLY_PENDING and final_action is None:
+            elif action_name == 'Git Pull' and expected_action == Action.APPLY_PENDING:
                 self.log(message='   Apply action "{}" will be done. Status: {}'.format(action_name, expected_action), level='info')
-                final_action = 'Git Pull'
-        if final_action is None:
+                final_actions.append('Git Pull')
+            
+            if action_name == 'Git Create Random Dir' and expected_action != Action.APPLY_PENDING:
+                self.log(message='   Apply action "{}" will not be done. Status: {}'.format(action_name, expected_action), level='info')
+            elif action_name == 'Git Create Random Dir' and expected_action == Action.APPLY_PENDING:
+                self.log(message='   Apply action "{}" will be done. Status: {}'.format(action_name, expected_action), level='info')
+                final_actions.append('Git Create Random Dir')
+
+        if len(final_actions) == 0:
             return
 
-        if final_action == 'Git Clone':
+        work_dir = None
+        if 'Git Create Random Dir' in final_actions:
+            work_dir = create_temp_directory()
+            self.log(message='Created system generated working directory "{}"'.format(work_dir), level='info')
+        else:
+            work_dir = self.spec['workDir']
+            if os.path.exists(work_dir) is False:
+                create_directory(path=work_dir)
+                self.log(message='Created working directory "{}"'.format(work_dir), level='info')
+        self.log(message='Using working directory "{}"'.format(work_dir), level='info')
+
+        if work_dir is not None:
+            variable_cache.store_variable(
+                variable=Variable(
+                    name=self._var_name(var_name='GIT_DIR'),
+                    initial_value=work_dir,
+                    logger=self.logger
+                ),
+                overwrite_existing=True
+            )
+        else:
+            raise Exception('Cannot proceed as work directory is not set...')
+
+        if 'Git Clone' in final_actions:
             branch = self._get_branch(variable_cache=variable_cache)
             if self.spec['cloneUrl'].lower().startswith('http') is True:
                 self.log(message='Cloning a HTTP repository', level='info')
-                self._process_http_based_git_repo(branch=branch, variable_cache=variable_cache)
+                self._process_http_based_git_repo(branch=branch)
             else:
                 self.log(message='Cloning a SSH repository', level='info')
-                self._process_other_git_repo(branch=branch, variable_cache=variable_cache)
-        elif final_action == 'Git Pull':
+                self._process_other_git_repo(branch=branch)
+        elif 'Git Pull' in final_actions:
             self.log(message='Git Pull action not yet implemented... For now you have to delete the existing Git repository first to ensure a fresh copy is cloned from source', level='warning')
 
         return
 
     def delete_manifest(self):
         self.log(message='DELETE CALLED', level='info')
+
+        if 'workDir' in self.spec:
+            pass
+
         return
