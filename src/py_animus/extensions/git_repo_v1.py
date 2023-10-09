@@ -64,15 +64,6 @@ Spec fields:
         return work_dir
 
     def implemented_manifest_differ_from_this_manifest(self)->bool:
-        # work_dir = self._create_temporary_working_directory()
-        # variable_cache.store_variable(
-        #     variable=Variable(
-        #         name=self._var_name(var_name='GIT_DIR'),
-        #         initial_value=work_dir,
-        #         logger=self.logger
-        #     ),
-        #     overwrite_existing=True
-        # )
         return True
 
     def determine_actions(self):
@@ -90,7 +81,7 @@ Spec fields:
         if self.implemented_manifest_differ_from_this_manifest() is True:
             if actions.command == 'apply':
                 if 'workDir' in self.spec:
-                    if os.path.exists('{}{}.git'.format(self.metadata['workDirt'], os.sep)) is True:
+                    if os.path.exists('{}{}.git'.format(self.spec['workDir'], os.sep)) is True:
                         self.register_action(action_name='Git Pull', initial_status=Action.APPLY_PENDING)
                         self.log(message='Registered action "Git Pull" with status "{}"'.format(Action.APPLY_PENDING), level='info')
                     else:
@@ -103,8 +94,8 @@ Spec fields:
                     self.log(message='Registered action "Git Clone" with status "{}"'.format(Action.APPLY_PENDING), level='info')
             elif actions.command == 'delete':
                 if 'workDir' in self.spec:
-                    self.register_action(action_name='Git Delete Dir', initial_status=Action.APPLY_PENDING)
-                    self.log(message='Registered action "Git Delete Dir" with status "{}"'.format(Action.APPLY_PENDING), level='info')
+                    self.register_action(action_name='Git Delete Dir', initial_status=Action.DELETE_PENDING)
+                    self.log(message='Registered action "Git Delete Dir" with status "{}"'.format(Action.DELETE_PENDING), level='info')
             else:
                 raise Exception('Unknown or unsupported command for this manifest kind "{}"'.format(self.kind))
         else:
@@ -152,8 +143,7 @@ Spec fields:
         variable_cache.store_variable(
             variable=Variable(
                 name='{}:BRANCH'.format(self._var_name),
-                initial_value=branch,
-                logger=self.logger
+                initial_value=branch
             ),
             overwrite_existing=True
         )
@@ -235,20 +225,14 @@ Spec fields:
         """
         final_actions = list()
         for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
-            if action_name == 'Git Clone' and expected_action != Action.APPLY_PENDING:
-                self.log(message='   Apply action "{}" will not be done. Status: {}'.format(action_name, expected_action), level='info')
-            elif action_name == 'Git Clone' and expected_action == Action.APPLY_PENDING:
+            if action_name == 'Git Clone' and expected_action == Action.APPLY_PENDING:
                 self.log(message='   Apply action "{}" will be done. Status: {}'.format(action_name, expected_action), level='info')
                 final_actions.append('Git Clone')
-            elif action_name == 'Git Pull' and expected_action != Action.APPLY_PENDING:
-                self.log(message='   Apply action "{}" will not be done. Status: {}'.format(action_name, expected_action), level='info')
             elif action_name == 'Git Pull' and expected_action == Action.APPLY_PENDING:
                 self.log(message='   Apply action "{}" will be done. Status: {}'.format(action_name, expected_action), level='info')
                 final_actions.append('Git Pull')
             
-            if action_name == 'Git Create Random Dir' and expected_action != Action.APPLY_PENDING:
-                self.log(message='   Apply action "{}" will not be done. Status: {}'.format(action_name, expected_action), level='info')
-            elif action_name == 'Git Create Random Dir' and expected_action == Action.APPLY_PENDING:
+            if action_name == 'Git Create Random Dir' and expected_action == Action.APPLY_PENDING:
                 self.log(message='   Apply action "{}" will be done. Status: {}'.format(action_name, expected_action), level='info')
                 final_actions.append('Git Create Random Dir')
 
@@ -270,8 +254,7 @@ Spec fields:
             variable_cache.store_variable(
                 variable=Variable(
                     name=self._var_name(var_name='GIT_DIR'),
-                    initial_value=work_dir,
-                    logger=self.logger
+                    initial_value=work_dir
                 ),
                 overwrite_existing=True
             )
@@ -279,7 +262,7 @@ Spec fields:
             raise Exception('Cannot proceed as work directory is not set...')
 
         if 'Git Clone' in final_actions:
-            branch = self._get_branch(variable_cache=variable_cache)
+            branch = self._get_branch()
             if self.spec['cloneUrl'].lower().startswith('http') is True:
                 self.log(message='Cloning a HTTP repository', level='info')
                 self._process_http_based_git_repo(branch=branch)
@@ -294,7 +277,26 @@ Spec fields:
     def delete_manifest(self):
         self.log(message='DELETE CALLED', level='info')
 
-        if 'workDir' in self.spec:
-            pass
+        final_actions = list()
+        for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
+            if action_name == 'Git Delete Dir' and expected_action == Action.DELETE_PENDING:
+                self.log(message='   Delete action "{}" will be done. Status: {}'.format(action_name, expected_action), level='info')
+                final_actions.append('Git Delete Dir')
+
+        if 'Git Delete Dir' in final_actions:
+            work_dir = None
+            if 'workDir' in self.spec:
+                work_dir = self.spec['workDir']
+            else:
+                work_dir = variable_cache.get_value(
+                    variable_name=self._var_name(var_name='GIT_DIR'),
+                    value_if_expired=None,
+                    default_value_if_not_found=None,
+                    raise_exception_on_expired=False,
+                    raise_exception_on_not_found=False
+                )
+                
+            if work_dir is not None:
+                delete_directory(dir=work_dir)
 
         return

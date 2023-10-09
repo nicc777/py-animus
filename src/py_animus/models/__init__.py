@@ -59,11 +59,11 @@ class Action:
     APPLY_UPDATE_EXISTING       = 'APPLY_UPDATE_EXISTING'
     APPLY_DELETE_EXISTING       = 'APPLY_DELETE_EXISTING'
     APPLY_SKIP                  = 'APPLY_SKIP'
-    DELETE_PENDING              = 'APPLY_PENDING'
-    DELETE_DONE                 = 'APPLY_DONE'
-    DELETE_ABORTED_WITH_ERRORS  = 'APPLY_ABORTED_WITH_ERRORS'
-    DELETE_DELETE_EXISTING      = 'APPLY_DELETE_EXISTING'
-    DELETE_SKIP                 = 'APPLY_SKIP'
+    DELETE_PENDING              = 'DELETE_PENDING'
+    DELETE_DONE                 = 'DELETE_DONE'
+    DELETE_ABORTED_WITH_ERRORS  = 'DELETE_ABORTED_WITH_ERRORS'
+    DELETE_DELETE_EXISTING      = 'DELETE_DELETE_EXISTING'
+    DELETE_SKIP                 = 'DELETE_SKIP'
     _possible_actions = (
         'UNKNOWN',
         'NO_ACTION',
@@ -74,11 +74,11 @@ class Action:
         'APPLY_UPDATE_EXISTING',
         'APPLY_DELETE_EXISTING',
         'APPLY_SKIP',
-        'APPLY_PENDING',
-        'APPLY_DONE',
-        'APPLY_ABORTED_WITH_ERRORS',
-        'APPLY_DELETE_EXISTING',
-        'APPLY_SKIP',
+        'DELETE_PENDING',
+        'DELETE_DONE',
+        'DELETE_ABORTED_WITH_ERRORS',
+        'DELETE_DELETE_EXISTING',
+        'DELETE_SKIP',
     )
 
     def __init__(self, manifest_kind: str, manifest_name: str, action_name: str, action_status: str):
