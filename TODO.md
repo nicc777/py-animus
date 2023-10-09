@@ -5,7 +5,7 @@
 
 # Current tasks
 
-* [ ] Complete implementation of Git extension
+* [x] Complete implementation of Git extension
 * [ ] Refactor built in extensions to ensure all extensions handle `apply` and `delete` scenarios as intended, including with the new meta data key `actionOverrides`
 
 
