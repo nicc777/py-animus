@@ -1,3 +1,5 @@
-PyYAML
 cerberus
+PyYAML
 chardet
+GitPython
+requests

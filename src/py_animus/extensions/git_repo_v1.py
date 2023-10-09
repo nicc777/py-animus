@@ -176,7 +176,7 @@ Spec fields:
             password=password,
             skip_ssl=False,
             target_dir=variable_cache.get_value(
-                variable_name='{}:GIT_DIR'.format(self._var_name),
+                variable_name=self._var_name(var_name='GIT_DIR'),
                 raise_exception_on_expired=True,
                 raise_exception_on_not_found=True
             ),
@@ -197,7 +197,7 @@ Spec fields:
                             url=self.spec['cloneUrl'].lower(),
                             private_key=private_key,
                             target_dir=variable_cache.get_value(
-                                variable_name='{}:GIT_DIR'.format(self._var_name),
+                                variable_name=self._var_name(var_name='GIT_DIR'),
                                 raise_exception_on_expired=True,
                                 raise_exception_on_not_found=True
                             ),
@@ -211,6 +211,18 @@ Spec fields:
                 self.log(message='Failed to clone Git repo - Authentication type required but not present', level='error')
         else:
             self.log(message='Failed to clone Git repo - http not configured and unable to guess protocol and authentication method', level='error')
+
+    def _process_git_pull(self):
+        repo = Repo(
+            variable_cache.get_value(
+                variable_name=self._var_name(var_name='GIT_DIR'),
+                raise_exception_on_expired=True,
+                raise_exception_on_not_found=True
+            )
+        )
+        o = repo.remotes.origin
+        o.pull()
+        repo.git.checkout(self._get_branch())
 
     def apply_manifest(self):
         self.log(message='APPLY CALLED', level='info')
@@ -275,7 +287,7 @@ Spec fields:
                 self.log(message='Cloning a SSH repository', level='info')
                 self._process_other_git_repo(branch=branch)
         elif 'Git Pull' in final_actions:
-            self.log(message='Git Pull action not yet implemented... For now you have to delete the existing Git repository first to ensure a fresh copy is cloned from source', level='warning')
+            self._process_git_pull()
 
         return
 
