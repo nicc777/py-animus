@@ -138,7 +138,7 @@ Spec fields:
 
         for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
             if action_name == 'Write File' and expected_action != Action.DELETE_PENDING:
-                self.log(message='   Apply action "{}" will not be done. Status: {}'.format(action_name, expected_action), level='info')
+                self.log(message='   Delete action "{}" will not be done. Status: {}'.format(action_name, expected_action), level='info')
                 return
 
         try:
