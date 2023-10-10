@@ -14,3 +14,7 @@
   * [ ] Checking out a branch
   * [ ] Pull changes for previously downloaded repo's
 
+# Documentation
+
+Consider using something like [mkdocs](https://squidfunk.github.io/mkdocs-material/getting-started/) with a good theme to make documentation. 
+
