@@ -14,10 +14,26 @@ import stat
 
 
 class WriteFile(ManifestBase):
-    """This manifest will take provided data and write it to a file. The file can be (optionally) marked as executable.
+    """# `WriteFile` Description
+     
+This manifest will take provided data and write it to a file. The file can be 
+(optionally) marked as executable.
 
-The `apply` action will create the file and the `delete` action will delete the file. To retain files on `delete`
-action, set the manifest skip option in the meta data.
+The `apply` action will create the file and the `delete` action will delete the
+file. To retain files on `delete` action, set the manifest skip option in the 
+meta data.
+
+# Apply Action
+
+Get input from user
+
+# Delete Action
+
+No Action
+
+# Variables 
+
+## After Apply Action
 
 The following variables will be defined:
 
@@ -26,6 +42,18 @@ The following variables will be defined:
 * `EXECUTABLE` - Boolean value which will be TRUE if the file has been set as executable
 * `SIZE` - The file size in BYTES
 * `SHA256_CHECKSUM` - The calculated file checksum (SHA256)
+
+## After Delete Action
+
+The following variables will be deleted:
+
+* `FILE_PATH`
+* `WRITTEN`
+* `EXECUTABLE`
+* `SIZE`
+* `SHA256_CHECKSUM`
+
+## Spec fields
 
 Spec fields:
 

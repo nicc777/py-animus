@@ -15,21 +15,36 @@ from git import Repo
 
 
 class GitRepo(ManifestBase):
-    """Defines a Git repository.
+    """# `GitRepo` Description
+     
+The configured Git repository will be cloned (or updates may be pulled, in the
+case of an existing repository).
 
-Running `apply` will clone the Git repository to a local working directory and checkout the default or selected
-branch.
+This extension is useful for obtaining additional artifacts stored in a Git repository and make then available locally for easier/faster processing.
 
-If the work directory exists, it will first be deleted in order to clone a fresh copy of the selected repository.
+# Apply Action
 
-The `delete` action will simply remove the working directory.
+Clones (or pulls) from the remote Git repository to the local system
 
-The following variables will be set and can be referenced in other manifests using [variable substitution](https://github.com/nicc777/py-animus/blob/main/doc/placeholder_values.md#variables-and-manifest-dependencies)
+# Delete Action
 
-* `GIT_DIR` - Path to the working directory
-* `BRANCH` - The branch checked out
+Deletes the target directory containing the repository on the local system.
 
-Spec fields:
+# Variables 
+
+## After Apply Action
+
+* `GIT_DIR` - Contains the location or directory of the cloned Git repository
+* `BRANCH` - The checked out branch
+
+## After Delete Action
+
+The following variables will be deleted:
+
+* `GIT_DIR`
+* `BRANCH`
+
+## Spec fields
 
 | Field                                                | Type     | Required | Default Value  | Description                                                                                                                                                                                                                                                                                                                            |
 |------------------------------------------------------|----------|----------|----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -142,7 +157,7 @@ Spec fields:
                 branch = '{}'.format(self.spec['checkoutBranch'])
         variable_cache.store_variable(
             variable=Variable(
-                name='{}:BRANCH'.format(self._var_name),
+                name=self._var_name(var_name='BRANCH'),
                 initial_value=branch
             ),
             overwrite_existing=True
@@ -298,5 +313,7 @@ Spec fields:
                 
             if work_dir is not None:
                 delete_directory(dir=work_dir)
+                variable_cache.delete_variable(variable_name=self._var_name(var_name='GIT_DIR'))
+                variable_cache.delete_variable(variable_name=self._var_name(var_name='BRANCH'))
 
         return

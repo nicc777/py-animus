@@ -15,16 +15,39 @@ import sys
 
 
 class RotatingFileHandlerLogging(ManifestBase): # pragma: no cover
-    """
-        Spec fields:
+    """# `RotatingFileHandlerLogging` Description
+     
+Logs to a file on the local system. The log file will be appended until 
+`maxBytes` is reached (default=10 MiB). The number of backups kept is 
+determined by the `backupCount` setting (default=5).
 
-        | Field                       | Type    | Required | Default Value                               | Description                                                  |
-        |-----------------------------|---------|----------|---------------------------------------------|--------------------------------------------------------------|
-        | level                       | str     | No       | `info`                                      | The logging level                                            |
-        | loggingFormat               | str     | No       | `'%(asctime)s %(levelname)s - %(message)s'` | The message format                                           |
-        | filename                    | str     | yes      | None (will cause Exception to be raised)    | The log file name                                            |
-        | maxBytes                    | int     | No       | 10 MiB                                      | How many bytes to log before rotating the log file           |
-        | backupCount                 | int     | No       | 5                                           | HOw many files to keep before starting to delete old files.  | 
+# Apply Action
+
+Configures the logger
+
+# Delete Action
+
+Automatically redirects to the `apply` action
+
+# Variables 
+
+## After Apply Action
+
+No variables are set
+
+## After Delete Action
+
+No variables are set or deleted
+
+## Spec fields
+
+| Field                       | Type    | Required | Default Value                               | Description                                                  |
+|-----------------------------|---------|----------|---------------------------------------------|--------------------------------------------------------------|
+| level                       | str     | No       | `info`                                      | The logging level                                            |
+| loggingFormat               | str     | No       | `'%(asctime)s %(levelname)s - %(message)s'` | The message format                                           |
+| filename                    | str     | yes      | None (will cause Exception to be raised)    | The log file name                                            |
+| maxBytes                    | int     | No       | 10 MiB                                      | How many bytes to log before rotating the log file           |
+| backupCount                 | int     | No       | 5                                           | HOw many files to keep before starting to delete old files.  | 
     """
 
     def __init__(self, post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):
@@ -80,5 +103,6 @@ class RotatingFileHandlerLogging(ManifestBase): # pragma: no cover
         return
     
     def delete_manifest(self):
+        self.log(message='Logging "delete" actions automatically redirects to an apply action.', level='warning')
         return self.apply_manifest()
 

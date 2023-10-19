@@ -16,20 +16,45 @@ import os
 
 
 class ShellScript(ManifestBase):    # pragma: no cover    
-    """
-        Spec fields:
+    """# `ShellScript` Description
+     
+Runs a shell script. This extension is intended to be run on Unix like systems.
 
-        | Field                        | Type     | Required | Default Value                               | Description                                                                                                                                                                                                                                     |
-        |------------------------------|----------|----------|---------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|        
-        | `shellInterpreter`           |  str     | No       | `sh`                                        | The shell interpreter to select in the shabang line. Supported values: `sh`, `zsh`, `perl`, `python` and `bash`                                                                                                                                 |
-        | `source`                     |  dict    | Yes      | n/a                                         | Defines the script source                                                                                                                                                                                                                       |
-        | `source.type`                |  str     | No       | `inline`                                    | Select the source type, which can be either `filePath` that points to an existing script file on the local file system, or `inLine` with the script source defined in the `spec.source.value` field                                             |
-        | `source.value`               |  str     | No       | `exit 0`                                    | If `spec.source.type` has a value of `inLine` then the value here will be assumed to be the script content of that type. if `spec.source.type` has a value of `filePath` then this value must point to an existing file on the local filesystem |
-        | `workDir.path`               |  str     | No       | System Generated                            | An optional path to a working directory. The extension will create temporary files (if needed) in this directory and execute them from here.                                                                                                    |
-        | `convertOutputToText`        |  bool    | No       | False                                       | Normally the STDOUT and STDERR will be binary encoded. Setting this value to true will convert those values to a normal string. Default=False                                                                                                   |
-        | `stripNewline`               |  bool    | No       | False                                       | Output may include newline or other line break characters. Setting this value to true will remove newline characters. Default=False                                                                                                             |
-        | `convertRepeatingSpaces`     |  bool    | No       | False                                       | Output may contain more than one repeating space or tab characters. Setting this value to true will replace these with a single space. Default=False                                                                                            |
-        | `stripLeadingTrailingSpaces` |  bool    | No       | False                                       | Output may contain more than one repeating space or tab characters. Setting this value to true will replace these with a single space. Default=False                                                                                            |
+# Apply Action
+
+Run the script as defined.
+
+# Delete Action
+
+Shell script does not have a specific delete action. If action is also required
+during delete actions, consider using the `metadata.actionOverrides` setting to
+redirect a "delete" action to an "apply" action for this manifest.
+
+# Variables 
+
+## After Apply Action
+
+* `EXIT_CODE` - Contains the shell exit code
+* `STDOUT` - Output from STDOUT
+* `STDERR` - Output from STDERR
+
+## After Delete Action
+
+No action is taken
+
+## Spec fields
+
+| Field                        | Type     | Required | Default Value                               | Description                                                                                                                                                                                                                                     |
+|------------------------------|----------|----------|---------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|        
+| `shellInterpreter`           |  str     | No       | `sh`                                        | The shell interpreter to select in the shabang line. Supported values: `sh`, `zsh`, `perl`, `python` and `bash`                                                                                                                                 |
+| `source`                     |  dict    | Yes      | n/a                                         | Defines the script source                                                                                                                                                                                                                       |
+| `source.type`                |  str     | No       | `inline`                                    | Select the source type, which can be either `filePath` that points to an existing script file on the local file system, or `inLine` with the script source defined in the `spec.source.value` field                                             |
+| `source.value`               |  str     | No       | `exit 0`                                    | If `spec.source.type` has a value of `inLine` then the value here will be assumed to be the script content of that type. if `spec.source.type` has a value of `filePath` then this value must point to an existing file on the local filesystem |
+| `workDir.path`               |  str     | No       | System Generated                            | An optional path to a working directory. The extension will create temporary files (if needed) in this directory and execute them from here.                                                                                                    |
+| `convertOutputToText`        |  bool    | No       | False                                       | Normally the STDOUT and STDERR will be binary encoded. Setting this value to true will convert those values to a normal string. Default=False                                                                                                   |
+| `stripNewline`               |  bool    | No       | False                                       | Output may include newline or other line break characters. Setting this value to true will remove newline characters. Default=False                                                                                                             |
+| `convertRepeatingSpaces`     |  bool    | No       | False                                       | Output may contain more than one repeating space or tab characters. Setting this value to true will replace these with a single space. Default=False                                                                                            |
+| `stripLeadingTrailingSpaces` |  bool    | No       | False                                       | Output may contain more than one repeating space or tab characters. Setting this value to true will replace these with a single space. Default=False                                                                                            |
 
     """
 
@@ -291,5 +316,5 @@ class ShellScript(ManifestBase):    # pragma: no cover
                 self.log(message='   Apply action "{}" will not be done. Status: {}'.format(action_name, expected_action), level='info')
                 return
             
-        self.apply_manifest()
+        self.log(message='Shell script does not have a specific delete action. If action is also required during delete actions, consider using the `metadata.actionOverrides` setting to redirect a "delete" action to an "apply" action for this manifest.', level='warning')
         return

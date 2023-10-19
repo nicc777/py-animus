@@ -16,27 +16,50 @@ import socket
 
 
 class SyslogHandlerLogging(ManifestBase):   # pragma: no cover
-    """
-        Spec fields:
+    """# `SyslogHandlerLogging` Description
+     
+Logs to Syslog (by default logs to local host). The Syslog service is expected
+to listen on a specific UDP or TCP port. The type of port is set by the 
+`socketType` option (default=DGRAM or UDP).
 
-        | Field                       | Type    | Required | Default Value                               | Description                                     |
-        |-----------------------------|---------|----------|---------------------------------------------|-------------------------------------------------|
-        | level                       | string  | No       | `info`                                      | The logging level                               |
-        | loggingFormat               | string  | No       | `'%(asctime)s %(levelname)s - %(message)s'` | The message format                              |
-        | host                        | string  | No       | `localhost`                                 | The IP address or hostname of the Syslog server |
-        | port                        | integer | No       | `514`                                       | The port of the Syslog server                   |
-        | facility                    | string  | No       | `USER`                                      | The syslog facility                             |
-        | socketType                  | string  | No       | `DGRAM`                                     | The socket type                                 |
+# Apply Action
 
-        Supported `facility` names:
+Configures the logger
 
-        * `USER`
-        * `LOCAL0` upto and including `LOCAL7`
+# Delete Action
 
-        Supported `socketType` values:
+Automatically redirects to the `apply` action
 
-        * `DGRAM`
-        * `STREAM`
+# Variables 
+
+## After Apply Action
+
+No variables are set
+
+## After Delete Action
+
+No variables are set or deleted
+
+## Spec fields
+
+| Field                       | Type    | Required | Default Value                               | Description                                     |
+|-----------------------------|---------|----------|---------------------------------------------|-------------------------------------------------|
+| level                       | string  | No       | `info`                                      | The logging level                               |
+| loggingFormat               | string  | No       | `'%(asctime)s %(levelname)s - %(message)s'` | The message format                              |
+| host                        | string  | No       | `localhost`                                 | The IP address or hostname of the Syslog server |
+| port                        | integer | No       | `514`                                       | The port of the Syslog server                   |
+| facility                    | string  | No       | `USER`                                      | The syslog facility                             |
+| socketType                  | string  | No       | `DGRAM`                                     | The socket type                                 |
+
+Supported `facility` names:
+
+* `USER`
+* `LOCAL0` upto and including `LOCAL7`
+
+Supported `socketType` values:
+
+* `DGRAM`
+* `STREAM`
     """
 
     def __init__(self, post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):
@@ -114,5 +137,6 @@ class SyslogHandlerLogging(ManifestBase):   # pragma: no cover
         return
     
     def delete_manifest(self):
+        self.log(message='Logging "delete" actions automatically redirects to an apply action.', level='warning')
         return self.apply_manifest()
 

@@ -14,15 +14,36 @@ import logging.handlers
 
 
 class DatagramHandlerLogging(ManifestBase): # pragma: no cover
-    """
-        Spec fields:
+    """# `DatagramHandlerLogging` Description
+     
+Logs to a UDP port on a remote host
 
-        | Field                       | Type    | Required | Default Value                               | Description                                           |
-        |-----------------------------|---------|----------|---------------------------------------------|-------------------------------------------------------|
-        | level                       | string  | No       | `info`                                      | The logging level                                     |
-        | loggingFormat               | string  | No       | `'%(asctime)s %(levelname)s - %(message)s'` | The message format                                    |
-        | host                        | string  | Yes      | None (will cause Exception to be raised)    | The IP address or hostname of the UDP listener server |
-        | port                        | integer | Yes      | None (will cause Exception to be raised)    | The port of the UDP listener server                   |
+# Apply Action
+
+Configures the logger
+
+# Delete Action
+
+Automatically redirects to the `apply` action
+
+# Variables 
+
+## After Apply Action
+
+No variables are set
+
+## After Delete Action
+
+No variables are set or deleted
+
+## Spec fields
+
+| Field                       | Type    | Required | Default Value                               | Description                                           |
+|-----------------------------|---------|----------|---------------------------------------------|-------------------------------------------------------|
+| level                       | string  | No       | `info`                                      | The logging level                                     |
+| loggingFormat               | string  | No       | `'%(asctime)s %(levelname)s - %(message)s'` | The message format                                    |
+| host                        | string  | Yes      | None (will cause Exception to be raised)    | The IP address or hostname of the UDP listener server |
+| port                        | integer | Yes      | None (will cause Exception to be raised)    | The port of the UDP listener server                   |
     """
 
     def __init__(self, post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):
@@ -70,5 +91,6 @@ class DatagramHandlerLogging(ManifestBase): # pragma: no cover
         return
     
     def delete_manifest(self):
+        self.log(message='Logging "delete" actions automatically redirects to an apply action.', level='warning')
         return self.apply_manifest()
 

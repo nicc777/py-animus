@@ -12,19 +12,41 @@ from getpass import getpass
 
 
 class CliInputPrompt(ManifestBase):
-    """Allows to pause for user input
+    """# `CliInputPrompt` Description
+     
+Allows to pause for user input
 
-        Spec fields:
+# Apply Action
 
-        | Field                          | Type     | Required | Default Value                               | Description                                                                                                                                                                                                                                     |
-        |--------------------------------|----------|----------|---------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-        | `spec.promptText`              | str      | No       | NULL                                        | The text to display on screen                                                                                                                                                                                                                   |
-        | `spec.promptCharacter`         | str      | No       | `> `                                        | The character for the actual prompt                                                                                                                                                                                                             |
-        | `spec.valueExpires`            | bool     | No       | False                                       | If set to true, the value will expire after `spec.valueTTL` seconds                                                                                                                                                                             |
-        | `spec.valueTTL`                | int      | No       | 60                                          | If `spec.valueExpires` is used, use this value to fine tune the exact timeout period in seconds                                                                                                                                                 |
-        | `spec.convertEmptyInputToNone` | bool     | No       | True                                        | If input is empty, convert the final value to NoneType                                                                                                                                                                                          |
-        | `spec.maskInput`               | bool     | No       | False                                       | If true, do not echo characters. This is suitable to ask for a password, for example                                                                                                                                                            |
-        | `spec.containsCredentials`     | bool     | No       | False                                       | If true, set the for_logging=True parameter for the Variable                                                                                                                                                                                    |
+Get input from user
+
+# Delete Action
+
+No Action
+
+# Variables 
+
+## After Apply Action
+
+* `CLI_INPUT_VALUE` - Contains the value entered
+
+## After Delete Action
+
+The following variables will be deleted:
+
+* `CLI_INPUT_VALUE`
+
+## Spec fields
+
+| Field                          | Type     | Required | Default Value                               | Description                                                                                                                                                                                                                                     |
+|--------------------------------|----------|----------|---------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `spec.promptText`              | str      | No       | NULL                                        | The text to display on screen                                                                                                                                                                                                                   |
+| `spec.promptCharacter`         | str      | No       | `> `                                        | The character for the actual prompt                                                                                                                                                                                                             |
+| `spec.valueExpires`            | bool     | No       | False                                       | If set to true, the value will expire after `spec.valueTTL` seconds                                                                                                                                                                             |
+| `spec.valueTTL`                | int      | No       | 60                                          | If `spec.valueExpires` is used, use this value to fine tune the exact timeout period in seconds                                                                                                                                                 |
+| `spec.convertEmptyInputToNone` | bool     | No       | True                                        | If input is empty, convert the final value to NoneType                                                                                                                                                                                          |
+| `spec.maskInput`               | bool     | No       | False                                       | If true, do not echo characters. This is suitable to ask for a password, for example                                                                                                                                                            |
+| `spec.containsCredentials`     | bool     | No       | False                                       | If true, set the for_logging=True parameter for the Variable                                                                                                                                                                                    |
 
     """
 
@@ -193,5 +215,5 @@ class CliInputPrompt(ManifestBase):
                 self.log(message='   Delete action "{}" will not be done. Status: {}'.format(action_name, expected_action), level='info')
                 return
             
-        self.apply_manifest()
+        self.log(message='CLI Input does not have a specific delete action. If input is also required during delete actions, consider using the `metadata.actionOverrides` setting to redirect a "delete" action to an "apply" action for this manifest.', level='warning')
         return

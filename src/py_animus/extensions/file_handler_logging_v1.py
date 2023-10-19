@@ -14,14 +14,38 @@ import sys
 
 
 class FileHandlerLogging(ManifestBase): # pragma: no cover
-    """
-        Spec fields:
+    """# `FileHandlerLogging` Description
+     
+Logs to a file on the local system. The log file will be appended to 
+indefinitely. No rotation is performed with this logging extension. For 
+rotation of log files, consider the `RotatingFileHandlerLogging` 
+extension.
 
-        | Field                       | Type    | Required | Default Value                               | Description        |
-        |-----------------------------|---------|----------|---------------------------------------------|--------------------|
-        | level                       | str     | No       | `info`                                      | The logging level  |
-        | loggingFormat               | str     | No       | `'%(asctime)s %(levelname)s - %(message)s'` | The message format |
-        | filename                    | str     | yes      | None (will cause Exception to be raised)    | The log file name  |
+# Apply Action
+
+Configures the logger
+
+# Delete Action
+
+Automatically redirects to the `apply` action
+
+# Variables 
+
+## After Apply Action
+
+No variables are set
+
+## After Delete Action
+
+No variables are set or deleted
+
+## Spec fields
+
+| Field                       | Type    | Required | Default Value                               | Description        |
+|-----------------------------|---------|----------|---------------------------------------------|--------------------|
+| level                       | str     | No       | `info`                                      | The logging level  |
+| loggingFormat               | str     | No       | `'%(asctime)s %(levelname)s - %(message)s'` | The message format |
+| filename                    | str     | yes      | None (will cause Exception to be raised)    | The log file name  |
     """
 
     def __init__(self, post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):
@@ -67,5 +91,6 @@ class FileHandlerLogging(ManifestBase): # pragma: no cover
         return
     
     def delete_manifest(self):
+        self.log(message='Logging "delete" actions automatically redirects to an apply action.', level='warning')
         return self.apply_manifest()
 

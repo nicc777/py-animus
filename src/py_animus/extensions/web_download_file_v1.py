@@ -10,23 +10,46 @@ import os
 
 
 class WebDownloadFile(ManifestBase):
-    """Download a file from an Internet URL and save it locally on the filesystem.
+    """# `WebDownloadFile` Description
+     
+Download a file from an Internet URL and save it locally on the filesystem.
 
-        Spec fields:
+# Apply Action
 
-        | Field                                            | Type     | Required | Default Value | Description                                                                                                                                                         |
-        |--------------------------------------------------|----------|----------|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-        | `sourceUrl`                                      | string   | Yes      | n/a           | The URL from where to download the file                                                                                                                             |
-        | `targetOutputFile`                               | string   | Yes      | n/a           | The destination file. NOTE: The directory MUST exist. To create the directory first (if needed) consider using a ShellScript as a dependency.                       |
-        | `skipSslVerification`                            | bool     | No       | False         | If set to true, skips SSL verification. WARNING: use with caution as this may pose a serious security risk                                                          |
-        | `proxy.host`                                     | string   | No       | NULL          | If you need to pass through a proxy, set the proxy host here. Include the protocol and port, for example `http://` or `https://`. An example: `http://myproxy:3128` |
-        | `proxy.basicAuthentication.username`             | string   | No       | NULL          | If the proxy requires authentication and supports basic authentication, set the username here                                                                       |
-        | `proxy.basicAuthentication.passwordVariableName` | string   | No       | NULL          | Contains the `Variable`` name, depending on source manifest implementation, that will contain the password                                                          |
-        | `extraHeaders`                                   | list     | No       | Empty List    | A list of name and value items with additional headers to set for the request. Things like a Authorization header might need to be set.                             |
-        | `method`                                         | string   | No       | `GET`         | The HTTP method to use                                                                                                                                              |
-        | `body`                                           | string   | No       | NULL          | Some request types, like POST, requires a body with the data to send. Also remember to set additional headers like "Content Type" as required                       |
-        | `httpBasicAuthentication.username`               | string   | No       | NULL          | If the remote site requires basic authentication, set the username using this field                                                                                 |
-        | `httpBasicAuthentication.passwordVariableName`   | string   | No       | NULL          | Contains the `Variable`` name, depending on source manifest implementation, that will contain the password                                                          
+Downloads the returned content from the requested URL resource to a local file.
+
+# Delete Action
+
+Deletes the file as defined by the `targetOutputFile` parameter.
+
+# Variables 
+
+## After Apply Action
+
+* `FILE_PATH` - Contains the value of the `targetOutputFile` parameter
+* `STATUS` - Contains either the value `SUCCESS` or `FAIL`
+
+## After Delete Action
+
+* `FILE_PATH` - Contains the value of the `targetOutputFile` parameter
+* `STATUS` - Not applicable
+* `DELETED` - Will be set to `True` if the local file was deleted.
+
+## Spec fields
+
+| Field                                            | Type     | Required | Default Value | Description                                                                                                                                                         |
+|--------------------------------------------------|----------|----------|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `sourceUrl`                                      | string   | Yes      | n/a           | The URL from where to download the file                                                                                                                             |
+| `targetOutputFile`                               | string   | Yes      | n/a           | The destination file. NOTE: The directory MUST exist. To create the directory first (if needed) consider using a ShellScript as a dependency.                       |
+| `skipSslVerification`                            | bool     | No       | False         | If set to true, skips SSL verification. WARNING: use with caution as this may pose a serious security risk                                                          |
+| `proxy.host`                                     | string   | No       | NULL          | If you need to pass through a proxy, set the proxy host here. Include the protocol and port, for example `http://` or `https://`. An example: `http://myproxy:3128` |
+| `proxy.basicAuthentication.username`             | string   | No       | NULL          | If the proxy requires authentication and supports basic authentication, set the username here                                                                       |
+| `proxy.basicAuthentication.passwordVariableName` | string   | No       | NULL          | Contains the `Variable`` name, depending on source manifest implementation, that will contain the password                                                          |
+| `extraHeaders`                                   | list     | No       | Empty List    | A list of name and value items with additional headers to set for the request. Things like a Authorization header might need to be set.                             |
+| `method`                                         | string   | No       | `GET`         | The HTTP method to use                                                                                                                                              |
+| `body`                                           | string   | No       | NULL          | Some request types, like POST, requires a body with the data to send. Also remember to set additional headers like "Content Type" as required                       |
+| `httpBasicAuthentication.username`               | string   | No       | NULL          | If the remote site requires basic authentication, set the username using this field                                                                                 |
+| `httpBasicAuthentication.passwordVariableName`   | string   | No       | NULL          | Contains the `Variable`` name, depending on source manifest implementation, that will contain the password                                                          
     """
 
     def __init__(self, post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):
