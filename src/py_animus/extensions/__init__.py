@@ -134,10 +134,16 @@ class UnitOfWork:
             if action == 'apply':
                 if 'skipApplyAll' in self.work_instance.metadata:
                     rerouted = False    # But... were we rerouted from delete?
+                    print('111 - metadata: {}'.format(json.dumps(self.work_instance.metadata, default=str)))
                     if 'actionOverrides' in self.work_instance.metadata:
+                        print('222')
                         if 'delete' in self.work_instance.metadata['actionOverrides']:
+                            print('333')
                             if self.work_instance.metadata['actionOverrides']['delete'] == 'apply':
+                                print('444')
                                 rerouted = True
+                    print('555')
+                    logger.info('rerouted={}'.format(rerouted))
                     if self.work_instance.metadata['skipApplyAll'] is True and rerouted is False:
                         logger.warning(
                             'UnitOfWork "{}:{}" will not be executed because  "skipApplyAll" was set to True'.format(
@@ -163,6 +169,7 @@ class UnitOfWork:
                         if 'apply' in self.work_instance.metadata['actionOverrides']:
                             if self.work_instance.metadata['actionOverrides']['apply'] == 'delete':
                                 rerouted = True
+                    logger.info('rerouted={}'.format(rerouted))
                     if self.work_instance.metadata['skipDeleteAll'] is True and rerouted is False:
                         logger.warning(
                             'UnitOfWork "{}:{}" will not be executed because  "skipDeleteAll" was set to True'.format(
