@@ -99,7 +99,7 @@ No action is taken
         if 'source' in self.spec:
             if 'value' in self.spec['source']:
                 try:
-                    self.log(message='   Loading script source from file "{}"'.format(self.spec['source']['value']), level='info')
+                    self.log(message='   Loading script source from file "{}"'.format(self.spec['source']['value']), level='debug')
                     with open(self.spec['source']['value'], 'r') as f:
                         source = f.read()
                 except:
@@ -111,7 +111,7 @@ No action is taken
         if 'workDir' in self.spec:
             if 'path' in self.spec['workDir']:
                 work_dir = self.spec['workDir']['path']
-        self.log(message='   Workdir set to "{}"'.format(work_dir), level='info')
+        self.log(message='   Workdir set to "{}"'.format(work_dir), level='debug')
         return work_dir
 
     def _del_file(self, file: str):
@@ -126,12 +126,12 @@ No action is taken
             os.sep,
             self.metadata['name']
         )
-        self.log(message='   Writing source code to file "{}"'.format(work_file), level='info')
+        self.log(message='   Writing source code to file "{}"'.format(work_file), level='debug')
         self._del_file(file=work_file)
         try:
             with open(work_file, 'w') as f:
                 f.write(source)
-            self.log(message='      DONE', level='info')
+            self.log(message='      DONE', level='debug')
         except:
             self.log(message='   EXCEPTION in _create_work_file(): {}'.format(traceback.format_exc()), level='error')
         return work_file
@@ -149,7 +149,7 @@ No action is taken
             
         for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
             if action_name == 'Run ShellScript' and expected_action != Action.APPLY_PENDING:
-                self.log(message='   Apply action "{}" will not be done. Status: {}'.format(action_name, expected_action), level='info')
+                self.log(message='   Apply action "{}" will not be done. Status: {}'.format(action_name, expected_action), level='debug')
                 return
 
         ###
@@ -183,9 +183,9 @@ No action is taken
             result = subprocess.run('{}'.format(work_file), check=True, capture_output=True)   # Returns CompletedProcess
         except:
             self.log(message='   EXCEPTION in apply_manifest(): {}'.format(traceback.format_exc()), level='error')
-            self.log(message='   Storing Variables', level='info')
+            self.log(message='   Storing Variables', level='debug')
             try:
-                self.log(message='      Storing Exit Code', level='info')
+                self.log(message='      Storing Exit Code', level='debug')
                 variable_cache.store_variable(
                     variable=Variable(
                         name=self._var_name(var_name='EXIT_CODE'),
@@ -193,7 +193,7 @@ No action is taken
                     ),
                     overwrite_existing=True
                 )
-                self.log(message='      Storing STDOUT', level='info')
+                self.log(message='      Storing STDOUT', level='debug')
                 variable_cache.store_variable(
                     variable=Variable(
                         name=self._var_name(var_name='STDOUT'),
@@ -201,7 +201,7 @@ No action is taken
                     ),
                     overwrite_existing=True
                 )
-                self.log(message='      Storing STDERR', level='info')
+                self.log(message='      Storing STDERR', level='debug')
                 variable_cache.store_variable(
                     variable=Variable(
                         name=self._var_name(var_name='STDERR'),
@@ -209,7 +209,7 @@ No action is taken
                     ),
                     overwrite_existing=True
                 )
-                self.log(message='      Storing ALL DONE', level='info')
+                self.log(message='      Storing ALL DONE', level='debug')
             except:
                 self.log(message='   EXCEPTION in apply_manifest() when storing variables: {}'.format(traceback.format_exc()), level='error')
 
@@ -217,9 +217,9 @@ No action is taken
         ### STORE VALUES
         ###
         if result is not None:
-            self.log(message='   Storing Variables', level='info')
+            self.log(message='   Storing Variables', level='debug')
             try:
-                self.log(message='      Storing Exit Code', level='info')
+                self.log(message='      Storing Exit Code', level='debug')
                 value_stdout_encoding = self.__detect_encoding(input_str=result.stdout)
                 value_stderr_encoding = self.__detect_encoding(input_str=result.stdout)
                 value_stdout_final = result.stdout
@@ -231,7 +231,7 @@ No action is taken
                     ),
                     overwrite_existing=True
                 )
-                self.log(message='      Storing STDOUT', level='info')
+                self.log(message='      Storing STDOUT', level='debug')
 
                 if 'convertOutputToText' in self.spec:
                     if self.spec['convertOutputToText'] is True:
@@ -282,7 +282,7 @@ No action is taken
                     ),
                     overwrite_existing=True
                 )
-                self.log(message='      Storing STDERR', level='info')
+                self.log(message='      Storing STDERR', level='debug')
                 variable_cache.store_variable(
                     variable=Variable(
                         name=self._var_name(var_name='STDERR'),
@@ -290,7 +290,7 @@ No action is taken
                     ),
                     overwrite_existing=True
                 )
-                self.log(message='      Storing ALL DONE', level='info')
+                self.log(message='      Storing ALL DONE', level='debug')
             except:
                 self.log(message='   EXCEPTION in apply_manifest() when storing variables: {}'.format(traceback.format_exc()), level='error')
         return_code = variable_cache.get_value(variable_name=self._var_name(var_name='EXIT_CODE'), value_if_expired=None, default_value_if_not_found=None, raise_exception_on_expired=False, raise_exception_on_not_found=False)
@@ -313,7 +313,7 @@ No action is taken
 
         for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
             if action_name == 'Run ShellScript' and expected_action != Action.DELETE_PENDING:
-                self.log(message='   Apply action "{}" will not be done. Status: {}'.format(action_name, expected_action), level='info')
+                self.log(message='   Apply action "{}" will not be done. Status: {}'.format(action_name, expected_action), level='debug')
                 return
             
         self.log(message='Shell script does not have a specific delete action. If action is also required during delete actions, consider using the `metadata.actionOverrides` setting to redirect a "delete" action to an "apply" action for this manifest.', level='warning')

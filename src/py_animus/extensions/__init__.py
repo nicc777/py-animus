@@ -114,11 +114,11 @@ class UnitOfWork:
         if 'environments' in self.work_instance.metadata:
             self.scopes = copy.deepcopy(work_instance.metadata['environments'])
 
-        logger.info('UnitOfWork: Manifest named "{}" registered as a UnitOfWork'.format(self.id))
+        logger.debug('UnitOfWork: Manifest named "{}" registered as a UnitOfWork'.format(self.id))
 
     def run(self, action: str, scope: str, rerouted: bool=False):
         if scope in self.scopes:
-            logger.info(
+            logger.debug(
                 'UnitOfWork: "{}:{}" marked for executed for scope named "{}"'.format(
                     self.work_instance.kind,
                     self.work_instance.metadata['name'],
@@ -168,7 +168,6 @@ class UnitOfWork:
                 elif 'actionOverrides' in self.work_instance.metadata and rerouted is False:
                     if 'delete' in self.work_instance.metadata['actionOverrides']:
                         if self.work_instance.metadata['actionOverrides']['delete'] == 'apply':
-                            print('888')
                             self.work_instance.metadata.pop('actionOverrides')  # Remove because we do not want any potential for circular references.
                             logger.info('Delete action was rerouted to Apply action...')
                             self.run(action='apply', scope=scope, rerouted=True)
@@ -270,17 +269,17 @@ class ExecutionPlan:
         if len(self.execution_order[action]) == 0:
             self.calculate_execution_plan()
             logger.info('ExecutionPlan: {}'.format(json.dumps(self.execution_order[action], default=str)))
-        logger.info('ExecutionPlan: Starting run for action "{}"'.format(action))
+        logger.debug('ExecutionPlan: Starting run for action "{}"'.format(action))
         for uof_id in self.execution_order[action]:
             uow = self.all_work.get_unit_of_work_by_id(id=uof_id)
             if scope in uow.scopes:
                 if uow.id not in self.completed_work_ids:
-                    logger.info('ExecutionPlan: Calling run action for UnitOfWork named "{}"'.format(uow.id))
+                    logger.debug('ExecutionPlan: Calling run action for UnitOfWork named "{}"'.format(uow.id))
                     uow.run(action=action, scope=scope)
                     # self.remove_unit_of_work(unit_of_work_id=uof_id)
                     self.completed_work_ids.append(uow.id)
                 else:
-                    logger.info('ExecutionPlan: UnitOfWork "{}" already run. Skipping.'.format(uow.id))
+                    logger.debug('ExecutionPlan: UnitOfWork "{}" already run. Skipping.'.format(uow.id))
         self.execution_order[action] = list()
 
 

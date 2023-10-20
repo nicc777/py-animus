@@ -323,7 +323,7 @@ class VariableTag(yaml.YAMLObject):
 
 
 def parse_sub_yaml(raw_yaml_str: str)->dict:
-    logger.info('Parsing input YAML: {}'.format(raw_yaml_str))
+    logger.debug('Parsing input YAML: {}'.format(raw_yaml_str))
     yaml.SafeLoader.add_constructor(        '!Value',       ValueTag.from_yaml      )
     yaml.SafeLoader.add_constructor(        '!Variable',    VariableTag.from_yaml   )
     yaml.SafeDumper.add_multi_representer(  ValueTag,       ValueTag.to_yaml        )
@@ -369,7 +369,7 @@ class SubTag(yaml.YAMLObject):
                     value_placeholders.add_environment_value(placeholder_name=yaml_key, value=parsed_value)
         # self.resolved_value = value_placeholders.parse_and_replace_placeholders_in_string(input_str=main_line, default_value_when_not_found=None, raise_exception_when_not_found=True)
         self.resolved_value = value_placeholders.parse_and_replace_placeholders_in_string(input_str=main_line, default_value_when_not_found='', raise_exception_when_not_found=False)
-        logger.info('resolved_value={}'.format(self.resolved_value))
+        logger.debug('resolved_value={}'.format(self.resolved_value))
         
 
     def __repr__(self):

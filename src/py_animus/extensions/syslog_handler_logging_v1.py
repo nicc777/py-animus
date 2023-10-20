@@ -133,7 +133,7 @@ Supported `socketType` values:
             if action_name == 'Configure SyslogHandler Logging' and expected_action == Action.APPLY_PENDING:
                 self._configure_logging()
                 actions.add_or_update_action(action=Action(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Configure SyslogHandler Logging', action_status=Action.APPLY_DONE))
-        logger.info('SyslogHandlerLogging configuration done')
+        logger.debug('SyslogHandlerLogging configuration done')
         return
     
     def delete_manifest(self):

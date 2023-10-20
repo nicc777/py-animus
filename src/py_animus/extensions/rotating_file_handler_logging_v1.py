@@ -99,7 +99,7 @@ No variables are set or deleted
             if action_name == 'Configure FileHandler Logging' and expected_action == Action.APPLY_PENDING:
                 self._configure_logging()
                 actions.add_or_update_action(action=Action(manifest_kind=self.kind, manifest_name=self.metadata['name'], action_name='Configure FileHandler Logging', action_status=Action.APPLY_DONE))
-        logger.info('FileHandlerLogging configuration done')
+        logger.debug('RotatingFileHandlerLogging configuration done')
         return
     
     def delete_manifest(self):

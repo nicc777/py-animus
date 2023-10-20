@@ -108,7 +108,7 @@ def _process_logging_sections(manifest_yaml_sections: dict)->dict:
 
 def convert_yaml_to_extension_instances(yaml_sections: dict=None):
     for manifest_kind, manifest_yaml_string in yaml_sections.items():
-        logger.info('Converting raw yaml with kind "{}"'.format(manifest_kind))
+        logger.debug('Converting raw yaml with kind "{}"'.format(manifest_kind))
         if manifest_kind != 'Project' and manifest_kind != 'Values' and manifest_kind.endswith('Logging') is False:
             for yaml_section in manifest_yaml_string:
                 work_instance = parse_animus_formatted_yaml(raw_yaml_str=yaml_section)
@@ -205,15 +205,15 @@ def process_project(project_manifest_uri: str, project_name: str):
             project_instance.determine_actions()
 
             # Process values
-            logger.info('Values processing for project "{}" starting'.format(project_instance.metadata['name']))
+            logger.debug('Values processing for project "{}" starting'.format(project_instance.metadata['name']))
             if 'valuesConfig' in project_instance.spec:
                 for values_config_uri in project_instance.spec['valuesConfig']:
                     potential_values_yaml_sections = extract_yaml_section_from_supplied_manifest_file(manifest_uri=values_config_uri)
                     _process_values_sections(manifest_yaml_sections=potential_values_yaml_sections)
-            logger.info('   Values processing for project "{}" completed'.format(project_instance.metadata['name']))
+            logger.debug('   Values processing for project "{}" completed'.format(project_instance.metadata['name']))
 
             # Process logging
-            logger.info('Logging processing for project "{}" starting'.format(project_instance.metadata['name']))
+            logger.debug('Logging processing for project "{}" starting'.format(project_instance.metadata['name']))
             logging_manifest = variable_cache.get_value(
                 variable_name='LOGGING_CONFIG',
                 value_if_expired=None,
@@ -225,10 +225,10 @@ def process_project(project_manifest_uri: str, project_name: str):
                 potential_logging_yaml_sections = extract_yaml_section_from_supplied_manifest_file(manifest_uri=logging_manifest)
                 _process_logging_sections(manifest_yaml_sections=potential_logging_yaml_sections)
                 project_instance.reset_logger()
-            logger.info('   Logging processing for project "{}" completed'.format(project_instance.metadata['name']))
+            logger.debug('   Logging processing for project "{}" completed'.format(project_instance.metadata['name']))
 
             # Load Extensions
-            logger.info('Extensions processing for project "{}" starting'.format(project_instance.metadata['name']))
+            logger.debug('Extensions processing for project "{}" starting'.format(project_instance.metadata['name']))
             project_instance.collect_extension_files()
             extension_files = variable_cache.get_value(
                 variable_name='{}PROJECT_EXTENSION_FILES'.format(project_instance_variables_base_name),
@@ -241,11 +241,11 @@ def process_project(project_manifest_uri: str, project_name: str):
                 extensions.add_extension(extension=returned_class)
                 logger.info('Added extension kind "{}"'.format(kind))
             
-            logger.info('   Extensions processing for project "{}" completed'.format(project_instance.metadata['name']))
+            logger.debug('   Extensions processing for project "{}" completed'.format(project_instance.metadata['name']))
             logger.debug('Extensions Ingested: {}'.format(str(extensions)))
 
             # Load manifest files and parse sections.
-            logger.info('Manifest processing for project "{}" starting'.format(project_instance.metadata['name']))
+            logger.debug('Manifest processing for project "{}" starting'.format(project_instance.metadata['name']))
             combined_project_manifest_sections = dict()
             final_combined_project_manifest_sections = dict()
             for project_manifest_file_or_url in project_instance.spec['manifestFiles']:
@@ -271,7 +271,7 @@ def process_project(project_manifest_uri: str, project_name: str):
                 project_instance.delete_manifest()
             else:
                 raise Exception('Unrecognized Command "{}" - expected either "apply" or "delete"'.format(actions.command))
-            logger.info('   Manifest processing for project "{}" completed'.format(project_instance.metadata['name']))
+            logger.debug('   Manifest processing for project "{}" completed'.format(project_instance.metadata['name']))
             
             project_instance_variable_names = variable_cache.get_all_variable_names_staring_with(project_instance_variables_base_name)
             logger.debug('Collected variable names: {}'.format(project_instance_variable_names))

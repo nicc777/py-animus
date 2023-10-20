@@ -21,6 +21,17 @@ Examples are included in this repository. The following examples are currently m
 
 This example uses the log configuration feature to process the manifests and eventually print some basic information on STDOUT - almost like a [hello world](https://www.helloworld.org/) example, although this one is arguably a lot more verbose than traditional examples.
 
+In our most basic example we will run a shell script (assuming we run on a Unix type OS) that will create a file on your system: `~/hello-world.txt`
+
+The file must contain text similar to the following:
+
+```text
+Action: apply with logging level set to debug
+```
+
+> **note**
+> The actual logging verbosity is controlled with the environment variable `DEBUG`. If you do not set this environment variable to `1`, only `INFO` level messages will be logged, even though the log level was set to `DEBUG` in the logging manifests. Or at least - this is the setting for environment `sandbox1`. For environment `sandbox2`, logging will only be on `INFO` level regardless of what the `DEBUG` environment variable is set to.
+
 ## The Project
 
 The "_[Simple Example 1](../../../examples/projects/simple-01/)_" directory contains the most basic example contained within one file: [The Project File](../../../examples/projects/simple-01/project-01.yaml)
@@ -63,12 +74,57 @@ In this example, everything is contained in the same file and the values of many
 Assuming you have already [installed](../01-quick-start/01-installing.md) Animus, you can run the example with the following command:
 
 ```shell
+$ animus apply https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-01/project-01.yaml project-1 sandbox1
+STARTUP: Setting Default Logging Handler: "StreamHandler"
+STARTUP: Initial global logging level: INFO
+[ animus.py:run_main:15 ] INFO - Starting
+[ __init__.py:initialize_animus:15 ] INFO - Init Start
+[ __init__.py:initialize_animus:46 ] INFO -    Init Done
+[ manifest_processing.py:process_project:204 ] INFO - Project "project-1" selected for processing
+*** 2023-10-20 05:39:04,557 INFO - manifest_processing.py:_process_logging_sections:105 - Logging ready
+*** 2023-10-20 05:39:04,641 INFO - manifest_processing.py:process_project:260 - Project "project-1" Execution Plan: {'apply': ['shell-script-v1-minimal'], 'delete': ['cleanup']}
+*** 2023-10-20 05:39:04,642 INFO - __init__.py:run:152 - APPLYING "shell-script-v1-minimal"
+*** 2023-10-20 05:39:04,642 INFO - extensions.py:log:324 - [ShellScript:shell-script-v1-minimal:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
+*** 2023-10-20 05:39:04,642 INFO - extensions.py:log:324 - [ShellScript:shell-script-v1-minimal:v1] APPLY CALLED
+*** 2023-10-20 05:39:04,645 INFO - extensions.py:log:324 - [ShellScript:shell-script-v1-minimal:v1] Return Code: 0
+*** 2023-10-20 05:39:04,645 INFO - project_v1.py:apply_manifest:183 - Project Applied
+*** 2023-10-20 05:39:04,645 INFO - animus.py:run_main:28 - ANIMUS DONE
 
+# TEST:
+$ cat ~/hello-world.txt
+Action: apply with logging level set to debug
 ```
+
+> **note**
+> To see much more verbose logging, set the `DEBUG` environment variable to `1`
 
 ## Cleaning Up
 
-TODO
+Running the cleanup:
+
+```shell
+$ animus delete https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-01/project-01.yaml project-1 sandbox1
+STARTUP: Setting Default Logging Handler: "StreamHandler"
+STARTUP: Initial global logging level: INFO
+[ animus.py:run_main:15 ] INFO - Starting
+[ __init__.py:initialize_animus:15 ] INFO - Init Start
+[ __init__.py:initialize_animus:46 ] INFO -    Init Done
+[ manifest_processing.py:process_project:204 ] INFO - Project "project-1" selected for processing
+*** 2023-10-20 05:39:09,825 INFO - manifest_processing.py:_process_logging_sections:105 - Logging ready
+*** 2023-10-20 05:39:09,902 INFO - manifest_processing.py:process_project:260 - Project "project-1" Execution Plan: {'apply': ['shell-script-v1-minimal'], 'delete': ['cleanup']}
+*** 2023-10-20 05:39:09,903 INFO - extensions.py:log:324 - [ShellScript:cleanup:v1] Registered action "Run ShellScript" with status "DELETE_PENDING"
+*** 2023-10-20 05:39:09,903 INFO - __init__.py:run:173 - Delete action was rerouted to Apply action...
+*** 2023-10-20 05:39:09,903 INFO - __init__.py:run:152 - APPLYING "cleanup"
+*** 2023-10-20 05:39:09,903 INFO - extensions.py:log:324 - [ShellScript:cleanup:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
+*** 2023-10-20 05:39:09,903 INFO - extensions.py:log:324 - [ShellScript:cleanup:v1] APPLY CALLED
+*** 2023-10-20 05:39:09,906 INFO - extensions.py:log:324 - [ShellScript:cleanup:v1] Return Code: 0
+*** 2023-10-20 05:39:09,907 INFO - project_v1.py:delete_manifest:190 - Project Deleted
+*** 2023-10-20 05:39:09,907 INFO - animus.py:run_main:28 - ANIMUS DONE
+
+# TEST
+$ cat ~/hello-world.txt
+cat: /home/nicc777/hello-world.txt: No such file or directory
+```
 
 # Other Examples
 

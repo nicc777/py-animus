@@ -43,7 +43,7 @@ class Project(ManifestBase):   # pragma: no cover
         self.logger = None
         importlib.reload(animus_logger)
         self.logger = animus_logger.logger
-        self.logger.info('Logger reloaded')
+        self.logger.debug('Logger reloaded')
 
     def collect_extension_files(self):
         ###

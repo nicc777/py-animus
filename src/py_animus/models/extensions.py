@@ -329,7 +329,7 @@ class ManifestBase:
 
     def logger_reset(self, new_logger):
         self.logger = new_logger
-        self.log(message='Logger for "{}" reloaded'.format(self.kind), level='info')
+        # self.log(message='Logger for "{}" reloaded'.format(self.kind), level='info')
         self.log(message='Logger for "{}" reloaded'.format(self.kind), level='debug')
 
     def parse_manifest(self, manifest_data: dict):
@@ -354,10 +354,10 @@ class ManifestBase:
             supported_version_found = False
             if converted_data['version'] in self.supported_versions:
                 supported_version_found = True
-                self.log(message='Manifest version "{}" found in class supported versions'.format(converted_data['version']), level='info')
+                self.log(message='Manifest version "{}" found in class supported versions'.format(converted_data['version']), level='debug')
             elif converted_data['version'] == self.version:
                 supported_version_found = True
-                self.log(message='Manifest version "{}" found in class main versions'.format(converted_data['version']), level='info')
+                self.log(message='Manifest version "{}" found in class main versions'.format(converted_data['version']), level='debug')
             if supported_version_found is False:
                 self.log(message='Version {} not supported by this implementation. Supported versions: {}'.format(converted_data['version'], self.supported_versions), level='error')
                 raise Exception('Version {} not supported by this implementation.'.format(converted_data['version']))
