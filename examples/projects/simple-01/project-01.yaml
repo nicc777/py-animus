@@ -73,7 +73,7 @@ metadata:
   name: cleanup
   skipApplyAll: true
   actionOverrides:
-    apply: delete
+    delete: apply
   environments:
   - sandbox1
   - sandbox2
