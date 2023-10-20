@@ -133,7 +133,12 @@ class UnitOfWork:
             logger.debug('Final Resolved Spec     : "{}"'.format(json.dumps(self.work_instance.spec, default=str)))
             if action == 'apply':
                 if 'skipApplyAll' in self.work_instance.metadata:
-                    if self.work_instance.metadata['skipApplyAll'] is True:
+                    rerouted = False    # But... were we rerouted from delete?
+                    if 'actionOverrides' in self.work_instance.metadata:
+                        if 'delete' in self.work_instance.metadata['actionOverrides']:
+                            if self.work_instance.metadata['actionOverrides']['delete'] == 'apply':
+                                rerouted = True
+                    if self.work_instance.metadata['skipApplyAll'] is True and rerouted is False:
                         logger.warning(
                             'UnitOfWork "{}:{}" will not be executed because  "skipApplyAll" was set to True'.format(
                                 self.work_instance.kind,
@@ -153,7 +158,12 @@ class UnitOfWork:
                 return
             if action == 'delete':
                 if 'skipDeleteAll' in self.work_instance.metadata:
-                    if self.work_instance.metadata['skipDeleteAll'] is True:
+                    rerouted = False    # But... were we rerouted from delete?
+                    if 'actionOverrides' in self.work_instance.metadata:
+                        if 'apply' in self.work_instance.metadata['actionOverrides']:
+                            if self.work_instance.metadata['actionOverrides']['apply'] == 'delete':
+                                rerouted = True
+                    if self.work_instance.metadata['skipDeleteAll'] is True and rerouted is False:
                         logger.warning(
                             'UnitOfWork "{}:{}" will not be executed because  "skipDeleteAll" was set to True'.format(
                                 self.work_instance.kind,
