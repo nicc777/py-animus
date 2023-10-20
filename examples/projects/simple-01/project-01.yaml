@@ -59,7 +59,7 @@ spec:
   source:
     type: inline
     value: !Sub
-    - 'echo "Action: ${action} with logging level set to ${debugLevel}"'
+    - 'echo "Action: ${action} with logging level set to ${debugLevel}" > hello-world.txt'
     - action: !Variable std::action
       debugLevel: !Value project-1-log-level
   convertOutputToText: true
