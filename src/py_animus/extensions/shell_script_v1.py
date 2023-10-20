@@ -309,7 +309,7 @@ No action is taken
         return
 
     def delete_manifest(self):
-        self.log(message='DELETE CALLED - Rerouting to APPLY ACTION.', level='info')
+        self.log(message='DELETE CALLED', level='info')
 
         for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
             if action_name == 'Run ShellScript' and expected_action != Action.DELETE_PENDING:
