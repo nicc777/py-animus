@@ -472,33 +472,37 @@ class ManifestBase:
             self.register_action(action_name='{}'.format(action_description), initial_status=final_action)
             self.log(message='Registered action "{}" with status "{}"'.format(action_description, final_action), level='info')
 
-    def determine_actions(self):
+    def determine_actions(self, action_override: str=None, rerouted: bool=False):
         """
             This is a generic function which can be overridden for finer 
             grained control in extensions withy multiple actions.
 
         """
-        if actions.command == 'delete':
-            if 'skipDeleteAll' in self.metadata:
+        final_Action = copy.deepcopy(actions.command)
+        if action_override is not None:
+            if action_override in ('apply', 'delete',):
+                final_Action = action_override
+        if final_Action == 'delete':
+            if 'skipDeleteAll' in self.metadata and rerouted is False:
                 if self.metadata['skipDeleteAll'] is True:
                     self._bulk_register_actions(final_action=Action.DELETE_SKIP)
                     return
-        if actions.command == 'apply':
+        if final_Action == 'apply':
             if 'skipApplyAll' in self.metadata:
-                if self.metadata['skipApplyAll'] is True:
+                if self.metadata['skipApplyAll'] is True and rerouted is False:
                     self._bulk_register_actions(final_action=Action.APPLY_SKIP)
                     return
         if self.implemented_manifest_differ_from_this_manifest() is True:
-            if actions.command == 'apply':
+            if final_Action == 'apply':
                 self._bulk_register_actions(final_action=Action.APPLY_PENDING)
-            elif actions.command == 'delete':
+            elif final_Action == 'delete':
                 self._bulk_register_actions(final_action=Action.DELETE_PENDING)
             else:
                 raise Exception('Unknown or unsupported command for this manifest kind "{}"'.format(self.kind))
         else:
-            if actions.command == 'apply':
+            if final_Action == 'apply':
                 self._bulk_register_actions(final_action=Action.APPLY_SKIP)
-            elif actions.command == 'delete':
+            elif final_Action == 'delete':
                 self._bulk_register_actions(final_action=Action.DELETE_SKIP)
             else:
                 raise Exception('Unknown or unsupported command for this manifest kind "{}"'.format(self.kind))

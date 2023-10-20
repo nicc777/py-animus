@@ -116,7 +116,7 @@ class UnitOfWork:
 
         logger.info('UnitOfWork: Manifest named "{}" registered as a UnitOfWork'.format(self.id))
 
-    def run(self, action: str, scope: str):
+    def run(self, action: str, scope: str, rerouted: bool=False):
         if scope in self.scopes:
             logger.info(
                 'UnitOfWork: "{}:{}" marked for executed for scope named "{}"'.format(
@@ -126,25 +126,15 @@ class UnitOfWork:
                 )
             )
             self.work_instance.logger_reset(new_logger=logger)
-            self.work_instance.metadata = self.work_instance.resolve_all_pending_variables(iterable=copy.deepcopy(self.work_instance.metadata))
-            self.work_instance.spec = self.work_instance.resolve_all_pending_variables(iterable=copy.deepcopy(self.work_instance.spec))
-            self.work_instance.determine_actions()
+            if rerouted is False:
+                self.work_instance.metadata = self.work_instance.resolve_all_pending_variables(iterable=copy.deepcopy(self.work_instance.metadata))
+                self.work_instance.spec = self.work_instance.resolve_all_pending_variables(iterable=copy.deepcopy(self.work_instance.spec))
             logger.debug('Final Resolved Metadata : "{}"'.format(json.dumps(self.work_instance.metadata, default=str)))
             logger.debug('Final Resolved Spec     : "{}"'.format(json.dumps(self.work_instance.spec, default=str)))
             if action == 'apply':
-                if 'skipApplyAll' in self.work_instance.metadata:
-                    rerouted = False    # But... were we rerouted from delete?
-                    print('111 - metadata: {}'.format(json.dumps(self.work_instance.metadata, default=str)))
-                    if 'actionOverrides' in self.work_instance.metadata:
-                        print('222')
-                        if 'delete' in self.work_instance.metadata['actionOverrides']:
-                            print('333')
-                            if self.work_instance.metadata['actionOverrides']['delete'] == 'apply':
-                                print('444')
-                                rerouted = True
-                    print('555')
+                if 'skipApplyAll' in self.work_instance.metadata and rerouted is False:
                     logger.info('rerouted={}'.format(rerouted))
-                    if self.work_instance.metadata['skipApplyAll'] is True and rerouted is False:
+                    if self.work_instance.metadata['skipApplyAll'] is True:
                         logger.warning(
                             'UnitOfWork "{}:{}" will not be executed because  "skipApplyAll" was set to True'.format(
                                 self.work_instance.kind,
@@ -152,25 +142,22 @@ class UnitOfWork:
                             )
                         )
                         return
-                elif 'actionOverrides' in self.work_instance.metadata:
+                elif 'actionOverrides' in self.work_instance.metadata and rerouted is False:
                     if 'apply' in self.work_instance.metadata['actionOverrides']:
                         if self.work_instance.metadata['actionOverrides']['apply'] == 'delete':
                             self.work_instance.metadata.pop('actionOverrides')  # Remove because we do not want any potential for circular references.
                             logger.info('Apply action was rerouted to Delete action...')
-                            self.run(action='delete', scope=scope)
+                            self.run(action='delete', scope=scope, rerouted=True)
                             return
                 logger.info('APPLYING "{}"'.format(self.work_instance.metadata['name']))
+                self.work_instance.determine_actions(action_override='apply', rerouted=rerouted)
                 self.work_instance.apply_manifest()
                 return
             if action == 'delete':
-                if 'skipDeleteAll' in self.work_instance.metadata:
-                    rerouted = False    # But... were we rerouted from delete?
-                    if 'actionOverrides' in self.work_instance.metadata:
-                        if 'apply' in self.work_instance.metadata['actionOverrides']:
-                            if self.work_instance.metadata['actionOverrides']['apply'] == 'delete':
-                                rerouted = True
+                self.work_instance.determine_actions()
+                if 'skipDeleteAll' in self.work_instance.metadata and rerouted is False:
                     logger.info('rerouted={}'.format(rerouted))
-                    if self.work_instance.metadata['skipDeleteAll'] is True and rerouted is False:
+                    if self.work_instance.metadata['skipDeleteAll'] is True:
                         logger.warning(
                             'UnitOfWork "{}:{}" will not be executed because  "skipDeleteAll" was set to True'.format(
                                 self.work_instance.kind,
@@ -178,14 +165,16 @@ class UnitOfWork:
                             )
                         )
                         return
-                elif 'actionOverrides' in self.work_instance.metadata:
+                elif 'actionOverrides' in self.work_instance.metadata and rerouted is False:
                     if 'delete' in self.work_instance.metadata['actionOverrides']:
                         if self.work_instance.metadata['actionOverrides']['delete'] == 'apply':
+                            print('888')
                             self.work_instance.metadata.pop('actionOverrides')  # Remove because we do not want any potential for circular references.
                             logger.info('Delete action was rerouted to Apply action...')
-                            self.run(action='apply', scope=scope)
+                            self.run(action='apply', scope=scope, rerouted=True)
                             return
                 logger.info('DELETING "{}"'.format(self.work_instance.metadata['name']))
+                self.work_instance.determine_actions(action_override='delete', rerouted=rerouted)
                 self.work_instance.delete_manifest()
                 return
         else:
