@@ -72,6 +72,8 @@ version: v1
 metadata:
   name: cleanup
   skipApplyAll: true
+  actionOverrides:
+    apply: delete
   environments:
   - sandbox1
   - sandbox2
