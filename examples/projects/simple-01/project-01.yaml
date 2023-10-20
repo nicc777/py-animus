@@ -71,7 +71,7 @@ kind: ShellScript
 version: v1
 metadata:
   name: cleanup
-  skipDeleteAll: true
+  skipApplyAll: true
   environments:
   - sandbox1
   - sandbox2
