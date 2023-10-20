@@ -145,8 +145,12 @@ class UnitOfWork:
                     if 'apply' in self.work_instance.metadata['actionOverrides']:
                         if self.work_instance.metadata['actionOverrides']['apply'] == 'delete':
                             self.work_instance.metadata.pop('actionOverrides')  # Remove because we do not want any potential for circular references.
+                            logger.info('Apply action was rerouted to Delete action...')
                             self.run(action='delete', scope=scope)
+                            return
+                logger.info('APPLYING "{}"'.format(self.work_instance.metadata['name']))
                 self.work_instance.apply_manifest()
+                return
             if action == 'delete':
                 if 'skipDeleteAll' in self.work_instance.metadata:
                     if self.work_instance.metadata['skipDeleteAll'] is True:
@@ -161,8 +165,12 @@ class UnitOfWork:
                     if 'delete' in self.work_instance.metadata['actionOverrides']:
                         if self.work_instance.metadata['actionOverrides']['delete'] == 'apply':
                             self.work_instance.metadata.pop('actionOverrides')  # Remove because we do not want any potential for circular references.
+                            logger.info('Delete action was rerouted to Apply action...')
                             self.run(action='apply', scope=scope)
+                            return
+                logger.info('DELETING "{}"'.format(self.work_instance.metadata['name']))
                 self.work_instance.delete_manifest()
+                return
         else:
             logger.warning(
                 'UnitOfWork "{}:{}" is not in scope for scope named "{}"'.format(
