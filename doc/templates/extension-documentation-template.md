@@ -26,7 +26,11 @@ Replace all the `<<PLACEHOLDER>>` placeholders with relevant values
 |-----------------------------|--------------------|------------------|------------------------------|-------------------------------------------------------------------|
 | `<<PLACEHOLDER>>`           | `<<PLACEHOLDER>>`  | `<<Yes or No >>` | `<<Some value or N/A>>`      | `<<Describe the function and use cases of this property>>`        |
 
-# Example
+# Examples
+
+## Basic Example
+
+`<<brief description of what this example will demonstrate>>`
 
 ```yaml
 kind: <<KIND>>
@@ -36,4 +40,8 @@ metadata:
 spec:
   <<PLACEHOLDER>>
 ```
+
+# See Also
+
+* `<<list of links to other documentation>>`
 
