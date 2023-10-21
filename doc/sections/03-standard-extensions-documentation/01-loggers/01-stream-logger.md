@@ -1,4 +1,4 @@
-Quick Navigation: [Documentation home](../../../README.md) | [Up](../README.md)
+Quick Navigation: [Documentation home](../../../README.md) | [Up](./README.md)
 
 <hr />
 
@@ -60,4 +60,4 @@ spec:
 
 <hr />
 
-Quick Navigation: [Documentation home](../../../README.md) | [Up](../README.md)
+Quick Navigation: [Documentation home](../../../README.md) | [Up](./README.md)
