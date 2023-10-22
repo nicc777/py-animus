@@ -19,7 +19,7 @@ Documentation Structure:
   * [Using Variables](./sections/02-concepts/08-variables.md)
   * [Planning and Project Hierarchy, Dependencies and Other Consideration](./sections/02-concepts/09-planning-and-hierarchy.md)
 * [Standard Extension Documentation](./sections/03-standard-extensions-documentation/README.md):
-  * Logging Extension:
+  * [Logging Extension](./sections/03-standard-extensions-documentation/01-loggers/README.md):
     * [Stream Logger](./sections/03-standard-extensions-documentation/01-loggers/01-stream-logger.md)
     * [Syslog logger](./sections/03-standard-extensions-documentation/01-loggers/02-syslog-logger.md)
     * [Datagram logger](./sections/03-standard-extensions-documentation/01-loggers/03-datagram-logger.md)
