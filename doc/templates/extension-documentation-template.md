@@ -1,3 +1,7 @@
+Quick Navigation: [Documentation home](../../../README.md) | [Up](./README.md)
+
+<hr />
+
 # `<<KIND>>` Description
      
 Replace all the `<<PLACEHOLDER>>` placeholders with relevant values
@@ -45,3 +49,6 @@ spec:
 
 * `<<list of links to other documentation>>`
 
+<hr />
+
+Quick Navigation: [Documentation home](../../../README.md) | [Up](./README.md)

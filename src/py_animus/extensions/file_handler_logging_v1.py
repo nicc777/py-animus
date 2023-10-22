@@ -46,6 +46,29 @@ No variables are set or deleted
 | level                       | str     | No       | `info`                                      | The logging level  |
 | loggingFormat               | str     | No       | `'%(asctime)s %(levelname)s - %(message)s'` | The message format |
 | filename                    | str     | yes      | None (will cause Exception to be raised)    | The log file name  |
+
+# Examples
+
+## Basic Example
+
+The following example illustrate how to target a specific log file with the `DEBUG` log level set:
+
+```yaml
+kind: FileHandlerLogging
+version: v1
+metadata:
+  name: file-logger
+spec:
+  filename: /tmp/my-logger
+  level: debug
+```
+
+# See Also
+
+* [Console Logger](https://github.com/nicc777/py-animus/blob/main/doc/sections/03-standard-extensions-documentation/01-loggers/01-stream-logger.md)
+* [Syslog Logger](https://github.com/nicc777/py-animus/blob/main/doc/sections/03-standard-extensions-documentation/01-loggers/02-syslog-logger.md)
+* [Datagram Logger](https://github.com/nicc777/py-animus/blob/main/doc/sections/03-standard-extensions-documentation/01-loggers/03-datagram-logger.md)
+* [Rotating File Logger](https://github.com/nicc777/py-animus/blob/main/doc/sections/03-standard-extensions-documentation/01-loggers/05-rotating-file-logger.md)
     """
 
     def __init__(self, post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):

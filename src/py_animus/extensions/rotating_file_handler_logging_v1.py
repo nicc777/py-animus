@@ -48,6 +48,30 @@ No variables are set or deleted
 | filename                    | str     | yes      | None (will cause Exception to be raised)    | The log file name                                            |
 | maxBytes                    | int     | No       | 10 MiB                                      | How many bytes to log before rotating the log file           |
 | backupCount                 | int     | No       | 5                                           | HOw many files to keep before starting to delete old files.  | 
+
+# Examples
+
+## Basic Example
+
+The following example specifies a specific file that will only be rotated once 1 GB is reached with a backup count of 2 files:
+
+```yaml
+kind: RotatingFileHandlerLogging
+version: v1
+metadata:
+  name: rotating-file-logger-abc
+spec:
+  filename: /some/path/to/logs/project-abc.log
+  maxBytes: 1080042496 # 1 GiB per log file
+  backupCount: 2
+```
+
+# See Also
+
+* [Console Logger](https://github.com/nicc777/py-animus/blob/main/doc/sections/03-standard-extensions-documentation/01-loggers/01-stream-logger.md)
+* [Syslog File Logger](https://github.com/nicc777/py-animus/blob/main/doc/sections/03-standard-extensions-documentation/01-loggers/02-syslog-logger.md)
+* [Datagram Logger](https://github.com/nicc777/py-animus/blob/main/doc/sections/03-standard-extensions-documentation/01-loggers/03-datagram-logger.md)
+* [File Logger](https://github.com/nicc777/py-animus/blob/main/doc/sections/03-standard-extensions-documentation/01-loggers/04-file-logger.md)
     """
 
     def __init__(self, post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):

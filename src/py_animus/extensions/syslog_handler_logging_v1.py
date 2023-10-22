@@ -60,6 +60,31 @@ Supported `socketType` values:
 
 * `DGRAM`
 * `STREAM`
+
+# Examples
+
+## Basic Example
+
+The following example demonstrates how to target a remote system server listening on a TCP port.
+
+```yaml
+kind: SyslogHandlerLogging
+version: v1
+metadata:
+  name: syslog-logger
+spec:
+  host: my-syslog-server
+  port: 1514
+  socketType: STREAM
+  facility: LOCAL1
+```
+
+# See Also
+
+* [Console Logger](https://github.com/nicc777/py-animus/blob/main/doc/sections/03-standard-extensions-documentation/01-loggers/01-stream-logger.md)
+* [Datagram Logger](https://github.com/nicc777/py-animus/blob/main/doc/sections/03-standard-extensions-documentation/01-loggers/03-datagram-logger.md)
+* [File Logger](https://github.com/nicc777/py-animus/blob/main/doc/sections/03-standard-extensions-documentation/01-loggers/04-file-logger.md)
+* [Rotating File Logger](https://github.com/nicc777/py-animus/blob/main/doc/sections/03-standard-extensions-documentation/01-loggers/05-rotating-file-logger.md)
     """
 
     def __init__(self, post_parsing_method: object=None, version: str='v1', supported_versions: tuple=('v1',)):
