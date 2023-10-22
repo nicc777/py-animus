@@ -14,6 +14,10 @@ Documentation Structure:
   * [Defining desired resource state in a Manifest](./sections/02-concepts/03-defining-desired-resource-state-in-a-manifest.md)
   * [Actions that can be performed to enforce resource state](./sections/02-concepts/04-actions-that-can-be-performed-to-enforce-resource-state.md)
   * [Extensions for every resources](./sections/02-concepts/05-extensions-for-every-resources.md)
+  * [How to think of Environments](./sections/02-concepts/06-environments.md)
+  * [How to use Values](./sections/02-concepts/07-values.md)
+  * [Using Variables](./sections/02-concepts/08-variables.md)
+  * [Planning and Project Hierarchy, Dependencies and Other Consideration](./sections/02-concepts/09-planning-and-hierarchy.md)
 * Standard Extension Documentation:
   * Logging Extension:
     * [Stream Logger](./sections/03-standard-extensions-documentation/01-loggers/01-stream-logger.md)
