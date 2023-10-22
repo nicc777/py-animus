@@ -5,10 +5,10 @@
 
 Documentation Structure:
 
-* Quick start section
+* [Quick start section](./sections/01-quick-start/README.md)
   * [Installing](./sections/01-quick-start/01-installing.md) `py-animus`
   * [First project and capability demonstration](./sections/01-quick-start/02-first-project-and-capability-demonstration.md)
-* Concepts:
+* [Concepts](./sections/02-concepts/README.md):
   * [What is a resource](./sections/02-concepts/01-what-is-a-resource.md)
   * [What is a "_Desired State_"](./sections/02-concepts/02-what-is-desired-state.md)
   * [Defining desired resource state in a Manifest](./sections/02-concepts/03-defining-desired-resource-state-in-a-manifest.md)
@@ -18,7 +18,7 @@ Documentation Structure:
   * [How to use Values](./sections/02-concepts/07-values.md)
   * [Using Variables](./sections/02-concepts/08-variables.md)
   * [Planning and Project Hierarchy, Dependencies and Other Consideration](./sections/02-concepts/09-planning-and-hierarchy.md)
-* Standard Extension Documentation:
+* [Standard Extension Documentation](./sections/03-standard-extensions-documentation/README.md):
   * Logging Extension:
     * [Stream Logger](./sections/03-standard-extensions-documentation/01-loggers/01-stream-logger.md)
     * [Syslog logger](./sections/03-standard-extensions-documentation/01-loggers/02-syslog-logger.md)
@@ -34,7 +34,7 @@ Documentation Structure:
     * [Git Repository](./sections/03-standard-extensions-documentation/03-other/03-git-repo.md)
     * [Web Resource Download](./sections/03-standard-extensions-documentation/03-other/04-web-download.md)
     * [Write File](./sections/03-standard-extensions-documentation/03-other/05-write-file.md)
-* Third Party Extensions
+* [Third Party Extensions](./sections/04-third-party-extensions/README.md)
   * [Introduction to extension and key concepts](./sections/04-third-party-extensions/01-intro.md)
   * [Extension Development Process](./sections/04-third-party-extensions/02-extension-development-process.md)
   * [Third party extension registry](./sections/04-third-party-extensions/03-registry.md)

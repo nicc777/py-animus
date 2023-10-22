@@ -1,4 +1,8 @@
 
+Quick Navigation: [Documentation home](../../README.md) | [Up](./README.md)
+
+<hr />
+
 - [Included Examples](#included-examples)
 - [Most Basic Example (or the "Hello World" demonstration)](#most-basic-example-or-the-hello-world-demonstration)
   - [The Project](#the-project)
@@ -6,6 +10,7 @@
   - [Cleaning Up](#cleaning-up)
 - [Other Examples](#other-examples)
 - [Final Notes](#final-notes)
+- [See Also](#see-also)
 
 
 # Included Examples
@@ -133,3 +138,11 @@ TODO
 # Final Notes
 
 TODO
+
+# See Also
+
+* [Installing](./01-installing.md) `py-animus`
+
+<hr />
+
+Quick Navigation: [Documentation home](../../README.md) | [Up](./README.md)
