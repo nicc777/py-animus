@@ -146,7 +146,7 @@ class UnitOfWork:
                     if 'apply' in self.work_instance.metadata['actionOverrides']:
                         if self.work_instance.metadata['actionOverrides']['apply'] == 'delete':
                             self.work_instance.metadata.pop('actionOverrides')  # Remove because we do not want any potential for circular references.
-                            logger.info('Apply action was rerouted to Delete action...')
+                            logger.warning('Apply action for "{}" was rerouted to Delete action...'.format(self.work_instance.metadata['name']))
                             self.run(action='delete', scope=scope, rerouted=True)
                             return
                 logger.info('APPLYING "{}"'.format(self.work_instance.metadata['name']))
@@ -169,7 +169,7 @@ class UnitOfWork:
                     if 'delete' in self.work_instance.metadata['actionOverrides']:
                         if self.work_instance.metadata['actionOverrides']['delete'] == 'apply':
                             self.work_instance.metadata.pop('actionOverrides')  # Remove because we do not want any potential for circular references.
-                            logger.info('Delete action was rerouted to Apply action...')
+                            logger.warning('Delete action for "{}" was rerouted to Apply action...'.format(self.work_instance.metadata['name']))
                             self.run(action='apply', scope=scope, rerouted=True)
                             return
                 logger.info('DELETING "{}"'.format(self.work_instance.metadata['name']))
@@ -242,14 +242,14 @@ class ExecutionPlan:
                         if a_action not in self.execution_order:
                             self.execution_order[a_action] = list()
                         if parent_uow_id not in self.execution_order[a_action]:
-                            logger.info('Parent UnitOfWork "{}" not yet marked for execution. Attempting to add...'.format(parent_uow_id))
+                            logger.debug('Parent UnitOfWork "{}" not yet marked for execution. Attempting to add...'.format(parent_uow_id))
                             retrieved_uow = self.all_work.get_unit_of_work_by_id(id=parent_uow_id)
                             if retrieved_uow is not None:
                                 self.add_unit_of_work_to_execution_order(uow=retrieved_uow)
                             else:
                                 logger.warning('UnitOfWork with id "{}" not found - skipping'.format(parent_uow_id))
                         else:
-                            logger.info('Parent UnitOfWork "{}" already marked for execution.'.format(parent_uow_id))
+                            logger.debug('Parent UnitOfWork "{}" already marked for execution.'.format(parent_uow_id))
         for a_action in ('apply', 'delete'):
             if self._unit_of_work_contains_skip_action_exclusion(uow=uow, action=a_action) is True:
                 if a_action not in self.execution_order:
