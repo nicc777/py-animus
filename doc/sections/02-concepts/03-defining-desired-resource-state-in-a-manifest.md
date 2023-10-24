@@ -172,45 +172,47 @@ Assuming you have run the example of the previous section, you may have noticed 
 ```shell
 # APPLY ACTION OUTPUT
 STARTUP: Setting Default Logging Handler: "StreamHandler"
-STARTUP: Initial global logging level: DEBUG
+STARTUP: Initial global logging level: INFO
 [ animus.py:run_main:15 ] INFO - Starting
 [ __init__.py:initialize_animus:15 ] INFO - Init Start
 [ __init__.py:initialize_animus:46 ] INFO -    Init Done
 [ manifest_processing.py:process_project:204 ] INFO - Project "manage-my-example-dir" selected for processing
-[ __init__.py:add_unit_of_work_to_execution_order:253 ] INFO - Parent UnitOfWork "backup-dir" already marked for execution.
-[ manifest_processing.py:process_project:260 ] INFO - Project "manage-my-example-dir" Execution Plan: {'apply': ['create-dir'], 'delete': ['backup-dir', 'delete-dir']}
-[ __init__.py:run:152 ] INFO - APPLYING "create-dir"
-[ extensions.py:log:324 ] INFO - [ShellScript:create-dir:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
-[ extensions.py:log:324 ] INFO - [ShellScript:create-dir:v1] APPLY CALLED
-[ extensions.py:log:324 ] INFO - [ShellScript:create-dir:v1] Return Code: 0
-[ project_v1.py:apply_manifest:183 ] INFO - Project Applied
-[ animus.py:run_main:28 ] INFO - ANIMUS DONE
+EXAMPLE: 2023-10-24 06:56:52,377 INFO  Logging ready
+EXAMPLE: 2023-10-24 06:56:52,456 INFO  Parent UnitOfWork "backup-dir" already marked for execution.
+EXAMPLE: 2023-10-24 06:56:52,456 INFO  Project "manage-my-example-dir" Execution Plan: {'apply': ['create-dir'], 'delete': ['backup-dir', 'delete-dir']}
+EXAMPLE: 2023-10-24 06:56:52,456 INFO  APPLYING "create-dir"
+EXAMPLE: 2023-10-24 06:56:52,456 INFO  [ShellScript:create-dir:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
+EXAMPLE: 2023-10-24 06:56:52,456 INFO  [ShellScript:create-dir:v1] APPLY CALLED
+EXAMPLE: 2023-10-24 06:56:52,460 INFO  [ShellScript:create-dir:v1] Return Code: 0
+EXAMPLE: 2023-10-24 06:56:52,461 INFO  Project Applied
+EXAMPLE: 2023-10-24 06:56:52,461 INFO  ANIMUS DONE
 
 
 
 # DELETE ACTION OUTPUT
 STARTUP: Setting Default Logging Handler: "StreamHandler"
-STARTUP: Initial global logging level: DEBUG
+STARTUP: Initial global logging level: INFO
 [ animus.py:run_main:15 ] INFO - Starting
 [ __init__.py:initialize_animus:15 ] INFO - Init Start
 [ __init__.py:initialize_animus:46 ] INFO -    Init Done
 [ manifest_processing.py:process_project:204 ] INFO - Project "manage-my-example-dir" selected for processing
-[ __init__.py:add_unit_of_work_to_execution_order:253 ] INFO - Parent UnitOfWork "backup-dir" already marked for execution.
-[ manifest_processing.py:process_project:260 ] INFO - Project "manage-my-example-dir" Execution Plan: {'apply': ['create-dir'], 'delete': ['backup-dir', 'delete-dir']}
-[ extensions.py:log:324 ] INFO - [ShellScript:backup-dir:v1] Registered action "Run ShellScript" with status "DELETE_PENDING"
-[ __init__.py:run:173 ] INFO - Delete action was rerouted to Apply action...
-[ __init__.py:run:152 ] INFO - APPLYING "backup-dir"
-[ extensions.py:log:324 ] INFO - [ShellScript:backup-dir:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
-[ extensions.py:log:324 ] INFO - [ShellScript:backup-dir:v1] APPLY CALLED
-[ extensions.py:log:324 ] INFO - [ShellScript:backup-dir:v1] Return Code: 0
-[ extensions.py:log:324 ] INFO - [ShellScript:delete-dir:v1] Registered action "Run ShellScript" with status "DELETE_PENDING"
-[ __init__.py:run:173 ] INFO - Delete action was rerouted to Apply action...
-[ __init__.py:run:152 ] INFO - APPLYING "delete-dir"
-[ extensions.py:log:324 ] INFO - [ShellScript:delete-dir:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
-[ extensions.py:log:324 ] INFO - [ShellScript:delete-dir:v1] APPLY CALLED
-[ extensions.py:log:324 ] INFO - [ShellScript:delete-dir:v1] Return Code: 0
-[ project_v1.py:delete_manifest:190 ] INFO - Project Deleted
-[ animus.py:run_main:28 ] INFO - ANIMUS DONE
+EXAMPLE: 2023-10-24 06:57:15,242 INFO  Logging ready
+EXAMPLE: 2023-10-24 06:57:15,320 INFO  Parent UnitOfWork "backup-dir" already marked for execution.
+EXAMPLE: 2023-10-24 06:57:15,321 INFO  Project "manage-my-example-dir" Execution Plan: {'apply': ['create-dir'], 'delete': ['backup-dir', 'delete-dir']}
+EXAMPLE: 2023-10-24 06:57:15,321 INFO  [ShellScript:backup-dir:v1] Registered action "Run ShellScript" with status "DELETE_PENDING"
+EXAMPLE: 2023-10-24 06:57:15,321 INFO  Delete action was rerouted to Apply action...
+EXAMPLE: 2023-10-24 06:57:15,321 INFO  APPLYING "backup-dir"
+EXAMPLE: 2023-10-24 06:57:15,321 INFO  [ShellScript:backup-dir:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
+EXAMPLE: 2023-10-24 06:57:15,321 INFO  [ShellScript:backup-dir:v1] APPLY CALLED
+EXAMPLE: 2023-10-24 06:57:15,329 INFO  [ShellScript:backup-dir:v1] Return Code: 0
+EXAMPLE: 2023-10-24 06:57:15,330 INFO  [ShellScript:delete-dir:v1] Registered action "Run ShellScript" with status "DELETE_PENDING"
+EXAMPLE: 2023-10-24 06:57:15,330 INFO  Delete action was rerouted to Apply action...
+EXAMPLE: 2023-10-24 06:57:15,330 INFO  APPLYING "delete-dir"
+EXAMPLE: 2023-10-24 06:57:15,330 INFO  [ShellScript:delete-dir:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
+EXAMPLE: 2023-10-24 06:57:15,330 INFO  [ShellScript:delete-dir:v1] APPLY CALLED
+EXAMPLE: 2023-10-24 06:57:15,332 INFO  [ShellScript:delete-dir:v1] Return Code: 0
+EXAMPLE: 2023-10-24 06:57:15,333 INFO  Project Deleted
+EXAMPLE: 2023-10-24 06:57:15,333 INFO  ANIMUS DONE
 ```
 
 ## Spec Fields
