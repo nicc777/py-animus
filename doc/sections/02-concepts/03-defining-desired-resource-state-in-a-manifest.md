@@ -73,6 +73,7 @@ version: v1
 metadata:
   name: manage-my-example-dir
 spec:
+  loggingConfig: /path/this-manifest.yaml
   manifestFiles: 
   - /path/this-manifest.yaml
 ---
@@ -131,8 +132,8 @@ A more practical implementation of this example is available [in this project re
 On Unix-like operating systems, after [installing](../01-quick-start/01-installing.md) `py-animus`, you can run and test the example using the following commands:
 
 ```shell
-# Run the apply action
-animus apply https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-01/project-02.yaml manage-my-example-dir default
+# Run the apply action (IMPORTANT: Assuming you are running from a virtual environment !!!)
+venv/bin/animus apply https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-01/project-02.yaml manage-my-example-dir default
 
 # Create some files:
 echo "content" > /tmp/project-02-example/file1
@@ -141,8 +142,8 @@ echo "more content" > /tmp/project-02-example/file2
 # Some output will now be created. Check that the directory exist:
 ls -lahrt /tmp/project-02-example
 
-# Run the delete action
-animus delete https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-01/project-02.yaml manage-my-example-dir default
+# Run the delete action (IMPORTANT: Assuming you are running from a virtual environment !!!)
+venv/bin/animus delete https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-01/project-02.yaml manage-my-example-dir default
 
 # Verify the directory and it's content is removed:
 ls -lahrt /tmp/project-02-example
@@ -163,7 +164,7 @@ drwxrwxr-x nicc777/nicc777   0 2023-10-24 06:39 tmp/project-02-example/
 
 Assuming you have run the example of the previous section, you may have noticed the following log outputs during the `apply` and `delete` actions:
 
-```text
+```shell
 # APPLY ACTION OUTPUT
 STARTUP: Setting Default Logging Handler: "StreamHandler"
 STARTUP: Initial global logging level: DEBUG

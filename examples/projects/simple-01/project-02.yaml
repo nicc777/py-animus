@@ -4,6 +4,7 @@ version: v1
 metadata:
   name: manage-my-example-dir
 spec:
+  loggingConfig: https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-01/project-02.yaml
   manifestFiles: 
   - https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-01/project-02.yaml
 ---
