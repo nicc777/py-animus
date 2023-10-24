@@ -126,9 +126,86 @@ In this example, during the `apply` action, _ONLY_ the manifest named `create-di
 
 But, when the `delete` action is called, the `create-dir` manifest processing will be skipped and then the `apply` actions will be called, _FIRST_ for the `backup-dir` and then for the `delete-dir` manifests.
 
+A more practical implementation of this example is available [in this project repository](https://github.com/nicc777/py-animus/blob/main/examples/projects/simple-01/project-02.yaml).
+
+On Unix-like operating systems, after [installing](../01-quick-start/01-installing.md) `py-animus`, you can run and test the example using the following commands:
+
+```shell
+# Run the apply action
+animus apply https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-01/project-02.yaml manage-my-example-dir default
+
+# Create some files:
+echo "content" > /tmp/project-02-example/file1
+echo "more content" > /tmp/project-02-example/file2
+
+# Some output will now be created. Check that the directory exist:
+ls -lahrt /tmp/project-02-example
+
+# Run the delete action
+animus delete https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-01/project-02.yaml manage-my-example-dir default
+
+# Verify the directory and it's content is removed:
+ls -lahrt /tmp/project-02-example
+
+# Verify the backup has been made:
+tar tvzf /tmp/dir-backup.tar.gz
+```
+
+The output from the last command should be something like the following:
+
+```text
+drwxrwxr-x nicc777/nicc777   0 2023-10-24 06:39 tmp/project-02-example/
+-rw-rw-r-- nicc777/nicc777   8 2023-10-24 06:39 tmp/project-02-example/file1
+-rw-rw-r-- nicc777/nicc777  13 2023-10-24 06:39 tmp/project-02-example/file2
+```
+
 ### Dependencies
 
-TODO
+Assuming you have run the example of the previous section, you may have noticed the following log outputs during the `apply` and `delete` actions:
+
+```text
+# APPLY ACTION OUTPUT
+STARTUP: Setting Default Logging Handler: "StreamHandler"
+STARTUP: Initial global logging level: DEBUG
+[ animus.py:run_main:15 ] INFO - Starting
+[ __init__.py:initialize_animus:15 ] INFO - Init Start
+[ __init__.py:initialize_animus:46 ] INFO -    Init Done
+[ manifest_processing.py:process_project:204 ] INFO - Project "manage-my-example-dir" selected for processing
+[ __init__.py:add_unit_of_work_to_execution_order:253 ] INFO - Parent UnitOfWork "backup-dir" already marked for execution.
+[ manifest_processing.py:process_project:260 ] INFO - Project "manage-my-example-dir" Execution Plan: {'apply': ['create-dir'], 'delete': ['backup-dir', 'delete-dir']}
+[ __init__.py:run:152 ] INFO - APPLYING "create-dir"
+[ extensions.py:log:324 ] INFO - [ShellScript:create-dir:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
+[ extensions.py:log:324 ] INFO - [ShellScript:create-dir:v1] APPLY CALLED
+[ extensions.py:log:324 ] INFO - [ShellScript:create-dir:v1] Return Code: 0
+[ project_v1.py:apply_manifest:183 ] INFO - Project Applied
+[ animus.py:run_main:28 ] INFO - ANIMUS DONE
+
+
+
+# DELETE ACTION OUTPUT
+STARTUP: Setting Default Logging Handler: "StreamHandler"
+STARTUP: Initial global logging level: DEBUG
+[ animus.py:run_main:15 ] INFO - Starting
+[ __init__.py:initialize_animus:15 ] INFO - Init Start
+[ __init__.py:initialize_animus:46 ] INFO -    Init Done
+[ manifest_processing.py:process_project:204 ] INFO - Project "manage-my-example-dir" selected for processing
+[ __init__.py:add_unit_of_work_to_execution_order:253 ] INFO - Parent UnitOfWork "backup-dir" already marked for execution.
+[ manifest_processing.py:process_project:260 ] INFO - Project "manage-my-example-dir" Execution Plan: {'apply': ['create-dir'], 'delete': ['backup-dir', 'delete-dir']}
+[ extensions.py:log:324 ] INFO - [ShellScript:backup-dir:v1] Registered action "Run ShellScript" with status "DELETE_PENDING"
+[ __init__.py:run:173 ] INFO - Delete action was rerouted to Apply action...
+[ __init__.py:run:152 ] INFO - APPLYING "backup-dir"
+[ extensions.py:log:324 ] INFO - [ShellScript:backup-dir:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
+[ extensions.py:log:324 ] INFO - [ShellScript:backup-dir:v1] APPLY CALLED
+[ extensions.py:log:324 ] INFO - [ShellScript:backup-dir:v1] Return Code: 0
+[ extensions.py:log:324 ] INFO - [ShellScript:delete-dir:v1] Registered action "Run ShellScript" with status "DELETE_PENDING"
+[ __init__.py:run:173 ] INFO - Delete action was rerouted to Apply action...
+[ __init__.py:run:152 ] INFO - APPLYING "delete-dir"
+[ extensions.py:log:324 ] INFO - [ShellScript:delete-dir:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
+[ extensions.py:log:324 ] INFO - [ShellScript:delete-dir:v1] APPLY CALLED
+[ extensions.py:log:324 ] INFO - [ShellScript:delete-dir:v1] Return Code: 0
+[ project_v1.py:delete_manifest:190 ] INFO - Project Deleted
+[ animus.py:run_main:28 ] INFO - ANIMUS DONE
+```
 
 ## Spec Fields
 

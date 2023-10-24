@@ -6,6 +6,7 @@
         "cprint",
         "datagram",
         "DGRAM",
+        "lahrt",
         "levelname",
         "plugable",
         "representer",
