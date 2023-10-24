@@ -9,6 +9,11 @@ Quick Navigation: [Documentation home](../../README.md) | [Up](./README.md)
       - [Use case: Run a `ShellScript` command to backup a directory during a `delete` action that will delete the directory](#use-case-run-a-shellscript-command-to-backup-a-directory-during-a-delete-action-that-will-delete-the-directory)
     - [Dependencies](#dependencies)
   - [Spec Fields](#spec-fields)
+- [Special Manifests](#special-manifests)
+  - [Project Manifests](#project-manifests)
+  - [Logging Manifests](#logging-manifests)
+  - [Values Manifests](#values-manifests)
+  - [Variables Manifests](#variables-manifests)
 - [See Also](#see-also)
 
 
@@ -215,6 +220,26 @@ Fields in this section are highly dependant on the implementation of each extens
 The `py-animus` project ships with a minimal set of "standard" extensions that is [documented here](../03-standard-extensions-documentation/README.md).
 
 To learn more how to use third party extensions or how to  create your own extensions, refer to [this section](../04-third-party-extensions/README.md).
+
+# Special Manifests
+
+TODO
+
+## Project Manifests
+
+TODO
+
+## Logging Manifests
+
+TODO
+
+## Values Manifests
+
+TODO
+
+## Variables Manifests
+
+TODO
 
 # See Also
 

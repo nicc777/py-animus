@@ -99,10 +99,6 @@ spec:
         if 'loggingFormat' in self.spec:
             log_format = self.spec['loggingFormat']
         formatter = logging.Formatter(log_format)
-
-        print('*** SPEC: {}'.format(self.spec))
-        print('*** FINAL Logging Format: {}'.format(log_format))
-
         h = logging.StreamHandler(sys.stdout)
         h.setLevel(log_level)
         h.setFormatter(formatter)
