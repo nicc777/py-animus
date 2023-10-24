@@ -1,0 +1,53 @@
+---
+kind: Project
+version: v1
+metadata:
+  name: manage-my-example-dir
+spec:
+  manifestFiles: 
+  - /path/this-manifest.yaml
+---
+kind: StreamHandlerLogging
+version: v1
+metadata:
+  name: StreamHandler
+spec:
+  level: debug
+  loggingFormat: 'EXAMPLE: %(asctime)s %(levelname)s  %(message)s'
+---
+kind: ShellScript
+version: v1
+metadata:
+  name: create-dir
+  skipDeleteAll: true
+spec:
+  source:
+    type: inline
+    value: 'mkdir -p /tmp/project-02-example'
+---
+kind: ShellScript
+version: v1
+metadata:
+  name: backup-dir
+  skipApplyAll: true
+  actionOverrides:
+    delete: apply
+spec:
+  source:
+    type: inline
+    value: 'rm -vf /tmp/dir-backup.tar.gz ; tar czf /tmp/dir-backup.tar.gz /tmp/project-02-example'
+---
+kind: ShellScript
+version: v1
+metadata:
+  name: delete-dir
+  skipApplyAll: true
+  actionOverrides:
+    delete: apply
+  dependencies:
+    delete:
+    - backup-dir
+spec:
+  source:
+    type: inline
+    value: 'rm -frR /tmp/project-02-example'
