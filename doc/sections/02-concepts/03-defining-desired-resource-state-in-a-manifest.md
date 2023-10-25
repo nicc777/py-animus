@@ -11,6 +11,7 @@ Quick Navigation: [Documentation home](../../README.md) | [Up](./README.md)
   - [Spec Fields](#spec-fields)
 - [Special Manifests](#special-manifests)
 - [Project(s)](#projects)
+  - [Project Dependencies](#project-dependencies)
   - [Project Spec](#project-spec)
 - [See Also](#see-also)
 
@@ -235,6 +236,8 @@ There are a number of manifest kinds that are supplementary and not directly rel
 
 A project forms the bases of a group of manifests that should be processed together. A project also allows to group related resources to manage together and through the ability to define project dependencies, there are even more options to build a hierarchy to groups of resources that should be processed in an order.
 
+## Project Dependencies
+
 WHen processing the project manifests, dependencies are only processed from the initial referenced project and it's dependencies. Tak the following example:
 
 ```text
@@ -261,6 +264,11 @@ The following fields are available in the Project `spec`:
 | `extensionPaths`   | List of Strings | No       | None (No Extensions)                   | Define the files where third party extensions are defined (source files for extension processing).                                                                        |
 | `manifestFiles`    | List of Strings | Yes      | N/A                                    | At least ONE source file is required that includes actual manifests to process.                                                                                           |
 | `skipConfirmation` | Boolean         | No       | False                                  | If set to `True`, confirmation to continue will not be required. The default value is `False` and therefore each new run will require user input to confirm to proceed.   |
+
+Notes about file references:
+
+* A "file" can be a path to a local file on the system, OR a web URL
+* All manifests can be defined in ONE file, which will then result in all the various configuration options pointing to the same file - as in [example 1](../../../examples/projects/simple-01/project-01.yaml) and [example 2](../../../examples/projects/simple-01/project-02.yaml).
 
 # See Also
 
