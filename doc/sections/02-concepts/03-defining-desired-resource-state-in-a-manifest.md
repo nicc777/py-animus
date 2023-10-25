@@ -10,10 +10,8 @@ Quick Navigation: [Documentation home](../../README.md) | [Up](./README.md)
     - [Dependencies](#dependencies)
   - [Spec Fields](#spec-fields)
 - [Special Manifests](#special-manifests)
-  - [Project Manifests](#project-manifests)
-  - [Logging Manifests](#logging-manifests)
-  - [Values Manifests](#values-manifests)
-  - [Variables Manifests](#variables-manifests)
+- [Project(s)](#projects)
+  - [Project Spec](#project-spec)
 - [See Also](#see-also)
 
 
@@ -51,7 +49,7 @@ In the processing of manifests, the `metadata` defined fields and values is used
 Below is a table with all the available fields for `metadata`:
 
 | Field              | Type            | Description                                                                                                                                                                                                                                                                                                                                                                                        |
-|---------------------|-----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|--------------------|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `name`             | String          | As already mentioned, names are important for referencing dependant manifests.                                                                                                                                                                                                                                                                                                                     |
 | `skipApplyAll`     | Boolean         | If the `apply` action is called and this field value is `true`, the manifest will NOT be processed. This is useful for applying cert6ain manifests only during `delete` actions. A good use case is a manifest to delete the contents of an AWS S3 bucket before deleting the entire bucket. This action is only required during a `delete` action and can therefore be ignored in `apply` actions |
 | `skipDeleteAll`    | Boolean         | Basically the opposite of the `skipApplyAll` meaning: manifests will only be processed when the `apply` action is run and will be ignored during `delete` actions.                                                                                                                                                                                                                                 |
@@ -170,6 +168,7 @@ drwxrwxr-x nicc777/nicc777   0 2023-10-24 06:39 tmp/project-02-example/
 Assuming you have run the example of the previous section, you may have noticed the following log outputs during the `apply` and `delete` actions:
 
 ```shell
+# APPLY ACTION OUTPUT
 STARTUP: Setting Default Logging Handler: "StreamHandler"
 STARTUP: Initial global logging level: INFO
 [ animus.py:run_main:15 ] INFO - Starting
@@ -212,6 +211,8 @@ EXAMPLE: 2023-10-24 07:05:11,455 INFO  Project Deleted
 EXAMPLE: 2023-10-24 07:05:11,455 INFO  ANIMUS DONE
 ```
 
+Of note here is the line with the text `Execution Plan` - usually around the 8th line (with INFO level logging). With the `apply` action, there is effectively only ONE action to process, since the other two are excluded by the `skipApplyAll` setting. During the `delete` action, there are two actions to perform, and the `backup-dir` will always be processed before `delete-dir` because the latter has a dependency on `backup-dir`.
+
 ## Spec Fields
 
 Fields in this section are highly dependant on the implementation of each extension.
@@ -222,23 +223,44 @@ To learn more how to use third party extensions or how to  create your own exten
 
 # Special Manifests
 
-TODO
+There are a number of manifest kinds that are supplementary and not directly related to the actual IaC process. These are:
 
-## Project Manifests
+| Manifest Category     | Kind(s)                                                                                                                         | Required | Purpose                                                                                                                                              |
+|-----------------------|---------------------------------------------------------------------------------------------------------------------------------|:--------:|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Project Definition    | `Project`                                                                                                                       | Yes      | At least ONE project is required to define the various other manifests to include in this project. Projects can have dependencies on other projects. |
+| Logging Configuration | `StreamHandlerLogging`, `SyslogHandlerLogging`, `DatagramHandlerLogging`, `FileHandlerLogging` and `RotatingFileHandlerLogging` | No       | Define the logging when processing the project(s)                                                                                                    |
+| Values                | `Values`                                                                                                                        | No       | Values can be defined per environment to accommodate slightly different configurations depending on the environment target for the deployment.       |
 
-TODO
+# Project(s)
 
-## Logging Manifests
+A project forms the bases of a group of manifests that should be processed together. A project also allows to group related resources to manage together and through the ability to define project dependencies, there are even more options to build a hierarchy to groups of resources that should be processed in an order.
 
-TODO
+WHen processing the project manifests, dependencies are only processed from the initial referenced project and it's dependencies. Tak the following example:
 
-## Values Manifests
+```text
++-----------+   +-----------+   +-----------+
+|           |   |           |   |           |
+| Project A +-->+ Project B +-->+ Project C +
+|           |   |           |   |           |
++-----------+   +-----------+   +-----------+
+```
 
-TODO
+Project has a dependency on Project B, and project B has a dependency on Project C. If the initial project starting reference is A, the processing order will be C, then B then A. If the starting reference is project B, project C will be processed first, the B and Project A will not be processed at all. Finally, if the starting reference is Project C, only project C will be processed.
 
-## Variables Manifests
+Keep in mind that with "_processing_" the goal is to ensure a [desired state](./02-what-is-desired-state.md) as defined in the manifests for each project. Changes in the configuration will therefore lead to those changes be applied to the targeted resources in order to achieve the desired state.
 
-TODO
+## Project Spec
+
+The following fields are available in the Project `spec`:
+
+| Field              | Type            | Required | Default Value                          | Description                                                                                                                                                               |
+|--------------------|-----------------|:--------:|----------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `workDirectory`    | String          | No       | Calculated at runtime                  | A temporary directory on the local file system that can be used to store files.                                                                                           |
+| `loggingConfig`    | String          | No       | Built in logging configuration is used | Control over what kind of logging can be used and where to send logs as well as the message format.                                                                       |
+| `valuesConfig`     | List of Strings | No       | None (No Values)                       | Define the files where values are defined.                                                                                                                                |
+| `extensionPaths`   | List of Strings | No       | None (No Extensions)                   | Define the files where third party extensions are defined (source files for extension processing).                                                                        |
+| `manifestFiles`    | List of Strings | Yes      | N/A                                    | At least ONE source file is required that includes actual manifests to process.                                                                                           |
+| `skipConfirmation` | Boolean         | No       | False                                  | If set to `True`, confirmation to continue will not be required. The default value is `False` and therefore each new run will require user input to confirm to proceed.   |
 
 # See Also
 
