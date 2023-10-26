@@ -9,7 +9,7 @@
 
 # More testing to be done
 
-n/a
+Adapt tests in `tests/test_main.py` to accommodate for the CLI input now required (currently these tests "stall" because it is waiting for user input.)
 
 # Documentation
 
