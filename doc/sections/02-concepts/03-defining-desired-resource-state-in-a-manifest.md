@@ -176,14 +176,23 @@ STARTUP: Initial global logging level: INFO
 [ __init__.py:initialize_animus:15 ] INFO - Init Start
 [ __init__.py:initialize_animus:46 ] INFO -    Init Done
 [ manifest_processing.py:process_project:204 ] INFO - Project "manage-my-example-dir" selected for processing
-EXAMPLE: 2023-10-24 07:04:53,656 INFO  Logging ready
-EXAMPLE: 2023-10-24 07:04:53,734 INFO  Project "manage-my-example-dir" Execution Plan: {'apply': ['create-dir'], 'delete': ['backup-dir', 'delete-dir']}
-EXAMPLE: 2023-10-24 07:04:53,734 INFO  APPLYING "create-dir"
-EXAMPLE: 2023-10-24 07:04:53,734 INFO  [ShellScript:create-dir:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
-EXAMPLE: 2023-10-24 07:04:53,734 INFO  [ShellScript:create-dir:v1] APPLY CALLED
-EXAMPLE: 2023-10-24 07:04:53,738 INFO  [ShellScript:create-dir:v1] Return Code: 0
-EXAMPLE: 2023-10-24 07:04:53,739 INFO  Project Applied
-EXAMPLE: 2023-10-24 07:04:53,739 INFO  ANIMUS DONE
+EXAMPLE: 2023-10-26 05:56:14,168 INFO  Logging ready
+EXAMPLE: 2023-10-26 05:56:14,254 INFO  Project "manage-my-example-dir" Execution Plan: {'apply': ['create-dir'], 'delete': ['backup-dir', 'delete-dir']}
+EXAMPLE: 2023-10-26 05:56:14,254 INFO  Project Apply Action Processed
+========================================
+
+Current Execution Plan
+----------------------
+
+    create-dir
+
+Process the above manifest names in the shown order? [N|y]: y
+========================================
+EXAMPLE: 2023-10-26 05:56:16,466 INFO  APPLYING "create-dir"
+EXAMPLE: 2023-10-26 05:56:16,466 INFO  [ShellScript:create-dir:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
+EXAMPLE: 2023-10-26 05:56:16,467 INFO  [ShellScript:create-dir:v1] APPLY CALLED
+EXAMPLE: 2023-10-26 05:56:16,471 INFO  [ShellScript:create-dir:v1] Return Code: 0
+EXAMPLE: 2023-10-26 05:56:16,471 INFO  ANIMUS DONE
 
 
 
@@ -194,22 +203,32 @@ STARTUP: Initial global logging level: INFO
 [ __init__.py:initialize_animus:15 ] INFO - Init Start
 [ __init__.py:initialize_animus:46 ] INFO -    Init Done
 [ manifest_processing.py:process_project:204 ] INFO - Project "manage-my-example-dir" selected for processing
-EXAMPLE: 2023-10-24 07:05:11,360 INFO  Logging ready
-EXAMPLE: 2023-10-24 07:05:11,443 INFO  Project "manage-my-example-dir" Execution Plan: {'apply': ['create-dir'], 'delete': ['backup-dir', 'delete-dir']}
-EXAMPLE: 2023-10-24 07:05:11,443 INFO  [ShellScript:backup-dir:v1] Registered action "Run ShellScript" with status "DELETE_PENDING"
-EXAMPLE: 2023-10-24 07:05:11,443 WARNING  Delete action for "backup-dir" was rerouted to Apply action...
-EXAMPLE: 2023-10-24 07:05:11,443 INFO  APPLYING "backup-dir"
-EXAMPLE: 2023-10-24 07:05:11,443 INFO  [ShellScript:backup-dir:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
-EXAMPLE: 2023-10-24 07:05:11,443 INFO  [ShellScript:backup-dir:v1] APPLY CALLED
-EXAMPLE: 2023-10-24 07:05:11,450 INFO  [ShellScript:backup-dir:v1] Return Code: 0
-EXAMPLE: 2023-10-24 07:05:11,451 INFO  [ShellScript:delete-dir:v1] Registered action "Run ShellScript" with status "DELETE_PENDING"
-EXAMPLE: 2023-10-24 07:05:11,451 WARNING  Delete action for "delete-dir" was rerouted to Apply action...
-EXAMPLE: 2023-10-24 07:05:11,451 INFO  APPLYING "delete-dir"
-EXAMPLE: 2023-10-24 07:05:11,451 INFO  [ShellScript:delete-dir:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
-EXAMPLE: 2023-10-24 07:05:11,451 INFO  [ShellScript:delete-dir:v1] APPLY CALLED
-EXAMPLE: 2023-10-24 07:05:11,454 INFO  [ShellScript:delete-dir:v1] Return Code: 0
-EXAMPLE: 2023-10-24 07:05:11,455 INFO  Project Deleted
-EXAMPLE: 2023-10-24 07:05:11,455 INFO  ANIMUS DONE
+EXAMPLE: 2023-10-26 05:56:54,714 INFO  Logging ready
+EXAMPLE: 2023-10-26 05:56:54,793 INFO  Project "manage-my-example-dir" Execution Plan: {'apply': ['create-dir'], 'delete': ['backup-dir', 'delete-dir']}
+EXAMPLE: 2023-10-26 05:56:54,793 INFO  Project Delete Action Processed
+========================================
+
+Current Execution Plan
+----------------------
+
+    backup-dir
+    delete-dir
+
+Process the above manifest names in the shown order? [N|y]: y
+========================================
+EXAMPLE: 2023-10-26 05:56:55,974 INFO  [ShellScript:backup-dir:v1] Registered action "Run ShellScript" with status "DELETE_PENDING"
+EXAMPLE: 2023-10-26 05:56:55,974 WARNING  Delete action for "backup-dir" was rerouted to Apply action...
+EXAMPLE: 2023-10-26 05:56:55,974 INFO  APPLYING "backup-dir"
+EXAMPLE: 2023-10-26 05:56:55,975 INFO  [ShellScript:backup-dir:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
+EXAMPLE: 2023-10-26 05:56:55,975 INFO  [ShellScript:backup-dir:v1] APPLY CALLED
+EXAMPLE: 2023-10-26 05:56:55,983 INFO  [ShellScript:backup-dir:v1] Return Code: 0
+EXAMPLE: 2023-10-26 05:56:55,984 INFO  [ShellScript:delete-dir:v1] Registered action "Run ShellScript" with status "DELETE_PENDING"
+EXAMPLE: 2023-10-26 05:56:55,984 WARNING  Delete action for "delete-dir" was rerouted to Apply action...
+EXAMPLE: 2023-10-26 05:56:55,984 INFO  APPLYING "delete-dir"
+EXAMPLE: 2023-10-26 05:56:55,985 INFO  [ShellScript:delete-dir:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
+EXAMPLE: 2023-10-26 05:56:55,985 INFO  [ShellScript:delete-dir:v1] APPLY CALLED
+EXAMPLE: 2023-10-26 05:56:55,986 INFO  [ShellScript:delete-dir:v1] Return Code: 0
+EXAMPLE: 2023-10-26 05:56:55,987 INFO  ANIMUS DONE
 ```
 
 Of note here is the line with the text `Execution Plan` - usually around the 8th line (with INFO level logging). With the `apply` action, there is effectively only ONE action to process, since the other two are excluded by the `skipApplyAll` setting. During the `delete` action, there are two actions to perform, and the `backup-dir` will always be processed before `delete-dir` because the latter has a dependency on `backup-dir`.

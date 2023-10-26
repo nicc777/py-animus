@@ -180,13 +180,13 @@ class Project(ManifestBase):   # pragma: no cover
         for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
             if action_name == 'Project Action' and expected_action == Action.APPLY_PENDING:
                 self._process_action()                
-        self.logger.info('Project Applied')
+        self.logger.info('Project Apply Action Processed')
         return
     
     def delete_manifest(self):
         for action_name, expected_action in actions.get_action_values_for_manifest(manifest_kind=self.kind, manifest_name=self.metadata['name']).items():
             if action_name == 'Project Action' and expected_action == Action.DELETE_PENDING:
                 self._process_action()
-        self.logger.info('Project Deleted')
+        self.logger.info('Project Delete Action Processed')
         return
 

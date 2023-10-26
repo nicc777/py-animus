@@ -8,8 +8,6 @@ Quick Navigation: [Documentation home](../../README.md) | [Up](./README.md)
   - [The Project](#the-project)
   - [Running the example](#running-the-example)
   - [Cleaning Up](#cleaning-up)
-- [Other Examples](#other-examples)
-- [Final Notes](#final-notes)
 - [See Also](#see-also)
 
 
@@ -86,14 +84,23 @@ STARTUP: Initial global logging level: INFO
 [ __init__.py:initialize_animus:15 ] INFO - Init Start
 [ __init__.py:initialize_animus:46 ] INFO -    Init Done
 [ manifest_processing.py:process_project:204 ] INFO - Project "project-1" selected for processing
-*** 2023-10-20 05:39:04,557 INFO - manifest_processing.py:_process_logging_sections:105 - Logging ready
-*** 2023-10-20 05:39:04,641 INFO - manifest_processing.py:process_project:260 - Project "project-1" Execution Plan: {'apply': ['shell-script-v1-minimal'], 'delete': ['cleanup']}
-*** 2023-10-20 05:39:04,642 INFO - __init__.py:run:152 - APPLYING "shell-script-v1-minimal"
-*** 2023-10-20 05:39:04,642 INFO - extensions.py:log:324 - [ShellScript:shell-script-v1-minimal:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
-*** 2023-10-20 05:39:04,642 INFO - extensions.py:log:324 - [ShellScript:shell-script-v1-minimal:v1] APPLY CALLED
-*** 2023-10-20 05:39:04,645 INFO - extensions.py:log:324 - [ShellScript:shell-script-v1-minimal:v1] Return Code: 0
-*** 2023-10-20 05:39:04,645 INFO - project_v1.py:apply_manifest:183 - Project Applied
-*** 2023-10-20 05:39:04,645 INFO - animus.py:run_main:28 - ANIMUS DONE
+*** 2023-10-26 05:58:10,096 INFO - manifest_processing.py:_process_logging_sections:105 - Logging ready
+*** 2023-10-26 05:58:10,233 INFO - manifest_processing.py:process_project:260 - Project "project-1" Execution Plan: {'apply': ['shell-script-v1-minimal'], 'delete': ['cleanup']}
+*** 2023-10-26 05:58:10,233 INFO - project_v1.py:apply_manifest:183 - Project Apply Action Processed
+========================================
+
+Current Execution Plan
+----------------------
+
+    shell-script-v1-minimal
+
+Process the above manifest names in the shown order? [N|y]: y
+========================================
+*** 2023-10-26 05:58:14,210 INFO - __init__.py:run:152 - APPLYING "shell-script-v1-minimal"
+*** 2023-10-26 05:58:14,211 INFO - extensions.py:log:324 - [ShellScript:shell-script-v1-minimal:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
+*** 2023-10-26 05:58:14,211 INFO - extensions.py:log:324 - [ShellScript:shell-script-v1-minimal:v1] APPLY CALLED
+*** 2023-10-26 05:58:14,214 INFO - extensions.py:log:324 - [ShellScript:shell-script-v1-minimal:v1] Return Code: 0
+*** 2023-10-26 05:58:14,214 INFO - animus.py:run_main:28 - ANIMUS DONE
 
 # TEST:
 $ cat ~/hello-world.txt
@@ -115,29 +122,30 @@ STARTUP: Initial global logging level: INFO
 [ __init__.py:initialize_animus:15 ] INFO - Init Start
 [ __init__.py:initialize_animus:46 ] INFO -    Init Done
 [ manifest_processing.py:process_project:204 ] INFO - Project "project-1" selected for processing
-*** 2023-10-20 05:39:09,825 INFO - manifest_processing.py:_process_logging_sections:105 - Logging ready
-*** 2023-10-20 05:39:09,902 INFO - manifest_processing.py:process_project:260 - Project "project-1" Execution Plan: {'apply': ['shell-script-v1-minimal'], 'delete': ['cleanup']}
-*** 2023-10-20 05:39:09,903 INFO - extensions.py:log:324 - [ShellScript:cleanup:v1] Registered action "Run ShellScript" with status "DELETE_PENDING"
-*** 2023-10-20 05:39:09,903 INFO - __init__.py:run:173 - Delete action was rerouted to Apply action...
-*** 2023-10-20 05:39:09,903 INFO - __init__.py:run:152 - APPLYING "cleanup"
-*** 2023-10-20 05:39:09,903 INFO - extensions.py:log:324 - [ShellScript:cleanup:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
-*** 2023-10-20 05:39:09,903 INFO - extensions.py:log:324 - [ShellScript:cleanup:v1] APPLY CALLED
-*** 2023-10-20 05:39:09,906 INFO - extensions.py:log:324 - [ShellScript:cleanup:v1] Return Code: 0
-*** 2023-10-20 05:39:09,907 INFO - project_v1.py:delete_manifest:190 - Project Deleted
-*** 2023-10-20 05:39:09,907 INFO - animus.py:run_main:28 - ANIMUS DONE
+*** 2023-10-26 05:58:52,345 INFO - manifest_processing.py:_process_logging_sections:105 - Logging ready
+*** 2023-10-26 05:58:52,432 INFO - manifest_processing.py:process_project:260 - Project "project-1" Execution Plan: {'apply': ['shell-script-v1-minimal'], 'delete': ['cleanup']}
+*** 2023-10-26 05:58:52,433 INFO - project_v1.py:delete_manifest:190 - Project Delete Action Processed
+========================================
+
+Current Execution Plan
+----------------------
+
+    cleanup
+
+Process the above manifest names in the shown order? [N|y]: y
+========================================
+*** 2023-10-26 05:58:54,375 INFO - extensions.py:log:324 - [ShellScript:cleanup:v1] Registered action "Run ShellScript" with status "DELETE_PENDING"
+*** 2023-10-26 05:58:54,375 WARNING - __init__.py:run:172 - Delete action for "cleanup" was rerouted to Apply action...
+*** 2023-10-26 05:58:54,375 INFO - __init__.py:run:152 - APPLYING "cleanup"
+*** 2023-10-26 05:58:54,375 INFO - extensions.py:log:324 - [ShellScript:cleanup:v1] Registered action "Run ShellScript" with status "APPLY_PENDING"
+*** 2023-10-26 05:58:54,375 INFO - extensions.py:log:324 - [ShellScript:cleanup:v1] APPLY CALLED
+*** 2023-10-26 05:58:54,379 INFO - extensions.py:log:324 - [ShellScript:cleanup:v1] Return Code: 0
+*** 2023-10-26 05:58:54,380 INFO - animus.py:run_main:28 - ANIMUS DONE
 
 # TEST
 $ cat ~/hello-world.txt
 cat: /home/nicc777/hello-world.txt: No such file or directory
 ```
-
-# Other Examples
-
-TODO
-
-# Final Notes
-
-TODO
 
 # See Also
 

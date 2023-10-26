@@ -260,7 +260,7 @@ def process_project(project_manifest_uri: str, project_name: str):
             logger.info('Project "{}" Execution Plan: {}'.format(project_name, execution_plan.execution_order))
 
             # The idea now is that the project extension sets various variables for next actions
-            execution_plan.do_work(scope=scope.value, action=actions.command)
+            # execution_plan.do_work(scope=scope.value, action=actions.command)
             if actions.command == 'apply':
                 project_instance.metadata = project_instance.resolve_all_pending_variables(iterable=copy.deepcopy(project_instance.metadata))
                 project_instance.spec = project_instance.resolve_all_pending_variables(iterable=copy.deepcopy(project_instance.spec))
@@ -271,6 +271,27 @@ def process_project(project_manifest_uri: str, project_name: str):
                 project_instance.delete_manifest()
             else:
                 raise Exception('Unrecognized Command "{}" - expected either "apply" or "delete"'.format(actions.command))
+            
+            # Get user confirmation if "skipConfirmation" is False
+            process_cli_confirmation = True
+            if 'skipConfirmation' in project_instance.spec:
+                if isinstance(project_instance.spec['skipConfirmation'], bool):
+                    if project_instance.spec['skipConfirmation'] is True:
+                        process_cli_confirmation = False
+            if process_cli_confirmation is True:
+                print('='*40)
+                print('\nCurrent Execution Plan')
+                print('----------------------\n')
+                for task_name in execution_plan.execution_order[actions.command]:
+                    print('    {}'.format(task_name))
+                user_response = input('\nProcess the above manifest names in the shown order? [N|y]: ')
+                if user_response.lower().startswith('y') is False:
+                    print('\nAborted per user request...\n\n')
+                    sys.exit()
+                print('='*40)
+
+            execution_plan.do_work(scope=scope.value, action=actions.command)
+            
             logger.debug('   Manifest processing for project "{}" completed'.format(project_instance.metadata['name']))
             
             project_instance_variable_names = variable_cache.get_all_variable_names_staring_with(project_instance_variables_base_name)
