@@ -5,14 +5,11 @@
 
 # Current tasks
 
-* [x] Complete implementation of Git extension
-* [x] Refactor built in extensions to ensure all extensions handle `apply` and `delete` scenarios as intended, including with the new meta data key `actionOverrides`
+* [ ] It seems there is a bug where spec field values is converted to strings (always) - check file `src/py_animus/helpers/manifest_processing.py` where we process `skipConfirmation`
 
 # More testing to be done
 
-* Testing the Git extension functionality:
-  * [x] Checking out a branch
-  * [x] Pull changes for previously downloaded repo's
+n/a
 
 # Documentation
 

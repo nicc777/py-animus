@@ -13,6 +13,7 @@ Quick Navigation: [Documentation home](../../README.md) | [Up](./README.md)
 - [Project(s)](#projects)
   - [Project Dependencies](#project-dependencies)
   - [Project Spec](#project-spec)
+- [Automating Project Processing](#automating-project-processing)
 - [See Also](#see-also)
 
 
@@ -288,6 +289,25 @@ Notes about file references:
 
 * A "file" can be a path to a local file on the system, OR a web URL
 * All manifests can be defined in ONE file, which will then result in all the various configuration options pointing to the same file - as in [example 1](../../../examples/projects/simple-01/project-01.yaml) and [example 2](../../../examples/projects/simple-01/project-02.yaml).
+
+# Automating Project Processing
+
+By default user confirmation is required before the selected project actions is processed. This might not be ideal for systems running unattended.
+
+For automation it is therefore a good idea to add the `skipConfirmation` field to the Project spec with a value of `true`, in which case no confirmation will be required.
+
+To test:
+
+```shell
+# Download the project file
+curl -s -o project-02.yaml https://raw.githubusercontent.com/nicc777/py-animus/main/examples/projects/simple-01/project-02.yaml
+
+# Add the skip confirmation option
+sed -i '10i \ \ skipConfirmation: true' project-02.yaml
+
+# Test
+venv/bin/animus apply $PWD/project-02.yaml manage-my-example-dir default
+```
 
 # See Also
 

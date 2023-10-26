@@ -275,9 +275,14 @@ def process_project(project_manifest_uri: str, project_name: str):
             # Get user confirmation if "skipConfirmation" is False
             process_cli_confirmation = True
             if 'skipConfirmation' in project_instance.spec:
+                logger.info('Processing "skipConfirmation" option in project spec: {} ({})'.format(project_instance.spec['skipConfirmation'], type(project_instance.spec['skipConfirmation'])))
                 if isinstance(project_instance.spec['skipConfirmation'], bool):
                     if project_instance.spec['skipConfirmation'] is True:
                         process_cli_confirmation = False
+                elif isinstance(project_instance.spec['skipConfirmation'], str):
+                    if project_instance.spec['skipConfirmation'].lower().startswith('t'):
+                        process_cli_confirmation = False
+
             if process_cli_confirmation is True:
                 print('='*40)
                 print('\nCurrent Execution Plan')
@@ -289,6 +294,8 @@ def process_project(project_manifest_uri: str, project_name: str):
                     print('\nAborted per user request...\n\n')
                     sys.exit()
                 print('='*40)
+            else:
+                logger.info('   User confirmation NOT required')
 
             execution_plan.do_work(scope=scope.value, action=actions.command)
             
