@@ -1,6 +1,6 @@
 # py_animus
 
-> `animus` as in a sense of purpose and reason
+> `animus` as in a sense of purpose and reason. The problem `py-animus` solves is to orchestrate different IaC tools targeting potentially different cloud environments without disrupting existing teams by dictating the use of different tools. [Read more about it here...](./doc/sections/02-concepts/05-extensions-for-every-resources.md)
 
 A python based plugable and extensible manifest processing system
 
