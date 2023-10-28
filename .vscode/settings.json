@@ -11,6 +11,7 @@
         "plugable",
         "representer",
         "shabang",
+        "stackoverflow",
         "termcolor",
         "Workdir"
     ],

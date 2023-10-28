@@ -17,6 +17,9 @@ Simply use the following command:
 pip install py-animus
 ```
 
+> **note**
+> It is always recommended to use a [Python Virtual Environment](https://docs.python.org/3/library/venv.html) to install third party Python modules. This way, the package and dependencies will not clash with your system managed Python installation. Have a look at [this stackoverflow discussion](https://stackoverflow.com/questions/49916736/how-to-properly-handle-conflicting-distutils-libraries-with-pip) to understand the potential problems using virtual environments avoid.
+
 # Building from source
 
 A build script is included. The basic steps:
@@ -75,6 +78,7 @@ pip3 install --upgrade /path/to/py-animus/dist/py_animus-1.1.0.tar.gz
 # See Also
 
 * [First project and capability demonstration](./02-first-project-and-capability-demonstration.md)
+* [Command Line Arguments](./03-command-line-args.md)
 
 <hr />
 

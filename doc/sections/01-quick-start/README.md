@@ -8,6 +8,7 @@ Below are the links to documentation that will give you a quick start for this p
 
 * [Installing](./01-installing.md) `py-animus`
 * [First project and capability demonstration](./02-first-project-and-capability-demonstration.md)
+* [Command Line Arguments](./03-command-line-args.md)
 
 # See Also
 
