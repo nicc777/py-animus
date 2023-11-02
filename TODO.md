@@ -6,6 +6,7 @@
 # Current tasks
 
 * [ ] It seems there is a bug where spec field values is converted to strings (always) - check file `src/py_animus/helpers/manifest_processing.py` where we process `skipConfirmation`
+* [ ] Drop scope name from variable name
 
 # More testing to be done
 
